@@ -10,16 +10,16 @@ import { ProviderError } from '@/lib/ai/types'
 
 // Helper to get user profile from Supabase (server-side)
 async function getUserProfile(userId: string) {
-  const { data, error } = await supabaseAdmin
-    .from('users')
+  const { data, error } = await (supabaseAdmin
+    .from('users') as any)
     .select('subscription_tier')
     .eq('id', userId)
     .single()
-  
+
   if (error || !data) {
     return null
   }
-  
+
   return {
     subscriptionTier: data.subscription_tier || 'trial',
   }
@@ -154,8 +154,8 @@ export async function POST(request: NextRequest) {
           isSelectedDraft: false,
         })
 
-        const { data: createdStory, error: insertError } = await supabaseAdmin
-          .from('stories')
+        const { data: createdStory, error: insertError } = await (supabaseAdmin
+          .from('stories') as any)
           .insert(storyData)
           .select()
           .single()
@@ -195,11 +195,11 @@ export async function POST(request: NextRequest) {
     if (parentStoryId && drafts.length > 1) {
       // Update all drafts except the first to reference the parent
       for (let i = 1; i < drafts.length; i++) {
-        await supabaseAdmin
-          .from('stories')
+        await (supabaseAdmin
+          .from('stories') as any)
           .update({ parent_story_id: parentStoryId })
           .eq('id', drafts[i].id)
-        
+
         drafts[i].parentStoryId = parentStoryId
       }
     }
@@ -213,7 +213,7 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error generating drafts:', error)
-    
+
     // Handle specific error types
     if (error instanceof Error) {
       if (error.message.includes('Trial limit') || error.message.includes('upgrade')) {
@@ -226,7 +226,7 @@ export async function POST(request: NextRequest) {
           { status: 403 }
         )
       }
-      
+
       if (error instanceof ProviderError || error.message.includes('API') || error.message.includes('provider')) {
         return NextResponse.json<ApiResponse>(
           {

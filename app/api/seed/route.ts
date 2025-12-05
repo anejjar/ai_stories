@@ -186,8 +186,8 @@ export async function POST(request: NextRequest) {
       image_urls: story.hasImages ? [] : undefined,
     }))
 
-    const { data: createdStories, error } = await supabaseAdmin
-      .from('stories')
+    const { data: createdStories, error } = await (supabaseAdmin
+      .from('stories') as any)
       .insert(storiesToInsert)
       .select()
 

@@ -11,8 +11,9 @@ import { databaseStoryToStory } from '@/types/database'
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   const { userId, response } = await requireAuth(request)
   if (response) return response
 
@@ -20,8 +21,8 @@ export async function POST(
     const storyId = params.id
 
     // Get the story to verify ownership and get parent story ID
-    const { data: story, error: storyError } = await supabaseAdmin
-      .from('stories')
+    const { data: story, error: storyError } = await (supabaseAdmin
+      .from('stories') as any)
       .select('*')
       .eq('id', storyId)
       .eq('user_id', userId)
@@ -41,14 +42,14 @@ export async function POST(
     const parentStoryId = story.parent_story_id || story.id
 
     // Unselect all drafts in this group
-    await supabaseAdmin
-      .from('stories')
+    await (supabaseAdmin
+      .from('stories') as any)
       .update({ is_selected_draft: false })
       .or(`parent_story_id.eq.${parentStoryId},id.eq.${parentStoryId}`)
 
     // Select this draft
-    const { data: updatedStory, error: updateError } = await supabaseAdmin
-      .from('stories')
+    const { data: updatedStory, error: updateError } = await (supabaseAdmin
+      .from('stories') as any)
       .update({ is_selected_draft: true })
       .eq('id', storyId)
       .select()

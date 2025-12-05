@@ -10,8 +10,9 @@ import type { ApiResponse } from '@/types'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   const { userId, response } = await requireAuth(request)
   if (response) return response
 
@@ -32,6 +33,7 @@ export async function POST(
       )
     }
 
+    // @ts-expect-error - Supabase type inference issue with Manual Database definition
     if (existingProfile.user_id !== userId) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Unauthorized' },
@@ -68,7 +70,7 @@ export async function POST(
     // Let's use 'stories' bucket for now, path: `child-profiles/${profileId}/avatar.png`
 
     const storagePath = `child-profiles/${profileId}/${Date.now()}.png`
-    
+
     // Upload using admin client to bypass RLS if needed
     const { data: uploadData, error: uploadError } = await supabaseAdmin
       .storage

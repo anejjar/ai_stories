@@ -6,8 +6,9 @@ import { databaseStoryToStory, type DatabaseStory } from '@/types/database'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   const { userId, response } = await requireAuth(request)
   if (response) return response
 

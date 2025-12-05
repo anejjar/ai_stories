@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ProtectedRoute } from '@/components/auth/protected-route'
 import { StoryForm } from '@/components/stories/story-form'
@@ -13,7 +13,7 @@ import { toast } from '@/components/ui/toaster'
 import { Sparkles, ArrowLeft } from 'lucide-react'
 import type { StoryInput, Story } from '@/types'
 
-export default function CreatePage() {
+function CreateContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, userProfile, getAccessToken } = useAuth()
@@ -153,7 +153,7 @@ export default function CreatePage() {
         <div className="absolute top-20 right-10 text-5xl animate-float opacity-30">📚</div>
         <div className="absolute bottom-20 left-10 text-5xl animate-float opacity-30" style={{ animationDelay: '1s' }}>✨</div>
         <div className="absolute top-1/2 left-20 text-4xl animate-bounce-slow opacity-20">🎨</div>
-        
+
         <div className="container mx-auto px-4 py-8 max-w-2xl relative z-10">
           <Card className="border-4 border-pink-300 shadow-2xl bg-white/95 backdrop-blur-sm">
             <CardHeader className="bg-gradient-to-r from-pink-100 to-purple-100 rounded-t-lg border-b-4 border-pink-200">
@@ -175,7 +175,7 @@ export default function CreatePage() {
                   ⚠️ {error}
                 </div>
               )}
-              
+
               {drafts.length > 0 ? (
                 <div className="space-y-4">
                   <Button
@@ -228,5 +228,17 @@ export default function CreatePage() {
         tier={upgradeTier}
       />
     </ProtectedRoute>
+  )
+}
+
+export default function CreatePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500"></div>
+      </div>
+    }>
+      <CreateContent />
+    </Suspense>
   )
 }

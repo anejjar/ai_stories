@@ -8,7 +8,9 @@ import { Button } from '@/components/ui/button'
 import { CheckCircle, Sparkles, Crown } from 'lucide-react'
 import Link from 'next/link'
 
-export default function PaymentSuccessPage() {
+import { Suspense } from 'react'
+
+function PaymentSuccessContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [tier, setTier] = useState<'pro' | 'pro_max' | null>(null)
@@ -31,7 +33,7 @@ export default function PaymentSuccessPage() {
         <div className="absolute top-40 right-20 text-5xl animate-float opacity-30" style={{ animationDelay: '1s' }}>✨</div>
         <div className="absolute bottom-40 left-20 text-5xl animate-float opacity-30" style={{ animationDelay: '2s' }}>⭐</div>
         <div className="absolute bottom-60 right-10 text-4xl animate-bounce-slow opacity-20">👑</div>
-        
+
         <div className="container mx-auto max-w-2xl relative z-10">
           <Card className="border-4 border-green-300 shadow-2xl bg-white/95 backdrop-blur-sm rounded-3xl">
             <CardHeader className="bg-gradient-to-r from-green-100 to-emerald-100 rounded-t-2xl border-b-4 border-green-200 text-center pb-6">
@@ -79,6 +81,18 @@ export default function PaymentSuccessPage() {
         </div>
       </div>
     </ProtectedRoute>
+  )
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+      </div>
+    }>
+      <PaymentSuccessContent />
+    </Suspense>
   )
 }
 

@@ -12,8 +12,9 @@ import type { ApiResponse } from '@/types'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   const { userId, response } = await requireAuth(request)
   if (response) return response
 
@@ -25,7 +26,7 @@ export async function POST(
         success: false,
         error: 'Too many profile image requests. Please wait before uploading another photo.',
       },
-      { 
+      {
         status: 429,
         headers: getRateLimitHeaders(rateLimitResult)
       }
@@ -78,7 +79,7 @@ export async function POST(
     // Convert file to base64
     const buffer = Buffer.from(await imageFile.arrayBuffer())
     const base64Image = buffer.toString('base64')
-    
+
     const providerManager = getProviderManager()
 
     // Step 1: Analyze Image
@@ -94,7 +95,7 @@ export async function POST(
       6. Facial expression
       Keep it concise (under 50 words). Do not include background details.`
     )
-    
+
     console.log('Image analysis result:', description)
 
     // Step 2: Generate 3 Variations
@@ -129,7 +130,7 @@ export async function POST(
           size: '1024x1024',
           style: theme.id === 'pixar' ? 'vivid' : 'natural' // Use vivid for 3D
         })
-        
+
         return {
           url: images[0],
           theme: theme.name,

@@ -11,11 +11,11 @@ async function getUserProfile(userId: string) {
     .select('*')
     .eq('id', userId)
     .single()
-  
+
   if (error || !data) {
     return null
   }
-  
+
   return data
 }
 
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user profile
-    const userProfile = await getUserProfile(userId)
+    const userProfile = (await getUserProfile(userId)) as any
     if (!userProfile) {
       return NextResponse.json<ApiResponse>(
         {
@@ -83,8 +83,8 @@ export async function POST(request: NextRequest) {
       customerId = customer.id
 
       // Save customer ID to user profile
-      await supabaseAdmin
-        .from('users')
+      await (supabaseAdmin
+        .from('users') as any)
         .update({ stripe_customer_id: customerId })
         .eq('id', userId)
     }

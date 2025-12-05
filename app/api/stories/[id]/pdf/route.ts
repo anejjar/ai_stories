@@ -10,15 +10,16 @@ import { databaseStoryToStory, type DatabaseStory } from '@/types/database'
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   const { userId, response } = await requireAuth(request)
   if (response) return response
 
   try {
     // Get user profile to check subscription tier
-    const { data: userProfile } = await supabaseAdmin
-      .from('users')
+    const { data: userProfile } = await (supabaseAdmin
+      .from('users') as any)
       .select('subscription_tier')
       .eq('id', userId)
       .single()
@@ -47,8 +48,8 @@ export async function GET(
 
     // Get the story
     const storyId = params.id
-    const { data: story, error: storyError } = await supabaseAdmin
-      .from('stories')
+    const { data: story, error: storyError } = await (supabaseAdmin
+      .from('stories') as any)
       .select('*')
       .eq('id', storyId)
       .eq('user_id', userId)
@@ -217,10 +218,10 @@ function generatePDFHTML(story: {
 
   <div class="content">
     ${images.map(
-      (img, index) => `
+    (img, index) => `
       <img src="${img}" alt="Story illustration ${index + 1}" class="story-image" />
     `
-    ).join('')}
+  ).join('')}
 
     ${paragraphs
       .map(

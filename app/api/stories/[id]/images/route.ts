@@ -14,8 +14,9 @@ import type { DatabaseStory } from '@/types/database'
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   const { userId, response } = await requireAuth(request)
   if (response) return response
 
@@ -27,7 +28,7 @@ export async function POST(
         success: false,
         error: 'Too many image generation requests. Please wait before generating more images.',
       },
-      { 
+      {
         status: 429,
         headers: getRateLimitHeaders(rateLimitResult)
       }
@@ -99,16 +100,16 @@ export async function POST(
     // For MVP, we'll generate 3-5 key scenes from the story
     const imagePrompts = isMultiChild && children
       ? generateImagePromptsFromMultiChildStory(
-          story.content,
-          children,
-          story.theme
-        )
+        story.content,
+        children,
+        story.theme
+      )
       : generateImagePromptsFromStory(
-          story.content,
-          story.child_name,
-          story.theme,
-          appearance
-        )
+        story.content,
+        story.child_name,
+        story.theme,
+        appearance
+      )
 
     // Generate images using configured image provider
     const providerManager = getProviderManager()

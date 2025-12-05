@@ -11,8 +11,9 @@ import { databaseChildProfileToChildProfile, childProfileToDatabaseChildProfile 
 // PUT - Update a child profile
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   const { userId, response } = await requireAuth(request)
   if (response) return response
 
@@ -76,7 +77,7 @@ export async function PUT(
     })
   } catch (error: any) {
     console.error('Error updating child profile:', error)
-    
+
     if (error.code === '23505' || error.message?.includes('unique')) {
       return NextResponse.json<ApiResponse>(
         {
@@ -100,8 +101,9 @@ export async function PUT(
 // DELETE - Delete a child profile
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   const { userId, response } = await requireAuth(request)
   if (response) return response
 

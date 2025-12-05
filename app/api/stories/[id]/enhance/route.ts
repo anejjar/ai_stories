@@ -18,15 +18,16 @@ interface EnhanceRequest {
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   const { userId, response } = await requireAuth(request)
   if (response) return response
 
   try {
     // Get user profile to check subscription tier
-    const { data: userProfile } = await supabaseAdmin
-      .from('users')
+    const { data: userProfile } = await (supabaseAdmin
+      .from('users') as any)
       .select('subscription_tier')
       .eq('id', userId)
       .single()
@@ -55,8 +56,8 @@ export async function POST(
 
     // Get the story
     const storyId = params.id
-    const { data: story, error: storyError } = await supabaseAdmin
-      .from('stories')
+    const { data: story, error: storyError } = await (supabaseAdmin
+      .from('stories') as any)
       .select('*')
       .eq('id', storyId)
       .eq('user_id', userId)
@@ -104,10 +105,10 @@ export async function POST(
 
     // Generate enhanced story using AI
     const providerManager = getProviderManager()
-    
+
     // Include the current story content in the prompt for context
     const fullPrompt = `${enhancementPrompt}\n\nCurrent story:\n${story.content}\n\nRewritten story:`
-    
+
     const enhancedContent = await providerManager.generateText({
       childName: story.child_name,
       adjectives: story.adjectives,
@@ -130,8 +131,8 @@ export async function POST(
     }
 
     // Update story with enhanced content
-    const { error: updateError } = await supabaseAdmin
-      .from('stories')
+    const { error: updateError } = await (supabaseAdmin
+      .from('stories') as any)
       .update({
         content: enhancedContent,
         updated_at: new Date().toISOString(),

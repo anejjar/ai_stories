@@ -8,16 +8,16 @@ export async function POST(request: NextRequest) {
   try {
     // Get user ID from auth token or request body (for cases without session)
     let userId = await getUserIdFromRequest(request.headers)
-    
+
     // Get user data from request body
     const body = await request.json()
     const { userId: bodyUserId, email, displayName, photoURL, subscriptionTier = 'trial' } = body
-    
+
     // Use userId from body if no session (e.g., email confirmation required)
     if (!userId && bodyUserId) {
       userId = bodyUserId
     }
-    
+
     if (!userId) {
       return NextResponse.json<ApiResponse>(
         {
@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
     // Create user profile using admin client (bypasses RLS)
     const { data: newUser, error: insertError } = await supabaseAdmin
       .from('users')
+      // @ts-expect-error - Supabase type inference issue with Manual Database definition
       .insert({
         id: userId,
         email: email || '',
@@ -70,6 +71,7 @@ export async function POST(request: NextRequest) {
     // Initialize trial usage
     const { error: usageError } = await supabaseAdmin
       .from('usage')
+      // @ts-expect-error - Supabase type inference issue with Manual Database definition
       .insert({
         user_id: userId,
         stories_generated: 0,

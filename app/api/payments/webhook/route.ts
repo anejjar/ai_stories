@@ -46,8 +46,8 @@ export async function POST(request: NextRequest) {
 
         if (userId && tier) {
           // Update user subscription tier
-          await supabaseAdmin
-            .from('users')
+          await (supabaseAdmin
+            .from('users') as any)
             .update({
               subscription_tier: tier,
               stripe_subscription_id: session.subscription as string,
@@ -63,8 +63,8 @@ export async function POST(request: NextRequest) {
         const customerId = subscription.customer as string
 
         // Find user by Stripe customer ID
-        const { data: users } = await supabaseAdmin
-          .from('users')
+        const { data: users } = await (supabaseAdmin
+          .from('users') as any)
           .select('*')
           .eq('stripe_customer_id', customerId)
           .limit(1)
@@ -81,8 +81,8 @@ export async function POST(request: NextRequest) {
             tier = 'pro_max'
           }
 
-          await supabaseAdmin
-            .from('users')
+          await (supabaseAdmin
+            .from('users') as any)
             .update({
               subscription_tier: tier,
               stripe_subscription_id: subscription.id,
@@ -97,18 +97,18 @@ export async function POST(request: NextRequest) {
         const customerId = subscription.customer as string
 
         // Find user by Stripe customer ID
-        const { data: users } = await supabaseAdmin
-          .from('users')
+        const { data: users } = await (supabaseAdmin
+          .from('users') as any)
           .select('*')
           .eq('stripe_customer_id', customerId)
           .limit(1)
 
         if (users && users.length > 0) {
           const user = users[0]
-          
+
           // Downgrade to trial
-          await supabaseAdmin
-            .from('users')
+          await (supabaseAdmin
+            .from('users') as any)
             .update({
               subscription_tier: 'trial',
               stripe_subscription_id: null,

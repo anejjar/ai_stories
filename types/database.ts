@@ -6,13 +6,13 @@ import type { User, Story, TrialUsage, Payment, SubscriptionTier, ChildAppearanc
 export interface DatabaseUser {
   id: string
   email: string
-  display_name?: string
-  photo_url?: string
+  display_name: string | null
+  photo_url: string | null
   subscription_tier: SubscriptionTier
   created_at: string // ISO timestamp
   updated_at: string // ISO timestamp
-  stripe_customer_id?: string
-  stripe_subscription_id?: string
+  stripe_customer_id: string | null
+  stripe_subscription_id: string | null
 }
 
 // Database Story Row (matches PostgreSQL stories table)
@@ -23,15 +23,15 @@ export interface DatabaseStory {
   content: string
   child_name: string // Kept for backward compatibility
   adjectives: string[] // Kept for backward compatibility
-  children?: Child[] | null // JSONB array for multi-child stories
+  children: Child[] | null // JSONB array for multi-child stories
   theme: string
-  moral?: string
+  moral: string | null
   has_images: boolean
-  image_urls?: string[]
-  appearance?: ChildAppearance | null // JSONB column for PRO MAX customization (deprecated, use children[].appearance)
-  parent_story_id?: string | null // If set, this is a draft of another story
-  draft_number?: number | null // Draft number (1, 2, 3, etc.)
-  is_selected_draft?: boolean | null // True if this draft was selected as final
+  image_urls: string[] | null
+  appearance: ChildAppearance | null // JSONB column for PRO MAX customization (deprecated, use children[].appearance)
+  parent_story_id: string | null // If set, this is a draft of another story
+  draft_number: number | null // Draft number (1, 2, 3, etc.)
+  is_selected_draft: boolean | null // True if this draft was selected as final
   created_at: string // ISO timestamp
   updated_at: string // ISO timestamp
 }
@@ -64,11 +64,11 @@ export interface DatabaseChildProfile {
   id: string
   user_id: string
   name: string
-  nickname?: string | null
-  birth_date?: string | null // ISO date string
-  appearance?: ChildAppearance | null // JSONB
-  ai_generated_image_url?: string | null
-  original_image_uploaded_at?: string | null // ISO timestamp
+  nickname: string | null
+  birth_date: string | null // ISO date string
+  appearance: ChildAppearance | null // JSONB
+  ai_generated_image_url: string | null
+  original_image_uploaded_at: string | null // ISO timestamp
   created_at: string // ISO timestamp
   updated_at: string // ISO timestamp
 }
@@ -79,24 +79,40 @@ export interface Database {
     Tables: {
       users: {
         Row: DatabaseUser
-        Insert: Omit<DatabaseUser, 'id' | 'created_at' | 'updated_at'>
+        Insert: Omit<DatabaseUser, 'created_at' | 'updated_at'>
         Update: Partial<Omit<DatabaseUser, 'id' | 'created_at'>>
+        Relationships: []
       }
       stories: {
         Row: DatabaseStory
         Insert: Omit<DatabaseStory, 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Omit<DatabaseStory, 'id' | 'created_at'>>
+        Relationships: []
       }
       usage: {
         Row: DatabaseTrialUsage
         Insert: Omit<DatabaseTrialUsage, 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Omit<DatabaseTrialUsage, 'id' | 'created_at'>>
+        Relationships: []
       }
       payments: {
         Row: DatabasePayment
         Insert: Omit<DatabasePayment, 'id' | 'created_at'>
         Update: Partial<Omit<DatabasePayment, 'id' | 'created_at'>>
+        Relationships: []
       }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
     }
   }
 }
@@ -106,24 +122,24 @@ export function databaseUserToUser(data: DatabaseUser): User {
   return {
     id: data.id,
     email: data.email,
-    displayName: data.display_name,
-    photoURL: data.photo_url,
+    displayName: data.display_name || undefined,
+    photoURL: data.photo_url || undefined,
     subscriptionTier: data.subscription_tier,
     createdAt: new Date(data.created_at),
     updatedAt: new Date(data.updated_at),
-    stripeCustomerId: data.stripe_customer_id,
-    stripeSubscriptionId: data.stripe_subscription_id,
+    stripeCustomerId: data.stripe_customer_id || undefined,
+    stripeSubscriptionId: data.stripe_subscription_id || undefined,
   }
 }
 
 export function userToDatabaseUser(user: Partial<User>): Partial<DatabaseUser> {
   return {
     email: user.email,
-    display_name: user.displayName,
-    photo_url: user.photoURL,
+    display_name: user.displayName || null,
+    photo_url: user.photoURL || null,
     subscription_tier: user.subscriptionTier,
-    stripe_customer_id: user.stripeCustomerId,
-    stripe_subscription_id: user.stripeSubscriptionId,
+    stripe_customer_id: user.stripeCustomerId || null,
+    stripe_subscription_id: user.stripeSubscriptionId || null,
   } as Partial<DatabaseUser>
 }
 
@@ -131,11 +147,11 @@ export function databaseStoryToStory(data: DatabaseStory): Story {
   // Safely convert dates
   const createdAt = data.created_at ? new Date(data.created_at) : new Date()
   const updatedAt = data.updated_at ? new Date(data.updated_at) : new Date()
-  
+
   // Validate dates
   const validCreatedAt = isNaN(createdAt.getTime()) ? new Date() : createdAt
   const validUpdatedAt = isNaN(updatedAt.getTime()) ? new Date() : updatedAt
-  
+
   // Parse children if it's a string (JSONB from database)
   let children: Child[] | undefined = undefined
   if (data.children) {
@@ -149,7 +165,7 @@ export function databaseStoryToStory(data: DatabaseStory): Story {
       children = data.children as Child[]
     }
   }
-  
+
   // Parse appearance if it's a string (JSONB from database) - deprecated, use children[].appearance
   let appearance: ChildAppearance | undefined = undefined
   if (data.appearance) {
@@ -163,7 +179,7 @@ export function databaseStoryToStory(data: DatabaseStory): Story {
       appearance = data.appearance as ChildAppearance
     }
   }
-  
+
   return {
     id: data.id,
     userId: data.user_id,
@@ -173,9 +189,9 @@ export function databaseStoryToStory(data: DatabaseStory): Story {
     adjectives: data.adjectives, // Kept for backward compatibility
     children, // New: multi-child support
     theme: data.theme,
-    moral: data.moral,
+    moral: data.moral || undefined,
     hasImages: data.has_images,
-    imageUrls: data.image_urls,
+    imageUrls: data.image_urls || undefined,
     appearance, // Deprecated: kept for backward compatibility
     parentStoryId: data.parent_story_id || undefined,
     draftNumber: data.draft_number || undefined,
@@ -190,7 +206,7 @@ export function storyToDatabaseStory(story: Partial<Story>): Partial<DatabaseSto
   const hasChildren = story.children && story.children.length > 0
   const childName = hasChildren ? story.children![0].name : story.childName
   const adjectives = hasChildren ? story.children![0].adjectives : story.adjectives
-  
+
   return {
     user_id: story.userId,
     title: story.title,
@@ -199,9 +215,9 @@ export function storyToDatabaseStory(story: Partial<Story>): Partial<DatabaseSto
     adjectives: adjectives || [], // Kept for backward compatibility
     children: story.children || null, // New: multi-child support
     theme: story.theme,
-    moral: story.moral,
+    moral: story.moral || null,
     has_images: story.hasImages,
-    image_urls: story.imageUrls,
+    image_urls: story.imageUrls || null,
     appearance: story.appearance || null, // Deprecated: kept for backward compatibility
     parent_story_id: story.parentStoryId || null,
     draft_number: story.draftNumber || null,
@@ -293,4 +309,3 @@ export function childProfileToDatabaseChildProfile(profile: Partial<ChildProfile
     original_image_uploaded_at: profile.originalImageUploadedAt ? profile.originalImageUploadedAt.toISOString() : null,
   } as Partial<DatabaseChildProfile>
 }
-

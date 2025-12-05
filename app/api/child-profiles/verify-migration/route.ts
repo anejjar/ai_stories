@@ -21,15 +21,15 @@ export async function GET() {
       // Check if error is because table doesn't exist
       // PostgreSQL error code 42P01 = undefined_table
       if (
-        error.code === '42P01' || 
+        error.code === '42P01' ||
         error.message?.includes('does not exist') ||
         error.message?.toLowerCase().includes('relation') ||
         error.message?.toLowerCase().includes('table')
       ) {
-        return NextResponse.json<ApiResponse<{ migrationStatus: 'not_applied' }>>({
+        return NextResponse.json<ApiResponse<{ migrationStatus: 'not_applied'; errorCode?: string; errorMessage?: string }>>({
           success: false,
           error: 'Migration not applied: child_profiles table does not exist',
-          data: { 
+          data: {
             migrationStatus: 'not_applied',
             errorCode: error.code,
             errorMessage: error.message,
@@ -56,7 +56,7 @@ export async function GET() {
       .limit(0)
 
     if (structureError) {
-      return NextResponse.json<ApiResponse<{ migrationStatus: 'partial' }>>({
+      return NextResponse.json<ApiResponse<{ migrationStatus: 'partial'; errorMessage?: string }>>({
         success: false,
         error: 'Table exists but structure may be incomplete',
         data: {
@@ -81,10 +81,10 @@ export async function GET() {
     })
   } catch (error: any) {
     console.error('Error verifying migration:', error)
-    
+
     // If it's a table doesn't exist error
     if (error.message?.includes('does not exist') || error.code === '42P01') {
-      return NextResponse.json<ApiResponse<{ migrationStatus: 'not_applied' }>>({
+      return NextResponse.json<ApiResponse<{ migrationStatus: 'not_applied'; errorCode?: string; errorMessage?: string }>>({
         success: false,
         error: 'Migration not applied: child_profiles table does not exist',
         data: { migrationStatus: 'not_applied' },
