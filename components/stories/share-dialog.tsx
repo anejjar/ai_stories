@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { DialogTitle } from '@/components/ui/dialog'
 import { Share2, Copy, Check, Mail, Facebook, Twitter, Link as LinkIcon } from 'lucide-react'
 import { toast } from '@/components/ui/toaster'
 
@@ -55,9 +56,9 @@ export function ShareDialog({ storyId, storyTitle, onClose }: ShareDialogProps) 
     <div className="p-6 rounded-3xl border-4 border-purple-300 bg-gradient-to-br from-purple-50 to-pink-50 shadow-xl">
       <div className="space-y-4">
         <div className="text-center">
-          <h3 className="text-2xl font-bold font-comic bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+          <DialogTitle className="text-2xl font-bold font-comic bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
             Share Story 📤
-          </h3>
+          </DialogTitle>
           <p className="text-sm text-gray-600 font-semibold">
             Share this magical story with friends and family! ✨
           </p>

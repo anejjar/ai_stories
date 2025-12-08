@@ -215,7 +215,15 @@ function CreateContent() {
                       </p>
                     </div>
                   )}
-                  <StoryForm onSubmit={handleSubmit} disabled={loading} loading={loading} />
+                  <StoryForm
+                    onSubmit={handleSubmit}
+                    disabled={loading}
+                    loading={loading}
+                    onShowUpgrade={(tier) => {
+                      setUpgradeTier(tier)
+                      setShowUpgradeModal(true)
+                    }}
+                  />
                 </>
               )}
             </CardContent>

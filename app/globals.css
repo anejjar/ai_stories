@@ -3,49 +3,71 @@
 @tailwind utilities;
 
 @layer base {
+  /*
+   * Pastel Dreams Color Palette - Soft, calming, gentle!
+   *
+   * To change the color palette, edit lib/colors.ts and change ACTIVE_PALETTE
+   * Current palette: Pastel Dreams
+   *
+   * Colors:
+   * - Primary: #A8DADC (Powder Blue)
+   * - Secondary: #F1C0E8 (Soft Pink)
+   * - Accent: #CFBAF0 (Lavender)
+   * - Background: #FFF9F9 (Off White)
+   */
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 340 82% 52%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 45 93% 47%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 45 100% 95%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 200 100% 85%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 45 100% 90%;
-    --input: 45 100% 95%;
-    --ring: 340 82% 52%;
+    --background: 330 100% 98%;          /* #FFF9F9 - Off White */
+    --foreground: 211 47% 22%;           /* #1D3557 - Navy */
+    --card: 0 0% 100%;                   /* White */
+    --card-foreground: 211 47% 22%;      /* #1D3557 */
+    --popover: 0 0% 100%;                /* White */
+    --popover-foreground: 211 47% 22%;   /* #1D3557 */
+    --primary: 183 35% 76%;              /* #A8DADC - Powder Blue */
+    --primary-foreground: 211 47% 22%;   /* #1D3557 */
+    --secondary: 306 66% 85%;            /* #F1C0E8 - Soft Pink */
+    --secondary-foreground: 211 47% 22%; /* #1D3557 */
+    --muted: 270 56% 90%;                /* Light muted */
+    --muted-foreground: 0 0% 45%;        /* #A8A8A8 */
+    --accent: 263 60% 85%;               /* #CFBAF0 - Lavender */
+    --accent-foreground: 211 47% 22%;    /* #1D3557 */
+    --destructive: 0 74% 80%;            /* #F4A4A4 - Soft Red */
+    --destructive-foreground: 0 0% 100%; /* White */
+    --border: 240 33% 94%;               /* #E8E8F0 - Light Gray */
+    --input: 240 33% 94%;                /* #E8E8F0 */
+    --ring: 183 35% 76%;                 /* #A8DADC - Powder Blue */
     --radius: 1rem;
+
+    /* Custom palette colors for gradients */
+    --primary-rgb: 168, 218, 220;        /* #A8DADC */
+    --secondary-rgb: 241, 192, 232;      /* #F1C0E8 */
+    --accent-rgb: 207, 186, 240;         /* #CFBAF0 */
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 340 82% 52%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 45 93% 47%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 200 100% 85%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 340 82% 52%;
+    --background: 211 47% 22%;           /* #1D3557 - Navy */
+    --foreground: 0 0% 98%;              /* Light */
+    --card: 211 39% 27%;                 /* Slightly lighter */
+    --card-foreground: 0 0% 98%;         /* Light */
+    --popover: 211 39% 27%;              /* Slightly lighter */
+    --popover-foreground: 0 0% 98%;      /* Light */
+    --primary: 183 35% 76%;              /* #A8DADC - Powder Blue */
+    --primary-foreground: 211 47% 22%;   /* #1D3557 */
+    --secondary: 306 66% 85%;            /* #F1C0E8 - Soft Pink */
+    --secondary-foreground: 211 47% 22%; /* #1D3557 */
+    --muted: 211 39% 32%;                /* Muted dark */
+    --muted-foreground: 0 0% 70%;        /* Light muted */
+    --accent: 263 60% 85%;               /* #CFBAF0 - Lavender */
+    --accent-foreground: 211 47% 22%;    /* Dark text */
+    --destructive: 0 74% 80%;            /* #F4A4A4 - Soft Red */
+    --destructive-foreground: 0 0% 100%; /* White */
+    --border: 211 39% 32%;               /* Dark border */
+    --input: 211 39% 32%;                /* Dark input */
+    --ring: 183 35% 76%;                 /* #A8DADC - Powder Blue */
+
+    /* Custom palette colors for gradients */
+    --primary-rgb: 168, 218, 220;        /* #A8DADC */
+    --secondary-rgb: 241, 192, 232;      /* #F1C0E8 */
+    --accent-rgb: 207, 186, 240;         /* #CFBAF0 */
   }
 }
 
@@ -53,6 +75,7 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
     font-family: 'Comic Neue', 'Nunito', system-ui, -apple-system, sans-serif;
@@ -60,115 +83,175 @@
 }
 
 @layer utilities {
+  /* Palette-aware gradient utilities */
+  .bg-gradient-primary {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+  }
+
+  .bg-gradient-secondary {
+    background: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--accent)));
+  }
+
+  .bg-gradient-accent {
+    background: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--primary)));
+  }
+
+  .bg-gradient-page {
+    background: linear-gradient(135deg, hsl(var(--background)), hsl(var(--muted)));
+  }
+
+  .bg-gradient-hero {
+    background: linear-gradient(to bottom right,
+      hsl(var(--primary) / 0.1),
+      hsl(var(--accent) / 0.1),
+      hsl(var(--secondary) / 0.1)
+    );
+  }
+
+  .text-gradient-primary {
+    background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--secondary)));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .text-gradient-accent {
+    background: linear-gradient(to right, hsl(var(--accent)), hsl(var(--primary)));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .border-gradient-primary {
+    border-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary))) 1;
+  }
+
   /* Playful animations */
   @keyframes float {
-    0%, 100% {
+
+    0%,
+    100% {
       transform: translateY(0px);
     }
+
     50% {
       transform: translateY(-20px);
     }
   }
-  
+
   @keyframes bounce-slow {
-    0%, 100% {
+
+    0%,
+    100% {
       transform: translateY(0);
     }
+
     50% {
       transform: translateY(-10px);
     }
   }
-  
+
   @keyframes wiggle {
-    0%, 100% {
+
+    0%,
+    100% {
       transform: rotate(0deg);
     }
+
     25% {
       transform: rotate(-5deg);
     }
+
     75% {
       transform: rotate(5deg);
     }
   }
-  
+
   @keyframes shimmer {
     0% {
       transform: translateX(-100%);
     }
+
     100% {
       transform: translateX(100%);
     }
   }
-  
+
   @keyframes sparkle {
-    0%, 100% {
+
+    0%,
+    100% {
       opacity: 1;
       transform: scale(1);
     }
+
     50% {
       opacity: 0.5;
       transform: scale(1.2);
     }
   }
-  
+
   @keyframes rainbow {
     0% {
       background-position: 0% 50%;
     }
+
     50% {
       background-position: 100% 50%;
     }
+
     100% {
       background-position: 0% 50%;
     }
   }
-  
+
   @keyframes shimmer {
     0% {
       background-position: -200% 0;
     }
+
     100% {
       background-position: 200% 0;
     }
   }
-  
+
   .animate-float {
     animation: float 3s ease-in-out infinite;
   }
-  
+
   .animate-bounce-slow {
     animation: bounce-slow 2s ease-in-out infinite;
   }
-  
+
   .animate-wiggle {
     animation: wiggle 0.5s ease-in-out infinite;
   }
-  
+
   .animate-sparkle {
     animation: sparkle 1.5s ease-in-out infinite;
   }
-  
+
   .animate-shimmer {
     animation: shimmer 2s linear infinite;
   }
-  
+
   .bg-rainbow {
     background: linear-gradient(-45deg, #ff6b6b, #4ecdc4, #45b7d1, #f9ca24, #f0932b, #eb4d4b);
     background-size: 400% 400%;
     animation: rainbow 3s ease infinite;
   }
-  
+
   /* Playful decorative elements */
   .star {
     position: relative;
     display: inline-block;
   }
-  
+
   .star::before {
     content: '⭐';
     animation: sparkle 2s ease-in-out infinite;
   }
-  
+
   .cloud {
     position: absolute;
     opacity: 0.3;
@@ -176,3 +259,62 @@
   }
 }
 
+
+/* Textures */
+.bg-grid-pattern {
+  background-image: linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.bg-dots-pattern {
+  background-image: radial-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.bg-paper-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.1'/%3E%3C/svg%3E");
+}
+
+/* Interactive Classes */
+.cursor-magic {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24'><text y='20' font-size='20'>🪄</text></svg>") 0 0, auto;
+}
+
+.cursor-space {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24'><text y='20' font-size='20'>🚀</text></svg>") 0 0, auto;
+}
+
+.cursor-ocean {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24'><text y='20' font-size='20'>🫧</text></svg>") 16 16, auto;
+}
+
+.cursor-nature {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24'><text y='20' font-size='20'>🌿</text></svg>") 0 0, auto;
+}
+
+.hover-pop:hover {
+  transform: scale(1.5);
+  opacity: 0;
+  transition: all 0.3s ease-out;
+}
+
+.hover-spin:hover {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.hover-flee:hover {
+  transform: translate(20px, -20px) rotate(20deg);
+  opacity: 0.5;
+  transition: all 0.2s ease-in-out;
+}

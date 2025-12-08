@@ -27,20 +27,20 @@ export class GeminiProvider implements AIProvider {
 
     const prompt = await this.createStoryPrompt(request)
 
-    // Try gemini-pro first, fallback to gemini-1.5-pro
+    // Try gemini-2.5-flash first (faster, cheaper), fallback to gemini-2.5-pro
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' })
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
       const result = await model.generateContent(prompt)
       const response = await result.response
       return response.text()
     } catch (error: any) {
-      console.error('Error generating story with gemini-pro:', error)
-      
-      // If gemini-pro fails, try gemini-1.5-pro as fallback
+      console.error('Error generating story with gemini-2.5-flash:', error)
+
+      // If gemini-2.5-flash fails, try gemini-2.5-pro as fallback
       if (error.message?.includes('404') || error.message?.includes('not found')) {
-        console.log('Trying fallback model: gemini-1.5-pro')
+        console.log('Trying fallback model: gemini-2.5-pro')
         try {
-          const fallbackModel = this.genAI.getGenerativeModel({ model: 'gemini-1.5-pro' })
+          const fallbackModel = this.genAI.getGenerativeModel({ model: 'gemini-2.5-pro' })
           const result = await fallbackModel.generateContent(prompt)
           const response = await result.response
           return response.text()
@@ -53,8 +53,42 @@ export class GeminiProvider implements AIProvider {
           )
         }
       }
-      
+
       throw error
+    }
+  }
+
+  /**
+   * Analyze an image using Gemini's vision capabilities
+   */
+  async analyzeImage(base64Image: string, prompt?: string): Promise<string> {
+    if (!this.genAI) {
+      throw new Error('Gemini API key is not configured')
+    }
+
+    try {
+      // Use gemini-2.0-flash-exp which supports vision
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
+
+      // Convert base64 to the format Gemini expects
+      const imagePart = {
+        inlineData: {
+          data: base64Image.replace(/^data:image\/\w+;base64,/, ''),
+          mimeType: 'image/jpeg',
+        },
+      }
+
+      const defaultPrompt = 'Describe this image in detail.'
+      const result = await model.generateContent([prompt || defaultPrompt, imagePart])
+      const response = await result.response
+      return response.text()
+    } catch (error: any) {
+      console.error('Error analyzing image with Gemini:', error)
+      throw new Error(
+        `Failed to analyze image with Gemini. ` +
+        `Error: ${error?.message}. ` +
+        `Please verify your GEMINI_API_KEY is valid and has access to vision models.`
+      )
     }
   }
 
@@ -69,7 +103,7 @@ export class GeminiProvider implements AIProvider {
 
     const { childName, adjectives, theme, moral, children } = request as any
     const templateId = (request as any).templateId // Type assertion for templateId
-    
+
     const isMultiChild = children && Array.isArray(children) && children.length > 0
     const moralText = moral ? ` The story should teach the moral: ${moral}.` : ''
 
@@ -93,7 +127,7 @@ export class GeminiProvider implements AIProvider {
         const adjList = child.adjectives.join(', ')
         return `${index + 1}. ${child.name} - described as: ${adjList}`
       }).join('\n')
-      
+
       const childrenNames = children.map((child: any) => child.name).join(', ')
       const childrenNamesList = children.map((child: any) => child.name).join(' and ')
 

@@ -17,6 +17,7 @@ import {
   DialogContent,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { getThemeStyles } from '@/lib/theme-config'
 import type { Story } from '@/types'
 
 interface StoryDisplayProps {
@@ -33,7 +34,10 @@ export function StoryDisplay({ story, onBack }: StoryDisplayProps) {
   const [showShareDialog, setShowShareDialog] = useState(false)
   const [imageLoadingStates, setImageLoadingStates] = useState<Record<number, boolean>>({})
   const [imageErrorStates, setImageErrorStates] = useState<Record<number, boolean>>({})
+  const [backgroundFloaters, setBackgroundFloaters] = useState<{ emoji: string, style: React.CSSProperties }[]>([])
   const isProMax = userProfile?.subscriptionTier === 'pro_max'
+
+  const themeStyles = getThemeStyles(story.theme)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -47,6 +51,27 @@ export function StoryDisplay({ story, onBack }: StoryDisplayProps) {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // Generate random positions for floaters
+  useEffect(() => {
+    if (themeStyles.floaters) {
+      const floaters = themeStyles.floaters.flatMap(emoji =>
+        // Create 3 instances of each floater for better coverage
+        Array(3).fill(emoji).map(() => ({
+          emoji,
+          style: {
+            top: `${Math.random() * 100}%`,
+            left: `${Math.random() * 100}%`,
+            animationDelay: `${Math.random() * 5}s`,
+            animationDuration: `${3 + Math.random() * 4}s`,
+            fontSize: `${2 + Math.random() * 2}rem`,
+            opacity: 0.1 + Math.random() * 0.2
+          } as React.CSSProperties
+        }))
+      )
+      setBackgroundFloaters(floaters)
+    }
+  }, [themeStyles.floaters])
 
   // Initialize loading states for existing images
   useEffect(() => {
@@ -127,12 +152,12 @@ export function StoryDisplay({ story, onBack }: StoryDisplayProps) {
   const formatDate = (date: Date | string) => {
     try {
       const dateObj = typeof date === 'string' ? new Date(date) : date
-      
+
       // Check if date is valid
       if (!dateObj || isNaN(dateObj.getTime())) {
         return 'Recently'
       }
-      
+
       return new Intl.DateTimeFormat('en-US', {
         year: 'numeric',
         month: 'long',
@@ -145,22 +170,30 @@ export function StoryDisplay({ story, onBack }: StoryDisplayProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-pink-50 via-yellow-50 to-blue-50 relative">
+    <div className={`min-h-screen ${themeStyles.background} ${themeStyles.cursor || ''} relative transition-colors duration-500`}>
       {/* Decorative elements */}
-      <div className="absolute top-20 right-10 text-4xl animate-float opacity-20">⭐</div>
-      <div className="absolute top-40 left-10 text-4xl animate-float opacity-20" style={{ animationDelay: '1s' }}>✨</div>
-      <div className="absolute bottom-40 right-20 text-4xl animate-float opacity-20" style={{ animationDelay: '2s' }}>🌟</div>
-      
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        {backgroundFloaters.map((floater, idx) => (
+          <div
+            key={idx}
+            className={`absolute animate-float select-none ${themeStyles.interaction || ''} pointer-events-auto`}
+            style={floater.style}
+          >
+            {floater.emoji}
+          </div>
+        ))}
+      </div>
+
       {/* Reading Progress Bar */}
-      <div className="fixed top-0 left-0 right-0 h-2 bg-pink-200 z-50">
+      <div className="fixed top-0 left-0 right-0 h-2 bg-white/20 z-50">
         <div
-          className="h-full bg-gradient-to-r from-pink-500 to-purple-500 transition-all duration-150 shadow-lg"
+          className={`h-full ${themeStyles.button} transition-all duration-150 shadow-lg`}
           style={{ width: `${readingProgress}%` }}
         />
       </div>
 
       {/* Header */}
-      <div className="sticky top-0 bg-white/90 backdrop-blur-md border-b-4 border-pink-300 z-40 shadow-lg">
+      <div className={`sticky top-0 bg-white/90 backdrop-blur-md border-b-4 ${themeStyles.navBorder} z-40 shadow-lg transition-colors duration-500`}>
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -176,7 +209,7 @@ export function StoryDisplay({ story, onBack }: StoryDisplayProps) {
                 </Link>
               )}
               <div>
-                <h1 className="text-xl font-bold font-comic bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+                <h1 className={`text-xl font-bold font-comic ${themeStyles.titleGradient} bg-clip-text text-transparent`}>
                   📖 Story
                 </h1>
                 <p className="text-xs text-gray-600 font-semibold">
@@ -210,15 +243,14 @@ export function StoryDisplay({ story, onBack }: StoryDisplayProps) {
       {/* Story Content */}
       <div className="container mx-auto px-4 py-8 max-w-3xl relative z-10">
         {/* Story Metadata */}
-        <div className="mb-8 space-y-4 bg-white/80 backdrop-blur-sm p-6 rounded-3xl border-4 border-pink-300 shadow-xl">
+        <div className={`mb-8 space-y-4 bg-white/80 backdrop-blur-sm p-6 rounded-3xl border-4 ${themeStyles.cardBorder} ${themeStyles.cardTexture || ''} shadow-xl transition-colors duration-500`}>
           <div>
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 font-comic bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 bg-clip-text text-transparent">
-              {story.title} 📚
+            <h1 className={`text-4xl md:text-5xl font-bold mb-4 font-comic ${themeStyles.titleGradient} bg-clip-text text-transparent`}>
+              {story.title} {themeStyles.emoji}
             </h1>
             <div className="flex flex-wrap gap-2 mb-4">
-              <Badge className="bg-gradient-to-r from-purple-400 to-blue-400 text-white font-bold border-2 border-purple-500 rounded-full px-3 py-1">
-                <BookOpen className="h-4 w-4 mr-1" />
-                {story.theme}
+              <Badge className={`${themeStyles.badge} font-bold border-2 rounded-full px-3 py-1 shadow-sm`}>
+                {themeStyles.emoji} {story.theme}
               </Badge>
               {/* Show children info for multi-child stories */}
               {story.children && story.children.length > 0 ? (
@@ -247,7 +279,7 @@ export function StoryDisplay({ story, onBack }: StoryDisplayProps) {
               )}
             </div>
             {story.moral && (
-              <div className="bg-yellow-100 border-2 border-yellow-300 rounded-2xl p-4 mt-4">
+              <div className={`bg-white/50 border-2 ${themeStyles.cardBorder} rounded-2xl p-4 mt-4`}>
                 <p className="text-base text-gray-800 font-semibold">
                   <span className="text-2xl mr-2">💡</span>
                   Lesson: {story.moral}
@@ -307,7 +339,7 @@ export function StoryDisplay({ story, onBack }: StoryDisplayProps) {
             {storyImages.map((imageUrl, index) => {
               const isLoading = imageLoadingStates[index] !== false
               const hasError = imageErrorStates[index] === true
-              
+
               return (
                 <div
                   key={index}
@@ -334,7 +366,7 @@ export function StoryDisplay({ story, onBack }: StoryDisplayProps) {
                         </div>
                       </div>
                     )}
-                    
+
                     {/* Error State */}
                     {hasError && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center p-8">
@@ -347,15 +379,14 @@ export function StoryDisplay({ story, onBack }: StoryDisplayProps) {
                         </p>
                       </div>
                     )}
-                    
+
                     {/* Image */}
                     {!hasError && (
                       <img
                         src={imageUrl}
                         alt={`Story illustration ${index + 1} for ${story.children && story.children.length > 0 ? story.children.map((c: any) => c.name).join(' and ') : story.childName}`}
-                        className={`w-full h-full object-cover transition-opacity duration-500 ${
-                          isLoading ? 'opacity-0' : 'opacity-100'
-                        }`}
+                        className={`w-full h-full object-cover transition-opacity duration-500 ${isLoading ? 'opacity-0' : 'opacity-100'
+                          }`}
                         onLoad={() => {
                           setImageLoadingStates((prev) => ({ ...prev, [index]: false }))
                         }}
@@ -365,7 +396,7 @@ export function StoryDisplay({ story, onBack }: StoryDisplayProps) {
                         }}
                       />
                     )}
-                    
+
                     {/* Decorative overlay when loaded */}
                     {!isLoading && !hasError && (
                       <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full p-2 border-2 border-purple-400 shadow-lg animate-in zoom-in">
@@ -385,23 +416,22 @@ export function StoryDisplay({ story, onBack }: StoryDisplayProps) {
         )}
 
         {/* Story Text - Fun & Engaging for Kids */}
-        <div className="max-w-none bg-gradient-to-br from-white via-pink-50 to-purple-50 backdrop-blur-sm p-8 md:p-12 rounded-3xl border-4 border-blue-300 shadow-2xl">
+        <div className={`max-w-none bg-gradient-to-br from-white via-pink-50 to-purple-50 backdrop-blur-sm p-8 md:p-12 rounded-3xl border-4 border-blue-300 ${themeStyles.cardTexture || ''} shadow-2xl`}>
           <div className="text-2xl md:text-3xl leading-relaxed md:leading-loose text-gray-900 whitespace-pre-wrap font-comic">
             {story.content.split('\n').map((paragraph, index) => {
               if (!paragraph.trim()) {
                 return <div key={index} className="h-6" />
               }
-              
+
               // Add decorative elements for first paragraph
               const isFirstParagraph = index === 0
               const isLastParagraph = index === story.content.split('\n').filter(p => p.trim()).length - 1
-              
+
               return (
                 <div
                   key={index}
-                  className={`mb-8 md:mb-10 relative ${
-                    isFirstParagraph ? 'animate-in fade-in slide-in-from-bottom-4' : ''
-                  }`}
+                  className={`mb-8 md:mb-10 relative ${isFirstParagraph ? 'animate-in fade-in slide-in-from-bottom-4' : ''
+                    }`}
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   {/* Decorative elements for first paragraph */}
@@ -412,12 +442,12 @@ export function StoryDisplay({ story, onBack }: StoryDisplayProps) {
                       <div className="text-4xl animate-bounce-slow" style={{ animationDelay: '0.5s' }}>✨</div>
                     </div>
                   )}
-                  
+
                   <p className="text-gray-900 font-bold leading-relaxed md:leading-loose text-2xl md:text-3xl drop-shadow-sm">
                     {paragraph.split('.').map((sentence, sentenceIndex, sentences) => {
                       const trimmedSentence = sentence.trim()
                       if (!trimmedSentence) return null
-                      
+
                       // Add emoji after certain words for fun
                       const enhancedSentence = trimmedSentence
                         .replace(/\b(Once upon a time|Once|Long ago)\b/gi, (match) => `${match} 🎭`)
@@ -442,7 +472,7 @@ export function StoryDisplay({ story, onBack }: StoryDisplayProps) {
                         .replace(/\b(smile|smiled|happy|happily)\b/gi, (match) => `${match} 😊`)
                         .replace(/\b(laugh|laughed|funny)\b/gi, (match) => `${match} 😄`)
                         .replace(/\b(surprise|surprised|amazing)\b/gi, (match) => `${match} 😲`)
-                      
+
                       return (
                         <span key={sentenceIndex}>
                           {enhancedSentence}
@@ -453,7 +483,7 @@ export function StoryDisplay({ story, onBack }: StoryDisplayProps) {
                     })}
                     {paragraph.trim() && !paragraph.endsWith('.') && !paragraph.endsWith('!') && !paragraph.endsWith('?') && '.'}
                   </p>
-                  
+
                   {/* Decorative elements for last paragraph */}
                   {isLastParagraph && (
                     <div className="flex items-center gap-3 mt-6">
@@ -462,7 +492,7 @@ export function StoryDisplay({ story, onBack }: StoryDisplayProps) {
                       <div className="text-4xl animate-bounce-slow" style={{ animationDelay: '0.5s' }}>✨</div>
                     </div>
                   )}
-                  
+
                   {/* Small decorative stars between paragraphs */}
                   {!isFirstParagraph && !isLastParagraph && index % 2 === 0 && (
                     <div className="absolute -left-4 top-1/2 transform -translate-y-1/2 text-2xl opacity-30 animate-sparkle">
@@ -473,13 +503,13 @@ export function StoryDisplay({ story, onBack }: StoryDisplayProps) {
               )
             })}
           </div>
-          
+
           {/* Story ending decoration */}
           <div className="mt-12 text-center">
             <div className="inline-flex items-center gap-4 bg-gradient-to-r from-yellow-100 to-pink-100 rounded-full px-8 py-4 border-4 border-yellow-300 shadow-lg">
               <span className="text-4xl animate-bounce-slow">📚</span>
-              <span className="text-2xl font-comic font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-                The End! 🎉
+              <span className={`text-2xl font-comic font-bold ${themeStyles.titleGradient} bg-clip-text text-transparent`}>
+                The End!
               </span>
               <span className="text-4xl animate-bounce-slow" style={{ animationDelay: '0.3s' }}>✨</span>
             </div>
@@ -487,7 +517,7 @@ export function StoryDisplay({ story, onBack }: StoryDisplayProps) {
         </div>
 
         {/* Footer */}
-        <div className="mt-12 pt-8 border-t-4 border-pink-300 bg-white/80 backdrop-blur-sm p-6 rounded-3xl border-4 border-purple-300 shadow-lg">
+        <div className={`mt-12 pt-8 border-t-4 ${themeStyles.navBorder} bg-white/80 backdrop-blur-sm p-6 rounded-3xl border-4 ${themeStyles.cardBorder} shadow-lg transition-colors duration-500`}>
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-lg font-bold text-gray-700">
               <span className="text-2xl mr-2">👶</span>
@@ -499,7 +529,7 @@ export function StoryDisplay({ story, onBack }: StoryDisplayProps) {
                 Share Story 📤
               </Button>
               <Link href="/library">
-                <Button variant="outline" className="rounded-full border-2 border-pink-400 hover:bg-pink-100 font-bold">
+                <Button variant="outline" className={`rounded-full border-2 hover:bg-white font-bold ${themeStyles.primaryColor} ${themeStyles.cardBorder}`}>
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back to Library 📚
                 </Button>

@@ -18,13 +18,13 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 # -----------------------------------------------------
 # Comma-separated list of providers in priority order
 # Options: openai, gemini, anthropic
-AI_PROVIDER=openai
+AI_PROVIDER=gemini
 
-# OpenAI (Recommended - supports both text and images)
-OPENAI_API_KEY=sk-your-openai-key
+# Google Gemini (Recommended - uses latest Gemini 2.5 models)
+GEMINI_API_KEY=your-gemini-key
 
-# Google Gemini (Alternative)
-# GEMINI_API_KEY=your-gemini-key
+# OpenAI (Alternative - supports both text and images)
+# OPENAI_API_KEY=sk-your-openai-key
 
 # Anthropic Claude (Alternative)
 # ANTHROPIC_API_KEY=your-anthropic-key
@@ -33,10 +33,13 @@ OPENAI_API_KEY=sk-your-openai-key
 # AI PROVIDERS - Image Generation (Required for PRO MAX)
 # -----------------------------------------------------
 # Comma-separated list of providers in priority order
-# Options: dalle, stable-diffusion, midjourney
-IMAGE_PROVIDER=dalle
+# Options: gemini-image, dalle, stable-diffusion, midjourney
+IMAGE_PROVIDER=gemini-image
 
-# DALL-E uses OPENAI_API_KEY (set above)
+# Gemini Image (Recommended - uses Gemini 2.5 Flash for images)
+# Uses GEMINI_API_KEY (set above)
+
+# DALL-E (Alternative - uses OpenAI)
 # DALL_E_API_KEY=sk-your-openai-key  # Optional, will use OPENAI_API_KEY
 
 # Stability AI / Stable Diffusion (Alternative)

@@ -21,7 +21,13 @@ export default function StoryPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
-  const [hasShownModal, setHasShownModal] = useState(false)
+  const [hasShownModal, setHasShownModal] = useState(() => {
+    // Check sessionStorage to see if modal was already shown this session
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('upgrade_modal_shown_session') === 'true'
+    }
+    return false
+  })
 
   const storyId = params.id as string
 
@@ -56,7 +62,7 @@ export default function StoryPage() {
         const result = await response.json()
         if (result.success && result.data) {
           setStory(result.data)
-          
+
           // Show upgrade modal after first story completion (emotional moment)
           // Only show once per session and only if trial was just completed
           if (
@@ -69,6 +75,10 @@ export default function StoryPage() {
             setTimeout(() => {
               setShowUpgradeModal(true)
               setHasShownModal(true)
+              // Persist to sessionStorage so it won't show again this session
+              if (typeof window !== 'undefined') {
+                sessionStorage.setItem('upgrade_modal_shown_session', 'true')
+              }
             }, 3000) // Show after 3 seconds
           }
         } else {

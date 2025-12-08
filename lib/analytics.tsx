@@ -15,7 +15,7 @@ function usePageView() {
     if (!GA_ID) return
 
     const url = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : '')
-    
+
     // Send page view to Google Analytics
     if (typeof window !== 'undefined' && (window as any).gtag) {
       (window as any).gtag('config', GA_ID, {
@@ -56,9 +56,7 @@ export function GoogleAnalytics() {
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', '${GA_ID}', {
-              page_path: window.location.pathname,
-            });
+            gtag('config', '${GA_ID}');
           `,
         }}
       />
@@ -93,18 +91,18 @@ export const analytics = {
   storyShared: (method: string) => trackEvent('story_shared', 'stories', method),
   storyPrinted: () => trackEvent('story_printed', 'stories'),
   pdfDownloaded: () => trackEvent('pdf_downloaded', 'stories'),
-  
+
   // User events
   userSignedUp: () => trackEvent('sign_up', 'users'),
   userLoggedIn: () => trackEvent('login', 'users'),
   profileCreated: () => trackEvent('profile_created', 'users'),
   childProfileCreated: () => trackEvent('child_profile_created', 'users'),
-  
+
   // Subscription events
   subscriptionStarted: (tier: string) => trackEvent('subscription_started', 'payments', tier),
   upgradeClicked: (tier: string) => trackEvent('upgrade_clicked', 'payments', tier),
   trialCompleted: () => trackEvent('trial_completed', 'payments'),
-  
+
   // Feature usage
   audioPlayStarted: () => trackEvent('audio_play_started', 'features'),
   bedtimeModeEnabled: () => trackEvent('bedtime_mode_enabled', 'features'),

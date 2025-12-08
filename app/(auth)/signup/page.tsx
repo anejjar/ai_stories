@@ -72,28 +72,20 @@ export default function SignupPage() {
     }
 
     if (user) {
-      try {
-        // Create user profile in Supabase
-        await createUserProfile(user, 'trial')
-        // Redirect to story creation page
-        router.push('/create')
-      } catch (profileError: any) {
-        console.error('Error creating user profile:', profileError)
-        const errorMessage = profileError?.message || profileError?.error?.message || 'Unknown error'
-        const errorCode = profileError?.code || profileError?.error?.code || ''
-        
-        // Check if it's an RLS/permission error
-        if (errorCode === '42501' || errorMessage.includes('permission') || errorMessage.includes('policy')) {
-          setError('Profile setup failed due to permissions. Please check your database setup and RLS policies. Error: ' + errorMessage)
-        } else {
-          setError(`Account created but profile setup failed: ${errorMessage}. Please check the browser console for details.`)
-        }
-        setLoading(false)
-      }
+      // Wait for session to be fully established
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      // Database trigger automatically creates user profile
+      // Redirect to library
+      window.location.href = '/library'
     } else {
-      // User might need to confirm email first
-      setError('Account created! Please check your email to confirm your account, then try logging in.')
+      // Email confirmation required
+      setError('✅ Account created! Please check your email to confirm your account before signing in.')
       setLoading(false)
+      // Auto-redirect to login after 3 seconds
+      setTimeout(() => {
+        router.push('/login')
+      }, 3000)
     }
   }
 
@@ -131,7 +123,7 @@ export default function SignupPage() {
       <div className="absolute bottom-40 left-20 text-5xl animate-float opacity-30" style={{ animationDelay: '2s' }}>✨</div>
       <div className="absolute bottom-60 right-10 text-4xl animate-bounce-slow opacity-20">🎈</div>
       <div className="absolute top-1/2 left-20 text-4xl animate-bounce-slow opacity-20">🎨</div>
-      
+
       <Card className="w-full max-w-md border-4 border-pink-300 shadow-2xl bg-white/95 backdrop-blur-sm relative z-10">
         <CardHeader className="space-y-2 bg-gradient-to-r from-pink-100 to-purple-100 rounded-t-lg border-b-4 border-pink-200">
           <div className="flex justify-center mb-2">

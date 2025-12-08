@@ -20,7 +20,7 @@ async function getUserProfile(userId: string) {
   if (error || !data) {
     return null
   }
-  
+
   return {
     subscriptionTier: data.subscription_tier || 'trial',
   }
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
         success: false,
         error: 'Too many requests. Please wait before creating another story.',
       },
-      { 
+      {
         status: 429,
         headers: getRateLimitHeaders(rateLimitResult)
       }
@@ -190,17 +190,17 @@ export async function POST(request: NextRequest) {
     // Content moderation - validate for kid-safe content
     const validation = isMultiChild
       ? validateStoryInput({
-          childName: storyInput.children![0].name, // Use first child for validation
-          adjectives: storyInput.children![0].adjectives,
-          theme: storyInput.theme,
-          moral: storyInput.moral,
-        })
+        childName: storyInput.children![0].name, // Use first child for validation
+        adjectives: storyInput.children![0].adjectives,
+        theme: storyInput.theme,
+        moral: storyInput.moral,
+      })
       : validateStoryInput({
-          childName: storyInput.childName!,
-          adjectives: storyInput.adjectives!,
-          theme: storyInput.theme,
-          moral: storyInput.moral,
-        })
+        childName: storyInput.childName!,
+        adjectives: storyInput.adjectives!,
+        theme: storyInput.theme,
+        moral: storyInput.moral,
+      })
 
     if (!validation.isValid) {
       return NextResponse.json<ApiResponse>(
@@ -214,26 +214,26 @@ export async function POST(request: NextRequest) {
 
     // Generate story using configured AI provider with fallback
     const providerManager = getProviderManager()
-    
+
     // Prepare generation request - support both single and multi-child
     const generationRequest = isMultiChild
       ? {
-          children: storyInput.children!,
-          theme: storyInput.theme,
-          moral: storyInput.moral,
-          templateId: storyInput.templateId,
-          // For backward compatibility, also include first child's data
-          childName: storyInput.children![0].name,
-          adjectives: storyInput.children![0].adjectives,
-        }
+        children: storyInput.children!,
+        theme: storyInput.theme,
+        moral: storyInput.moral,
+        templateId: storyInput.templateId,
+        // For backward compatibility, also include first child's data
+        childName: storyInput.children![0].name,
+        adjectives: storyInput.children![0].adjectives,
+      }
       : {
-          childName: storyInput.childName!,
-          adjectives: storyInput.adjectives!,
-          theme: storyInput.theme,
-          moral: storyInput.moral,
-          templateId: storyInput.templateId,
-        }
-    
+        childName: storyInput.childName!,
+        adjectives: storyInput.adjectives!,
+        theme: storyInput.theme,
+        moral: storyInput.moral,
+        templateId: storyInput.templateId,
+      }
+
     const storyContent = await providerManager.generateText(generationRequest)
 
     // Generate story title
@@ -272,6 +272,9 @@ export async function POST(request: NextRequest) {
       appearance: subscriptionTier === 'pro_max' && !isMultiChild ? storyInput.appearance : undefined,
     })
 
+    // Log the data being inserted for debugging
+    console.log('Inserting story data:', JSON.stringify(storyData, null, 2))
+
     const { data: createdStory, error: insertError } = await supabaseAdmin
       .from('stories')
       .insert(storyData as any)
@@ -279,7 +282,9 @@ export async function POST(request: NextRequest) {
       .single<DatabaseStory>()
 
     if (insertError || !createdStory) {
-      throw new Error('Failed to save story to database')
+      console.error('Supabase insert error:', insertError)
+      console.error('Story data that failed:', JSON.stringify(storyData, null, 2))
+      throw new Error(`Failed to save story to database: ${insertError?.message || 'Unknown error'}`)
     }
 
     // Update trial usage if trial user
@@ -295,7 +300,7 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error creating story:', error)
-    
+
     // Handle specific error types
     if (error instanceof Error) {
       if (error.message.includes('Trial limit')) {
@@ -308,7 +313,7 @@ export async function POST(request: NextRequest) {
           { status: 403 }
         )
       }
-      
+
       if (error instanceof ProviderError || error.message.includes('API') || error.message.includes('provider')) {
         return NextResponse.json<ApiResponse>(
           {

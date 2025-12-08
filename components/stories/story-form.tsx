@@ -66,9 +66,10 @@ interface StoryFormProps {
   onSubmit: (data: StoryInput) => Promise<void>
   disabled?: boolean
   loading?: boolean
+  onShowUpgrade?: (tier: 'pro' | 'pro_max') => void
 }
 
-export function StoryForm({ onSubmit, disabled, loading }: StoryFormProps) {
+export function StoryForm({ onSubmit, disabled, loading, onShowUpgrade }: StoryFormProps) {
   const { userProfile, getAccessToken } = useAuth()
   const { canCreateStory } = useTrial()
   const [isMultiChild, setIsMultiChild] = useState(false)
@@ -90,7 +91,7 @@ export function StoryForm({ onSubmit, disabled, loading }: StoryFormProps) {
   const [childProfiles, setChildProfiles] = useState<ChildProfile[]>([])
   const [selectedProfileId, setSelectedProfileId] = useState<string>('')
   const [loadingProfiles, setLoadingProfiles] = useState(false)
-  
+
   const isProMax = userProfile?.subscriptionTier === 'pro_max'
   const isPro = userProfile?.subscriptionTier === 'pro' || isProMax
   const showProMaxUpsell = !isProMax
@@ -101,6 +102,31 @@ export function StoryForm({ onSubmit, disabled, loading }: StoryFormProps) {
       fetchChildProfiles()
     }
   }, [isProMax])
+
+  // Loading messages rotation
+  const [loadingMessage, setLoadingMessage] = useState('Generating plot...')
+
+  useEffect(() => {
+    if (!loading) return
+
+    const messages = [
+      'Generating plot...',
+      'Creating characters...',
+      'Weaving magic...',
+      'Writing the ending...',
+      'Polishing the story...',
+      'Adding sparkles...',
+      'Almost there...'
+    ]
+
+    let currentIndex = 0
+    const interval = setInterval(() => {
+      currentIndex = (currentIndex + 1) % messages.length
+      setLoadingMessage(messages[currentIndex])
+    }, 2500)
+
+    return () => clearInterval(interval)
+  }, [loading])
 
   const fetchChildProfiles = async () => {
     if (!isProMax) return
@@ -209,6 +235,13 @@ export function StoryForm({ onSubmit, disabled, loading }: StoryFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Check trial limit
+    if (!canCreateStory) {
+      onShowUpgrade?.('pro')
+      return
+    }
+
     setError('')
 
     // Validation
@@ -243,30 +276,30 @@ export function StoryForm({ onSubmit, disabled, loading }: StoryFormProps) {
 
     const storyInput: StoryInput = isMultiChild
       ? {
-          children: children.map((child) => ({
-            name: child.name.trim(),
-            adjectives: child.adjectives,
-            appearance: isProMax && (child.appearance?.skinTone || child.appearance?.hairColor || child.appearance?.hairStyle)
-              ? child.appearance
-              : undefined,
-            profileId: child.profileId
-          })),
-          theme,
-          moral: moral.trim() || undefined,
-          generateImages: isProMax && false,
-          templateId: templateId || undefined,
-        }
-      : {
-          childName: childName.trim(),
-          adjectives,
-          theme,
-          moral: moral.trim() || undefined,
-          generateImages: isProMax && false,
-          templateId: templateId || undefined,
-          appearance: isProMax && (appearance.skinTone || appearance.hairColor || appearance.hairStyle) 
-            ? appearance 
+        children: children.map((child) => ({
+          name: child.name.trim(),
+          adjectives: child.adjectives,
+          appearance: isProMax && (child.appearance?.skinTone || child.appearance?.hairColor || child.appearance?.hairStyle)
+            ? child.appearance
             : undefined,
-        }
+          profileId: child.profileId
+        })),
+        theme,
+        moral: moral.trim() || undefined,
+        generateImages: isProMax && false,
+        templateId: templateId || undefined,
+      }
+      : {
+        childName: childName.trim(),
+        adjectives,
+        theme,
+        moral: moral.trim() || undefined,
+        generateImages: isProMax && false,
+        templateId: templateId || undefined,
+        appearance: isProMax && (appearance.skinTone || appearance.hairColor || appearance.hairStyle)
+          ? appearance
+          : undefined,
+      }
 
     try {
       await onSubmit(storyInput)
@@ -414,8 +447,8 @@ export function StoryForm({ onSubmit, disabled, loading }: StoryFormProps) {
 
                   {isProMax && childProfiles.length > 0 && (
                     <div className="mb-2">
-                      <Select 
-                        value={child.profileId || 'none'} 
+                      <Select
+                        value={child.profileId || 'none'}
                         onValueChange={(val) => handleChildProfileSelect(childIndex, val === 'none' ? '' : val)}
                       >
                         <SelectTrigger className="h-8 text-sm bg-white border-purple-200">
@@ -499,11 +532,11 @@ export function StoryForm({ onSubmit, disabled, loading }: StoryFormProps) {
                         </Badge>
                       </label>
                       {child.appearance ? (
-                         <div className="text-xs text-gray-600 bg-white p-2 rounded border border-gray-200">
-                           {child.appearance.skinTone && `Skin: ${child.appearance.skinTone}, `}
-                           {child.appearance.hairColor && `Hair: ${child.appearance.hairColor} `}
-                           {child.appearance.hairStyle && `(${child.appearance.hairStyle})`}
-                         </div>
+                        <div className="text-xs text-gray-600 bg-white p-2 rounded border border-gray-200">
+                          {child.appearance.skinTone && `Skin: ${child.appearance.skinTone}, `}
+                          {child.appearance.hairColor && `Hair: ${child.appearance.hairColor} `}
+                          {child.appearance.hairStyle && `(${child.appearance.hairStyle})`}
+                        </div>
                       ) : (
                         <div className="text-xs text-gray-400 italic">No appearance set (images will be random)</div>
                       )}
@@ -519,76 +552,76 @@ export function StoryForm({ onSubmit, disabled, loading }: StoryFormProps) {
       {/* Single Child Adjectives (only show if not multi-child) */}
       {!isMultiChild && (
         <div className="space-y-3">
-        <label className="text-base font-bold text-gray-700 flex items-center gap-2">
-          <span className="text-2xl">⭐</span>
-          Adjectives <span className="text-red-500">*</span>
-        </label>
-        <p className="text-sm text-gray-600 mb-3 font-semibold">
-          Select or add adjectives that describe your child! 🎨
-        </p>
-        
-        <div className="flex flex-wrap gap-2 mb-3 p-3 bg-yellow-50 rounded-xl border-2 border-yellow-200">
-          {adjectives.map((adj) => (
-            <Badge
-              key={adj}
-              variant="secondary"
-              className="flex items-center gap-1 bg-gradient-to-r from-pink-400 to-purple-400 text-white font-bold px-3 py-1 rounded-full border-2 border-pink-500"
-            >
-              {adj}
-              <button
-                type="button"
-                onClick={() => handleRemoveAdjective(adj)}
-                className="ml-1 hover:text-red-600 transition-colors"
-                disabled={disabled || loading}
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </Badge>
-          ))}
-        </div>
+          <label className="text-base font-bold text-gray-700 flex items-center gap-2">
+            <span className="text-2xl">⭐</span>
+            Adjectives <span className="text-red-500">*</span>
+          </label>
+          <p className="text-sm text-gray-600 mb-3 font-semibold">
+            Select or add adjectives that describe your child! 🎨
+          </p>
 
-        <div className="flex flex-wrap gap-2 mb-3">
-          {PREDEFINED_ADJECTIVES.map((adj) => (
+          <div className="flex flex-wrap gap-2 mb-3 p-3 bg-yellow-50 rounded-xl border-2 border-yellow-200">
+            {adjectives.map((adj) => (
+              <Badge
+                key={adj}
+                variant="secondary"
+                className="flex items-center gap-1 bg-gradient-to-r from-pink-400 to-purple-400 text-white font-bold px-3 py-1 rounded-full border-2 border-pink-500"
+              >
+                {adj}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveAdjective(adj)}
+                  className="ml-1 hover:text-red-600 transition-colors"
+                  disabled={disabled || loading}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap gap-2 mb-3">
+            {PREDEFINED_ADJECTIVES.map((adj) => (
+              <Button
+                key={adj}
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => handleAddAdjective(adj)}
+                disabled={disabled || loading || adjectives.includes(adj)}
+                className="rounded-full border-2 border-purple-300 hover:bg-purple-100 hover:border-purple-500 font-semibold transition-all transform hover:scale-105"
+              >
+                {adj}
+              </Button>
+            ))}
+          </div>
+
+          <div className="flex gap-2">
+            <Input
+              type="text"
+              placeholder="Add custom adjective ✨"
+              value={customAdjective}
+              onChange={(e) => setCustomAdjective(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  handleAddCustomAdjective()
+                }
+              }}
+              disabled={disabled || loading}
+              className="rounded-xl border-2 border-purple-300 focus:border-purple-500"
+            />
             <Button
-              key={adj}
               type="button"
               variant="outline"
-              size="sm"
-              onClick={() => handleAddAdjective(adj)}
-              disabled={disabled || loading || adjectives.includes(adj)}
-              className="rounded-full border-2 border-purple-300 hover:bg-purple-100 hover:border-purple-500 font-semibold transition-all transform hover:scale-105"
+              onClick={handleAddCustomAdjective}
+              disabled={disabled || loading || !customAdjective.trim()}
+              className="rounded-full border-2 border-purple-400 hover:bg-purple-100 font-bold"
             >
-              {adj}
+              Add ➕
             </Button>
-          ))}
+          </div>
         </div>
-
-        <div className="flex gap-2">
-          <Input
-            type="text"
-            placeholder="Add custom adjective ✨"
-            value={customAdjective}
-            onChange={(e) => setCustomAdjective(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                handleAddCustomAdjective()
-              }
-            }}
-            disabled={disabled || loading}
-            className="rounded-xl border-2 border-purple-300 focus:border-purple-500"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleAddCustomAdjective}
-            disabled={disabled || loading || !customAdjective.trim()}
-            className="rounded-full border-2 border-purple-400 hover:bg-purple-100 font-bold"
-          >
-            Add ➕
-          </Button>
-        </div>
-      </div>
       )}
 
       <div className="space-y-2">
@@ -690,8 +723,8 @@ export function StoryForm({ onSubmit, disabled, loading }: StoryFormProps) {
             </Badge>
           </div>
           <p className="text-sm text-gray-600 mb-4 font-semibold">
-            Create and manage child profiles in your <Link href="/profile" className="text-purple-600 hover:text-purple-700 underline font-bold">Profile</Link> page! 
-            You can customize each child's appearance and upload photos (safely processed by AI). 
+            Create and manage child profiles in your <Link href="/profile" className="text-purple-600 hover:text-purple-700 underline font-bold">Profile</Link> page!
+            You can customize each child's appearance and upload photos (safely processed by AI).
             Then use those profiles when creating stories! ✨
           </p>
         </div>
@@ -718,8 +751,8 @@ export function StoryForm({ onSubmit, disabled, loading }: StoryFormProps) {
               <Button
                 type="button"
                 variant="outline"
-                disabled
-                className="rounded-full border-2 border-yellow-400 bg-white/80 font-bold cursor-not-allowed opacity-75"
+                onClick={() => onShowUpgrade?.('pro_max')}
+                className="rounded-full border-2 border-yellow-400 bg-white/80 font-bold hover:bg-yellow-50 hover:text-yellow-700 transition-colors"
               >
                 <Lock className="h-4 w-4 mr-2" />
                 Unlock with PRO MAX 🚀
@@ -732,13 +765,13 @@ export function StoryForm({ onSubmit, disabled, loading }: StoryFormProps) {
       <Button
         type="submit"
         className="w-full rounded-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-lg py-6 font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
-        disabled={disabled || loading || !canCreateStory}
+        disabled={disabled || loading}
         size="lg"
       >
         {loading ? (
           <>
             <span className="animate-spin mr-2">⏳</span>
-            Creating Story...
+            {loadingMessage}
           </>
         ) : !canCreateStory ? (
           <>

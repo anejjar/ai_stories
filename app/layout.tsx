@@ -3,6 +3,7 @@ import { Comic_Neue, Nunito } from 'next/font/google'
 import { QueryProvider } from '@/lib/providers/query-provider'
 import { Toaster } from '@/components/ui/toaster'
 import { GoogleAnalytics, AnalyticsTracker } from '@/lib/analytics'
+import { SoftwareApplicationSchema, OrganizationSchema } from '@/components/schema/schema-markup'
 import './globals.css'
 
 const comicNeue = Comic_Neue({
@@ -17,39 +18,62 @@ const nunito = Nunito({
   variable: '--font-nunito',
 })
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://aistories.app'
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://safeaistories.com'
 
 export const metadata: Metadata = {
   title: {
-    default: 'AI Stories - Personalized Bedtime Stories for Kids',
-    template: '%s | AI Stories',
+    default: 'AI Bedtime Stories Kids Love | Safe AI Stories Generator',
+    template: '%s | Safe AI Stories',
   },
-  description: 'Create magical, personalized bedtime stories starring your child. AI-powered story generation with beautiful illustrations. Perfect for parents who want unique stories for their little ones.',
-  keywords: ['bedtime stories', 'personalized stories', 'kids stories', 'AI stories', 'children books', 'story generator', 'custom stories'],
-  authors: [{ name: 'AI Stories' }],
-  creator: 'AI Stories',
-  publisher: 'AI Stories',
+  description: 'Create magical, personalized bedtime stories in seconds with AI. Safe, ad-free tales your kids will love. Try free tonight—sweet dreams guaranteed! ✨',
+  keywords: [
+    // Primary Keywords
+    'ai bedtime stories',
+    'bedtime story generator',
+    'personalized bedtime stories',
+    'ai story generator for kids',
+    'custom bedtime stories',
+    // Long-tail Keywords
+    'bedtime stories with child\'s name',
+    'ai generated children\'s stories',
+    'personalized story book for kids',
+    'make your own bedtime story',
+    'bedtime story app for toddlers',
+    'safe ai stories for children',
+    'bedtime story creator online',
+    'custom children\'s book generator',
+    'ai storytelling for kids',
+    'personalized fairy tales for children',
+    'bedtime stories without ads',
+    'create bedtime story with my child',
+    'ai bedtime story maker',
+    'educational bedtime stories ai',
+    'instant bedtime story generator',
+  ],
+  authors: [{ name: 'Safe AI Stories' }],
+  creator: 'Safe AI Stories',
+  publisher: 'Safe AI Stories',
   metadataBase: new URL(appUrl),
   openGraph: {
     type: 'website',
     locale: 'en_US',
     url: appUrl,
-    siteName: 'AI Stories',
-    title: 'AI Stories - Personalized Bedtime Stories for Kids',
-    description: 'Create magical, personalized bedtime stories starring your child. AI-powered story generation with beautiful illustrations.',
+    siteName: 'Safe AI Stories',
+    title: 'AI Bedtime Stories Kids Love | Safe AI Stories Generator',
+    description: 'Create magical, personalized bedtime stories in seconds with AI. Safe, ad-free tales your kids will love. Try free tonight—sweet dreams guaranteed! ✨',
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'AI Stories - Personalized Bedtime Stories',
+        alt: 'Safe AI Stories - Personalized AI Bedtime Stories for Kids',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AI Stories - Personalized Bedtime Stories for Kids',
-    description: 'Create magical, personalized bedtime stories starring your child.',
+    title: 'AI Bedtime Stories Kids Love | Safe AI Stories',
+    description: 'Create magical, personalized bedtime stories in seconds with AI. Safe, ad-free tales your kids will love. Try free tonight! ✨',
     images: ['/og-image.png'],
   },
   robots: {
@@ -90,6 +114,8 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <GoogleAnalytics />
+        <SoftwareApplicationSchema />
+        <OrganizationSchema />
       </head>
       <body className={`${comicNeue.variable} ${nunito.variable} font-sans`}>
         <QueryProvider>

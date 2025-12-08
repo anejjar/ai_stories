@@ -23,8 +23,11 @@ export function MainNav() {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
   const handleLogout = async () => {
-    await signOutUser()
-    router.push('/login')
+    const { error } = await signOutUser()
+    if (!error) {
+      // Force full page reload to clear all state and redirect to home
+      window.location.href = '/'
+    }
   }
 
   const navLinks = [

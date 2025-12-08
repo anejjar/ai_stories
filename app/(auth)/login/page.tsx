@@ -50,8 +50,15 @@ export default function LoginPage() {
     }
 
     if (user) {
-      // Redirect to dashboard/library
-      router.push('/library')
+      // Wait a moment for session to be fully established
+      // This prevents middleware from redirecting back to login
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      // Use window.location.href for full page reload
+      window.location.href = '/library'
+    } else {
+      setError('Login failed. Please try again.')
+      setLoading(false)
     }
   }
 
@@ -87,7 +94,7 @@ export default function LoginPage() {
       <div className="absolute top-40 right-20 text-5xl animate-float opacity-30" style={{ animationDelay: '1s' }}>⭐</div>
       <div className="absolute bottom-40 left-20 text-5xl animate-float opacity-30" style={{ animationDelay: '2s' }}>✨</div>
       <div className="absolute bottom-60 right-10 text-4xl animate-bounce-slow opacity-20">🎈</div>
-      
+
       <Card className="w-full max-w-md border-4 border-pink-300 shadow-2xl bg-white/95 backdrop-blur-sm relative z-10">
         <CardHeader className="space-y-2 bg-gradient-to-r from-pink-100 to-purple-100 rounded-t-lg border-b-4 border-pink-200">
           <div className="flex justify-center mb-2">

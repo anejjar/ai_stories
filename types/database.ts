@@ -216,12 +216,12 @@ export function storyToDatabaseStory(story: Partial<Story>): Partial<DatabaseSto
     children: story.children || null, // New: multi-child support
     theme: story.theme,
     moral: story.moral || null,
-    has_images: story.hasImages,
+    has_images: story.hasImages ?? false, // Ensure boolean, never undefined
     image_urls: story.imageUrls || null,
     appearance: story.appearance || null, // Deprecated: kept for backward compatibility
     parent_story_id: story.parentStoryId || null,
     draft_number: story.draftNumber || null,
-    is_selected_draft: story.isSelectedDraft || false,
+    is_selected_draft: story.isSelectedDraft ?? false, // Ensure boolean, never undefined
   } as Partial<DatabaseStory>
 }
 

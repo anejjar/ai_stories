@@ -18,8 +18,8 @@ import type {
   ImageProviderType,
   TextGenerationRequest,
   ImageGenerationRequest,
-  ProviderError,
 } from './types'
+import { ProviderError } from './types'
 
 export class ProviderManager {
   private textProviders: AIProviderType[]
@@ -47,7 +47,7 @@ export class ProviderManager {
    */
   getTextProviders(): AIProvider[] {
     const providers: AIProvider[] = []
-    
+
     for (const type of this.textProviders) {
       const provider = getProvider(type)
       if (provider) {
@@ -74,7 +74,7 @@ export class ProviderManager {
    */
   getImageProviders(): ImageProvider[] {
     const providers: ImageProvider[] = []
-    
+
     for (const type of this.imageProviders) {
       const provider = getImageProvider(type)
       if (provider) {
@@ -121,7 +121,7 @@ export class ProviderManager {
       if (error instanceof ProviderError) {
         throw error
       }
-      
+
       throw new ProviderError(
         'All text generation providers failed',
         'all',
@@ -145,7 +145,7 @@ export class ProviderManager {
 
     // Filter providers that support image analysis
     const capableProviders = providers.filter(p => typeof p.analyzeImage === 'function')
-    
+
     if (capableProviders.length === 0) {
       throw new ProviderError(
         'No configured providers support image analysis. Please configure OpenAI or Gemini.',
@@ -180,7 +180,7 @@ export class ProviderManager {
       if (error instanceof ProviderError) {
         throw error
       }
-      
+
       throw new ProviderError(
         'All image analysis providers failed',
         'all',
@@ -225,7 +225,7 @@ export class ProviderManager {
       if (error instanceof ProviderError) {
         throw error
       }
-      
+
       throw new ProviderError(
         'All image generation providers failed',
         'all',
