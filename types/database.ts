@@ -1,6 +1,6 @@
 // Supabase Database Types and Helper Functions
 
-import type { User, Story, TrialUsage, Payment, SubscriptionTier, ChildAppearance, Child, ChildProfile } from './index'
+import type { User, Story, TrialUsage, Payment, SubscriptionTier, ChildAppearance, Child, ChildProfile, BookPage } from './index'
 
 // Database User Row (matches PostgreSQL users table)
 export interface DatabaseUser {
@@ -32,6 +32,8 @@ export interface DatabaseStory {
   parent_story_id: string | null // If set, this is a draft of another story
   draft_number: number | null // Draft number (1, 2, 3, etc.)
   is_selected_draft: boolean | null // True if this draft was selected as final
+  is_illustrated_book: boolean | null // True if this is an illustrated book format (PRO MAX feature)
+  book_pages: BookPage[] | null // JSONB array of structured pages with illustrations (PRO MAX feature)
   created_at: string // ISO timestamp
   updated_at: string // ISO timestamp
 }
@@ -68,6 +70,7 @@ export interface DatabaseChildProfile {
   birth_date: string | null // ISO date string
   appearance: ChildAppearance | null // JSONB
   ai_generated_image_url: string | null
+  ai_description: string | null // AI-generated description for consistent illustration generation
   original_image_uploaded_at: string | null // ISO timestamp
   created_at: string // ISO timestamp
   updated_at: string // ISO timestamp
@@ -180,6 +183,20 @@ export function databaseStoryToStory(data: DatabaseStory): Story {
     }
   }
 
+  // Parse book_pages if it's a string (JSONB from database)
+  let bookPages: BookPage[] | undefined = undefined
+  if (data.book_pages) {
+    if (typeof data.book_pages === 'string') {
+      try {
+        bookPages = JSON.parse(data.book_pages) as BookPage[]
+      } catch {
+        bookPages = undefined
+      }
+    } else if (Array.isArray(data.book_pages)) {
+      bookPages = data.book_pages as BookPage[]
+    }
+  }
+
   return {
     id: data.id,
     userId: data.user_id,
@@ -196,6 +213,8 @@ export function databaseStoryToStory(data: DatabaseStory): Story {
     parentStoryId: data.parent_story_id || undefined,
     draftNumber: data.draft_number || undefined,
     isSelectedDraft: data.is_selected_draft || false,
+    isIllustratedBook: data.is_illustrated_book || false,
+    bookPages,
     createdAt: validCreatedAt,
     updatedAt: validUpdatedAt,
   }
@@ -222,6 +241,8 @@ export function storyToDatabaseStory(story: Partial<Story>): Partial<DatabaseSto
     parent_story_id: story.parentStoryId || null,
     draft_number: story.draftNumber || null,
     is_selected_draft: story.isSelectedDraft ?? false, // Ensure boolean, never undefined
+    is_illustrated_book: story.isIllustratedBook ?? false, // Ensure boolean, never undefined
+    book_pages: story.bookPages || null, // JSONB array of pages
   } as Partial<DatabaseStory>
 }
 
@@ -292,6 +313,9 @@ export function databaseChildProfileToChildProfile(data: DatabaseChildProfile): 
     birthDate: data.birth_date ? new Date(data.birth_date) : undefined,
     appearance: data.appearance || undefined,
     aiGeneratedImageUrl: data.ai_generated_image_url || undefined,
+    ai_generated_image_url: data.ai_generated_image_url || undefined,
+    aiDescription: data.ai_description || undefined,
+    ai_description: data.ai_description || undefined,
     originalImageUploadedAt: data.original_image_uploaded_at ? new Date(data.original_image_uploaded_at) : undefined,
     createdAt: new Date(data.created_at),
     updatedAt: new Date(data.updated_at),
@@ -305,7 +329,8 @@ export function childProfileToDatabaseChildProfile(profile: Partial<ChildProfile
     nickname: profile.nickname || null,
     birth_date: profile.birthDate ? profile.birthDate.toISOString().split('T')[0] : null,
     appearance: profile.appearance || null,
-    ai_generated_image_url: profile.aiGeneratedImageUrl || null,
+    ai_generated_image_url: profile.aiGeneratedImageUrl || profile.ai_generated_image_url || null,
+    ai_description: profile.aiDescription || profile.ai_description || null,
     original_image_uploaded_at: profile.originalImageUploadedAt ? profile.originalImageUploadedAt.toISOString() : null,
   } as Partial<DatabaseChildProfile>
 }

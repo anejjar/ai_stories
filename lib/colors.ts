@@ -333,7 +333,7 @@ export const OCEAN_ADVENTURE_PALETTE: ColorPalette = {
 // ============================================
 // ACTIVE PALETTE - Change this to switch themes!
 // ============================================
-export const ACTIVE_PALETTE = OCEAN_ADVENTURE_PALETTE
+export const ACTIVE_PALETTE = RAINBOW_KIDS_PALETTE
 
 // Export available palettes
 export const AVAILABLE_PALETTES = {

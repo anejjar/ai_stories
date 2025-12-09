@@ -91,10 +91,15 @@ export function StoryForm({ onSubmit, disabled, loading, onShowUpgrade }: StoryF
   const [childProfiles, setChildProfiles] = useState<ChildProfile[]>([])
   const [selectedProfileId, setSelectedProfileId] = useState<string>('')
   const [loadingProfiles, setLoadingProfiles] = useState(false)
+  const [generateIllustratedBook, setGenerateIllustratedBook] = useState(false)
 
   const isProMax = userProfile?.subscriptionTier === 'pro_max'
   const isPro = userProfile?.subscriptionTier === 'pro' || isProMax
   const showProMaxUpsell = !isProMax
+
+  // Check if selected profile has an image for illustrated book feature
+  const selectedProfile = childProfiles.find((p) => p.id === selectedProfileId)
+  const canGenerateIllustratedBook = isProMax && selectedProfile?.ai_generated_image_url
 
   // Fetch child profiles for PRO MAX users
   useEffect(() => {
@@ -286,7 +291,7 @@ export function StoryForm({ onSubmit, disabled, loading, onShowUpgrade }: StoryF
         })),
         theme,
         moral: moral.trim() || undefined,
-        generateImages: isProMax && false,
+        generateImages: generateIllustratedBook,
         templateId: templateId || undefined,
       }
       : {
@@ -294,11 +299,12 @@ export function StoryForm({ onSubmit, disabled, loading, onShowUpgrade }: StoryF
         adjectives,
         theme,
         moral: moral.trim() || undefined,
-        generateImages: isProMax && false,
+        generateImages: generateIllustratedBook,
         templateId: templateId || undefined,
         appearance: isProMax && (appearance.skinTone || appearance.hairColor || appearance.hairStyle)
           ? appearance
           : undefined,
+        profileId: selectedProfileId || undefined,
       }
 
     try {
@@ -730,6 +736,37 @@ export function StoryForm({ onSubmit, disabled, loading, onShowUpgrade }: StoryF
         </div>
       )}
 
+      {/* Illustrated Book Option - PRO MAX Only */}
+      {isProMax && canGenerateIllustratedBook && (
+        <div className="p-5 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl border-3 border-amber-300">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={generateIllustratedBook}
+              onChange={(e) => setGenerateIllustratedBook(e.target.checked)}
+              disabled={disabled || loading}
+              className="w-5 h-5 rounded border-2 border-amber-400 text-amber-600 focus:ring-amber-500"
+            />
+            <div className="flex items-center gap-2 flex-1">
+              <span className="text-2xl">📖</span>
+              <span className="font-bold text-gray-800 text-base">
+                Generate Illustrated Story Book
+              </span>
+              <Badge className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-xs font-bold px-2 border border-yellow-500">
+                PRO MAX 👑
+              </Badge>
+            </div>
+          </label>
+          <p className="text-sm text-gray-700 mt-3 ml-8 font-medium">
+            Create a beautiful book-format story with 5-7 AI-generated illustrations featuring <strong>{selectedProfile?.name}</strong> as the hero!
+            Illustrations will be consistent throughout and follow your selected theme. ✨
+          </p>
+          <p className="text-xs text-amber-700 mt-2 ml-8 italic">
+            Note: Illustrated book generation takes 2-3 minutes and no further enhancements will be available.
+          </p>
+        </div>
+      )}
+
       {/* Soft Upsell: PRO MAX Image Generation */}
       {showProMaxUpsell && (
         <div className="relative p-6 rounded-2xl border-4 border-yellow-300 bg-gradient-to-br from-yellow-50 to-orange-50 overflow-hidden">
@@ -737,16 +774,17 @@ export function StoryForm({ onSubmit, disabled, loading, onShowUpgrade }: StoryF
             <Crown className="h-6 w-6 text-yellow-500 animate-sparkle" />
           </div>
           <div className="flex items-start gap-4">
-            <div className="text-4xl">🎨</div>
+            <div className="text-4xl">📖</div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <h3 className="font-bold text-lg text-gray-800">Add Magical Illustrations</h3>
+                <h3 className="font-bold text-lg text-gray-800">Create Illustrated Story Books</h3>
                 <Badge className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white font-bold border-2 border-yellow-500 rounded-full px-3">
                   PRO MAX 👑
                 </Badge>
               </div>
               <p className="text-sm text-gray-700 mb-3 font-semibold">
-                Turn your story into a beautiful picture book with AI-generated illustrations featuring your child! ✨
+                Upgrade to PRO MAX to create beautiful illustrated story books with your child as the hero!
+                Generate 5-7 consistent AI illustrations that follow your selected theme and bring your story to life. ✨
               </p>
               <Button
                 type="button"

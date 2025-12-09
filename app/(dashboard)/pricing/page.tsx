@@ -25,9 +25,9 @@ export const metadata: Metadata = {
 
 export default function PricingPage() {
     return (
-        <main className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
+        <main className="min-h-screen bg-gradient-hero">
             {/* Header */}
-            <section className="bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 py-20 px-4">
+            <section className="bg-gradient-primary py-20 px-4">
                 <div className="container mx-auto max-w-6xl text-center">
                     <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 drop-shadow-lg">
                         Choose Your Perfect Plan
@@ -50,20 +50,20 @@ export default function PricingPage() {
                 <div className="container mx-auto max-w-6xl">
                     <div className="grid md:grid-cols-3 gap-8">
                         {/* Free Trial */}
-                        <Card className="border-4 border-blue-300 bg-white shadow-2xl relative">
-                            <CardHeader className="bg-gradient-to-r from-blue-100 to-cyan-100 border-b-4 border-blue-200">
+                        <Card className="border-4 border-border bg-card shadow-2xl relative">
+                            <CardHeader className="bg-gradient-secondary border-b-4 border-border">
                                 <div className="flex items-center gap-3 mb-2">
-                                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center">
+                                    <div className="h-12 w-12 rounded-full bg-gradient-primary flex items-center justify-center">
                                         <Star className="h-6 w-6 text-white" />
                                     </div>
                                     <div>
-                                        <CardTitle className="text-2xl font-bold text-gray-800">Free Trial</CardTitle>
-                                        <p className="text-sm text-gray-600 font-semibold">Try it risk-free</p>
+                                        <CardTitle className="text-2xl font-bold text-foreground">Free Trial</CardTitle>
+                                        <p className="text-sm text-muted-foreground font-semibold">Try it risk-free</p>
                                     </div>
                                 </div>
-                                <div className="text-4xl font-bold text-gray-800">
+                                <div className="text-4xl font-bold text-foreground">
                                     $0
-                                    <span className="text-lg text-gray-600 font-normal">/forever</span>
+                                    <span className="text-lg text-muted-foreground font-normal">/forever</span>
                                 </div>
                             </CardHeader>
                             <CardContent className="pt-6">
@@ -76,12 +76,12 @@ export default function PricingPage() {
                                     ].map((feature, idx) => (
                                         <li key={idx} className="flex items-center gap-3">
                                             <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-                                            <span className="text-gray-700">{feature}</span>
+                                            <span className="text-foreground">{feature}</span>
                                         </li>
                                     ))}
                                 </ul>
                                 <Link href="/signup">
-                                    <Button className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold py-6 rounded-full shadow-lg">
+                                    <Button className="w-full bg-gradient-primary hover:opacity-90 text-white font-bold py-6 rounded-full shadow-lg">
                                         Start Free Trial
                                     </Button>
                                 </Link>
@@ -89,20 +89,20 @@ export default function PricingPage() {
                         </Card>
 
                         {/* PRO Plan */}
-                        <Card className="border-4 border-pink-300 bg-white shadow-2xl relative">
-                            <CardHeader className="bg-gradient-to-r from-pink-100 to-purple-100 border-b-4 border-pink-200">
+                        <Card className="border-4 border-primary bg-card shadow-2xl relative">
+                            <CardHeader className="bg-gradient-primary border-b-4 border-primary">
                                 <div className="flex items-center gap-3 mb-2">
-                                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center">
+                                    <div className="h-12 w-12 rounded-full bg-gradient-secondary flex items-center justify-center">
                                         <Zap className="h-6 w-6 text-white" />
                                     </div>
                                     <div>
-                                        <CardTitle className="text-2xl font-bold text-gray-800">PRO</CardTitle>
-                                        <p className="text-sm text-gray-600 font-semibold">Most popular</p>
+                                        <CardTitle className="text-2xl font-bold text-foreground">PRO</CardTitle>
+                                        <p className="text-sm text-muted-foreground font-semibold">Most popular</p>
                                     </div>
                                 </div>
-                                <div className="text-4xl font-bold text-gray-800">
+                                <div className="text-4xl font-bold text-foreground">
                                     $9.99
-                                    <span className="text-lg text-gray-600 font-normal">/month</span>
+                                    <span className="text-lg text-muted-foreground font-normal">/month</span>
                                 </div>
                             </CardHeader>
                             <CardContent className="pt-6">
@@ -118,12 +118,12 @@ export default function PricingPage() {
                                     ].map((feature, idx) => (
                                         <li key={idx} className="flex items-center gap-3">
                                             <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-                                            <span className="text-gray-700">{feature}</span>
+                                            <span className="text-foreground">{feature}</span>
                                         </li>
                                     ))}
                                 </ul>
                                 <Link href="/signup?tier=pro">
-                                    <Button className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-bold py-6 rounded-full shadow-lg">
+                                    <Button className="w-full bg-gradient-primary hover:opacity-90 text-white font-bold py-6 rounded-full shadow-lg">
                                         Get PRO Now
                                     </Button>
                                 </Link>
@@ -131,25 +131,25 @@ export default function PricingPage() {
                         </Card>
 
                         {/* PRO MAX Plan */}
-                        <Card className="border-4 border-yellow-300 bg-white shadow-2xl relative">
+                        <Card className="border-4 border-accent bg-card shadow-2xl relative">
                             <div className="absolute -top-4 right-4">
-                                <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold px-4 py-2 text-sm">
+                                <Badge className="bg-gradient-accent text-accent-foreground font-bold px-4 py-2 text-sm">
                                     ⭐ BEST VALUE
                                 </Badge>
                             </div>
-                            <CardHeader className="bg-gradient-to-r from-yellow-100 to-orange-100 border-b-4 border-yellow-200">
+                            <CardHeader className="bg-gradient-accent border-b-4 border-accent">
                                 <div className="flex items-center gap-3 mb-2">
-                                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                                    <div className="h-12 w-12 rounded-full bg-gradient-secondary flex items-center justify-center">
                                         <Crown className="h-6 w-6 text-white" />
                                     </div>
                                     <div>
-                                        <CardTitle className="text-2xl font-bold text-gray-800">PRO MAX</CardTitle>
-                                        <p className="text-sm text-gray-600 font-semibold">Premium experience</p>
+                                        <CardTitle className="text-2xl font-bold text-foreground">PRO MAX</CardTitle>
+                                        <p className="text-sm text-muted-foreground font-semibold">Premium experience</p>
                                     </div>
                                 </div>
-                                <div className="text-4xl font-bold text-gray-800">
+                                <div className="text-4xl font-bold text-foreground">
                                     $19.99
-                                    <span className="text-lg text-gray-600 font-normal">/month</span>
+                                    <span className="text-lg text-muted-foreground font-normal">/month</span>
                                 </div>
                             </CardHeader>
                             <CardContent className="pt-6">
@@ -165,12 +165,12 @@ export default function PricingPage() {
                                     ].map((feature, idx) => (
                                         <li key={idx} className="flex items-center gap-3">
                                             <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-                                            <span className="text-gray-700 font-semibold">{feature}</span>
+                                            <span className="text-foreground font-semibold">{feature}</span>
                                         </li>
                                     ))}
                                 </ul>
                                 <Link href="/signup?tier=pro_max">
-                                    <Button className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold py-6 rounded-full shadow-lg">
+                                    <Button className="w-full bg-gradient-secondary hover:opacity-90 text-white font-bold py-6 rounded-full shadow-lg">
                                         Get PRO MAX Now
                                     </Button>
                                 </Link>
@@ -181,19 +181,19 @@ export default function PricingPage() {
             </section>
 
             {/* Comparison Table */}
-            <section className="py-16 px-4 bg-white">
+            <section className="py-16 px-4 bg-card">
                 <div className="container mx-auto max-w-6xl">
-                    <h2 className="text-4xl font-bold text-center bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent mb-12">
+                    <h2 className="text-4xl font-bold text-center text-gradient-primary mb-12">
                         Compare All Features
                     </h2>
                     <div className="overflow-x-auto">
                         <table className="w-full border-collapse">
                             <thead>
-                                <tr className="bg-gradient-to-r from-pink-100 to-purple-100">
-                                    <th className="p-4 text-left font-bold text-gray-800">Feature</th>
-                                    <th className="p-4 text-center font-bold text-gray-800">Free</th>
-                                    <th className="p-4 text-center font-bold text-gray-800">PRO</th>
-                                    <th className="p-4 text-center font-bold text-gray-800">PRO MAX</th>
+                                <tr className="bg-gradient-primary">
+                                    <th className="p-4 text-left font-bold text-foreground">Feature</th>
+                                    <th className="p-4 text-center font-bold text-foreground">Free</th>
+                                    <th className="p-4 text-center font-bold text-foreground">PRO</th>
+                                    <th className="p-4 text-center font-bold text-foreground">PRO MAX</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -207,11 +207,11 @@ export default function PricingPage() {
                                     { feature: 'Custom Art Styles', free: '—', pro: '—', max: '✓' },
                                     { feature: 'Ad-Free', free: '✓', pro: '✓', max: '✓' },
                                 ].map((row, idx) => (
-                                    <tr key={idx} className="border-b border-gray-200">
-                                        <td className="p-4 font-semibold text-gray-700">{row.feature}</td>
-                                        <td className="p-4 text-center text-gray-600">{row.free}</td>
-                                        <td className="p-4 text-center text-gray-600">{row.pro}</td>
-                                        <td className="p-4 text-center text-gray-600 font-semibold">{row.max}</td>
+                                    <tr key={idx} className="border-b border-border">
+                                        <td className="p-4 font-semibold text-foreground">{row.feature}</td>
+                                        <td className="p-4 text-center text-muted-foreground">{row.free}</td>
+                                        <td className="p-4 text-center text-muted-foreground">{row.pro}</td>
+                                        <td className="p-4 text-center text-muted-foreground font-semibold">{row.max}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -223,7 +223,7 @@ export default function PricingPage() {
             {/* FAQ Section */}
             <section className="py-16 px-4">
                 <div className="container mx-auto max-w-4xl">
-                    <h2 className="text-4xl font-bold text-center bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent mb-12">
+                    <h2 className="text-4xl font-bold text-center text-gradient-primary mb-12">
                         Pricing FAQs
                     </h2>
                     <div className="space-y-6">
@@ -249,12 +249,12 @@ export default function PricingPage() {
                                 a: 'Yes! Every story passes through multiple child-safety filters. We use advanced AI content moderation and human oversight to ensure 100% kid-safe content.',
                             },
                         ].map((faq, idx) => (
-                            <Card key={idx} className="border-2 border-pink-200 bg-white shadow-lg">
+                            <Card key={idx} className="border-2 border-border bg-card shadow-lg">
                                 <CardHeader>
-                                    <CardTitle className="text-lg font-bold text-gray-800">{faq.q}</CardTitle>
+                                    <CardTitle className="text-lg font-bold text-foreground">{faq.q}</CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <p className="text-gray-700">{faq.a}</p>
+                                    <p className="text-foreground">{faq.a}</p>
                                 </CardContent>
                             </Card>
                         ))}
@@ -263,7 +263,7 @@ export default function PricingPage() {
             </section>
 
             {/* CTA Section */}
-            <section className="py-16 px-4 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500">
+            <section className="py-16 px-4 bg-gradient-primary">
                 <div className="container mx-auto max-w-4xl text-center">
                     <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
                         Ready to Transform Bedtime?

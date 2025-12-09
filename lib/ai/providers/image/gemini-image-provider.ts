@@ -26,37 +26,104 @@ export class GeminiImageProvider implements ImageProvider {
         }
 
         try {
-            // Use Gemini 2.5 Flash for image generation
-            // Note: Gemini's image generation API works differently than DALL-E
-            // This is a placeholder implementation - you may need to adjust based on actual API
-            const model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash-image' })
+            const apiKey = process.env.GEMINI_API_KEY
+            if (!apiKey) {
+                throw new Error('GEMINI_API_KEY is required for image generation')
+            }
 
-            // Gemini image generation typically returns base64 encoded images
-            // The actual implementation depends on Google's API structure
-            const result = await model.generateContent({
-                contents: [{
-                    role: 'user',
-                    parts: [{
-                        text: `Generate an image: ${request.prompt}`
-                    }]
-                }]
+            // Use Gemini 2.5 Flash Image (Nano Banana) model
+            const model = this.genAI.getGenerativeModel({ 
+                model: 'gemini-2.5-flash-image'
             })
 
-            const response = await result.response
+            // Determine aspect ratio from size
+            let aspectRatio = '1:1'
+            if (request.size === '1024x1792') {
+                aspectRatio = '9:16'
+            } else if (request.size === '1792x1024') {
+                aspectRatio = '16:9'
+            }
 
-            // Extract image URLs or base64 data from response
-            // This is a simplified implementation - adjust based on actual API response
-            const imageData = response.text()
+            // Generate content with image output
+            const result = await model.generateContent({
+                contents: [{ role: 'user', parts: [{ text: request.prompt }] }],
+                generationConfig: {
+                    responseModalities: ['IMAGE'],
+                    // @ts-ignore - imageConfig may not be in types yet
+                    imageConfig: {
+                        aspectRatio: aspectRatio
+                    }
+                }
+            })
 
-            // Return array of image URLs/data
-            return [imageData]
+            const response = result.response
+            const images: string[] = []
+
+            // Extract images from response parts
+            for (const part of response.candidates?.[0]?.content?.parts || []) {
+                if (part.inlineData) {
+                    // Convert inline data to base64 data URL
+                    const mimeType = part.inlineData.mimeType || 'image/png'
+                    const base64Data = part.inlineData.data
+                    images.push(`data:${mimeType};base64,${base64Data}`)
+                }
+            }
+
+            if (images.length === 0) {
+                throw new Error('No images generated in response')
+            }
+
+            // Handle multiple image requests
+            const count = request.count || 1
+            if (count > 1 && images.length === 1) {
+                // Make additional requests if more images needed
+                const additionalPromises = []
+                for (let i = 1; i < count; i++) {
+                    additionalPromises.push(
+                        model.generateContent({
+                            contents: [{ role: 'user', parts: [{ text: request.prompt }] }],
+                            generationConfig: {
+                                responseModalities: ['IMAGE'],
+                                // @ts-ignore
+                                imageConfig: { aspectRatio: aspectRatio }
+                            }
+                        })
+                    )
+                }
+                
+                const additionalResults = await Promise.all(additionalPromises)
+                for (const result of additionalResults) {
+                    const parts = result.response.candidates?.[0]?.content?.parts || []
+                    for (const part of parts) {
+                        if (part.inlineData) {
+                            const mimeType = part.inlineData.mimeType || 'image/png'
+                            images.push(`data:${mimeType};base64,${part.inlineData.data}`)
+                        }
+                    }
+                }
+            }
+
+            return images.slice(0, count)
+
         } catch (error: any) {
-            console.error('Error generating image with Gemini:', error)
+            console.error('Error generating image with Gemini 2.5 Flash Image:', {
+                message: error.message,
+                status: error.status,
+                code: error.code
+            })
+
+            // Provide helpful error messages
+            let errorMessage = error.message || 'Unknown error'
+            
+            if (errorMessage.includes('PERMISSION_DENIED') || errorMessage.includes('403')) {
+                errorMessage = 'Image generation requires a paid Gemini API plan. Please enable billing at https://aistudio.google.com/apikey'
+            } else if (errorMessage.includes('MODEL_NOT_FOUND') || errorMessage.includes('404')) {
+                errorMessage = 'gemini-2.5-flash-image model not available. Ensure you have access to the latest Gemini models.'
+            }
 
             throw new Error(
-                `Failed to generate image with Gemini. ` +
-                `Error: ${error.message || 'Unknown error'}. ` +
-                `Please verify your GEMINI_API_KEY is valid and has access to Gemini image generation.`
+                `Failed to generate image with Gemini 2.5 Flash Image. ` +
+                `Error: ${errorMessage}`
             )
         }
     }

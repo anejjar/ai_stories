@@ -33,14 +33,14 @@ GEMINI_API_KEY=your-gemini-key
 # AI PROVIDERS - Image Generation (Required for PRO MAX)
 # -----------------------------------------------------
 # Comma-separated list of providers in priority order
-# Options: gemini-image, dalle, stable-diffusion, midjourney
-IMAGE_PROVIDER=gemini-image
+# Options: dalle, stable-diffusion, midjourney
+# NOTE: Gemini does NOT support image generation, use DALL-E instead
+IMAGE_PROVIDER=dalle
 
-# Gemini Image (Recommended - uses Gemini 2.5 Flash for images)
-# Uses GEMINI_API_KEY (set above)
+# DALL-E (Recommended - uses OpenAI DALL-E 3)
+OPENAI_API_KEY=sk-your-openai-key
 
-# DALL-E (Alternative - uses OpenAI)
-# DALL_E_API_KEY=sk-your-openai-key  # Optional, will use OPENAI_API_KEY
+# Alternative: DALL_E_API_KEY=sk-your-openai-key  # Will use OPENAI_API_KEY if not set
 
 # Stability AI / Stable Diffusion (Alternative)
 # STABILITY_AI_API_KEY=your-stability-key

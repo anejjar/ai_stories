@@ -52,16 +52,22 @@ export function PDFExportButton({ story }: PDFExportButtonProps) {
 
       if (result.success && result.data?.html) {
         // Generate PDF from HTML
+        // For illustrated books, use landscape orientation for better book layout
+        const isIllustratedBook = story.isIllustratedBook && story.bookPages && story.bookPages.length > 0
+
         const blob = await generatePDFFromHTML(result.data.html, {
           title: story.title,
           format: 'letter',
-          orientation: 'portrait',
+          orientation: isIllustratedBook ? 'landscape' : 'portrait',
         })
 
         // Download PDF
         downloadPDF(blob, result.data.title || `${story.title}.pdf`)
 
-        toast.success('PDF downloaded! 📄', 'Your story is ready to print or share!')
+        const message = isIllustratedBook
+          ? 'Your illustrated book is ready to print! 📖✨'
+          : 'Your story is ready to print or share!'
+        toast.success('PDF downloaded! 📄', message)
       }
     } catch (error) {
       console.error('Error exporting PDF:', error)

@@ -42,7 +42,7 @@ export async function POST(
     }
 
     const body = await request.json()
-    const { imageUrl, theme } = body
+    const { imageUrl, theme, aiDescription } = body
 
     if (!imageUrl) {
       return NextResponse.json<ApiResponse>(
@@ -51,57 +51,116 @@ export async function POST(
       )
     }
 
-    // Download image from temporary URL
-    const imageResponse = await fetch(imageUrl)
-    if (!imageResponse.ok) {
-      throw new Error('Failed to download generated image')
+    let imageBuffer: ArrayBuffer
+    const startTime = Date.now()
+
+    // Handle data URLs (base64) directly - no need to download
+    if (imageUrl.startsWith('data:image/')) {
+      console.log('Processing base64 image data...')
+      try {
+        // Extract base64 data from data URL
+        const base64Data = imageUrl.split(',')[1]
+        if (!base64Data) {
+          throw new Error('Invalid data URL format')
+        }
+        imageBuffer = Buffer.from(base64Data, 'base64').buffer
+        console.log(`Base64 image processed in ${Date.now() - startTime}ms`)
+      } catch (error) {
+        throw new Error('Failed to process base64 image data')
+      }
+    } else {
+      // Download image from URL with timeout
+      console.log('Downloading image from URL...')
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+
+      try {
+        const imageResponse = await fetch(imageUrl, {
+          signal: controller.signal,
+        })
+        clearTimeout(timeoutId)
+
+        if (!imageResponse.ok) {
+          throw new Error(`Failed to download image: ${imageResponse.status} ${imageResponse.statusText}`)
+        }
+
+        imageBuffer = await imageResponse.arrayBuffer()
+        console.log(`Image downloaded in ${Date.now() - startTime}ms`)
+      } catch (error: any) {
+        clearTimeout(timeoutId)
+        if (error.name === 'AbortError') {
+          throw new Error('Image download timeout - please try again')
+        }
+        throw new Error(`Failed to download image: ${error.message}`)
+      }
     }
-    const imageBuffer = await imageResponse.arrayBuffer()
 
-    // Upload to Supabase Storage
-    const fileName = `${userId}/${profileId}/${Date.now()}-${theme || 'generated'}.png`
-    const bucketName = 'child-profiles' // Assuming this bucket exists or 'stories' bucket is used? 
-    // The migration 006 says: "only AI-generated versions are stored". 
-    // We should check if 'child-profiles' bucket exists. 
-    // The migration 005 created 'stories' bucket. 
-    // I'll use 'stories' bucket but organize under 'child-profiles' folder to be safe, or try 'child-profiles' bucket if I create it.
-    // Let's assume we use the 'stories' bucket for now as it's already set up, or create 'child-profiles' bucket if needed.
-    // Actually, migration 005 creates 'stories'. Migration 006 doesn't create a bucket.
-    // Let's use 'stories' bucket for now, path: `child-profiles/${profileId}/avatar.png`
-
+    // Upload to Supabase Storage with optimized path (fallbacks to original URL on failure)
     const storagePath = `child-profiles/${profileId}/${Date.now()}.png`
+    const uploadStartTime = Date.now()
+    let publicUrl = imageUrl as string
 
-    // Upload using admin client to bypass RLS if needed
-    const { data: uploadData, error: uploadError } = await supabaseAdmin
-      .storage
-      .from('stories') // Using 'stories' bucket as shared storage
-      .upload(storagePath, imageBuffer, {
-        contentType: 'image/png',
-        upsert: true
-      })
+    try {
+      console.log('Uploading image to storage...')
+      // Upload using admin client with timeout handling
+      const uploadPromise = supabaseAdmin
+        .storage
+        .from('stories') // Using 'stories' bucket as shared storage
+        .upload(storagePath, imageBuffer, {
+          contentType: 'image/png',
+          upsert: true,
+          cacheControl: '3600', // Cache for 1 hour
+        })
 
-    if (uploadError) {
-      throw uploadError
+      const { data: uploadData, error: uploadError } = await uploadPromise
+
+      if (uploadError) {
+        throw uploadError
+      }
+
+      console.log(`Image uploaded in ${Date.now() - uploadStartTime}ms`)
+
+      // Get public URL
+      const { data: { publicUrl: storageUrl } } = supabaseAdmin
+        .storage
+        .from('stories')
+        .getPublicUrl(storagePath)
+
+      if (!storageUrl) {
+        throw new Error('Supabase returned no public URL for uploaded image')
+      }
+
+      publicUrl = storageUrl
+    } catch (uploadError: any) {
+      // Fall back to original URL (often a data URL) so the user still succeeds
+      console.error('Error uploading image to storage, using original URL instead:', uploadError)
+      publicUrl = imageUrl
     }
 
-    // Get public URL
-    const { data: { publicUrl } } = supabaseAdmin
-      .storage
-      .from('stories')
-      .getPublicUrl(storagePath)
+    // Update profile (optimized - only update necessary fields)
+    console.log('Updating profile...')
+    const updateData: any = {
+      ai_generated_image_url: publicUrl,
+      updated_at: new Date().toISOString(),
+    }
 
-    // Update profile
+    // Save AI description if provided (for consistent illustration generation)
+    if (aiDescription) {
+      updateData.ai_description = aiDescription
+    }
+
     const { error: updateError } = await (supabaseAdmin
       .from('child_profiles') as any)
-      .update({
-        ai_generated_image_url: publicUrl,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq('id', profileId)
+      .select('id') // Only select id to minimize response size
 
     if (updateError) {
+      console.error('Update error:', updateError)
       throw updateError
     }
+
+    console.log(`Profile updated successfully in ${Date.now() - startTime}ms total`)
 
     return NextResponse.json<ApiResponse>({
       success: true,

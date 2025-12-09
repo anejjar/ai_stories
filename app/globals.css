@@ -10,64 +10,54 @@
    * Current palette: Pastel Dreams
    *
    * Colors:
-   * - Primary: #A8DADC (Powder Blue)
-   * - Secondary: #F1C0E8 (Soft Pink)
-   * - Accent: #CFBAF0 (Lavender)
-   * - Background: #FFF9F9 (Off White)
+   * - Primary: #7CB9E8 (Sky Blue)
+   * - Secondary: #FFB7CE (Cotton Candy Pink)
+   * - Accent: #B19CD9 (Soft Purple)
+   * - Background: #FAFBFC (Very Light Gray-Blue)
    */
   :root {
-    --background: 330 100% 98%;          /* #FFF9F9 - Off White */
-    --foreground: 211 47% 22%;           /* #1D3557 - Navy */
+    --background: 210 40% 98%;           /* #FAFBFC - Very Light Gray-Blue */
+    --foreground: 215 25% 27%;           /* #2D3748 - Dark Slate */
     --card: 0 0% 100%;                   /* White */
-    --card-foreground: 211 47% 22%;      /* #1D3557 */
+    --card-foreground: 215 25% 27%;      /* #2D3748 */
     --popover: 0 0% 100%;                /* White */
-    --popover-foreground: 211 47% 22%;   /* #1D3557 */
-    --primary: 183 35% 76%;              /* #A8DADC - Powder Blue */
-    --primary-foreground: 211 47% 22%;   /* #1D3557 */
-    --secondary: 306 66% 85%;            /* #F1C0E8 - Soft Pink */
-    --secondary-foreground: 211 47% 22%; /* #1D3557 */
-    --muted: 270 56% 90%;                /* Light muted */
-    --muted-foreground: 0 0% 45%;        /* #A8A8A8 */
-    --accent: 263 60% 85%;               /* #CFBAF0 - Lavender */
-    --accent-foreground: 211 47% 22%;    /* #1D3557 */
-    --destructive: 0 74% 80%;            /* #F4A4A4 - Soft Red */
+    --popover-foreground: 215 25% 27%;   /* #2D3748 */
+    --primary: 204 70% 66%;              /* #7CB9E8 - Sky Blue */
+    --primary-foreground: 0 0% 100%;     /* White */
+    --secondary: 343 100% 86%;           /* #FFB7CE - Cotton Candy Pink */
+    --secondary-foreground: 215 25% 27%; /* Dark Slate */
+    --muted: 214 32% 91%;                /* Light Blue-Gray */
+    --muted-foreground: 215 20% 55%;     /* #718096 */
+    --accent: 260 44% 72%;               /* #B19CD9 - Soft Purple */
+    --accent-foreground: 0 0% 100%;      /* White */
+    --destructive: 4 100% 69%;           /* #FF6961 */
     --destructive-foreground: 0 0% 100%; /* White */
-    --border: 240 33% 94%;               /* #E8E8F0 - Light Gray */
-    --input: 240 33% 94%;                /* #E8E8F0 */
-    --ring: 183 35% 76%;                 /* #A8DADC - Powder Blue */
+    --border: 214 32% 91%;               /* #E2E8F0 */
+    --input: 214 32% 91%;                /* #E2E8F0 */
+    --ring: 204 70% 66%;                 /* #7CB9E8 */
     --radius: 1rem;
-
-    /* Custom palette colors for gradients */
-    --primary-rgb: 168, 218, 220;        /* #A8DADC */
-    --secondary-rgb: 241, 192, 232;      /* #F1C0E8 */
-    --accent-rgb: 207, 186, 240;         /* #CFBAF0 */
   }
 
   .dark {
-    --background: 211 47% 22%;           /* #1D3557 - Navy */
+    --background: 215 28% 17%;           /* Dark Slate */
     --foreground: 0 0% 98%;              /* Light */
-    --card: 211 39% 27%;                 /* Slightly lighter */
+    --card: 215 25% 20%;                 /* Slightly lighter */
     --card-foreground: 0 0% 98%;         /* Light */
-    --popover: 211 39% 27%;              /* Slightly lighter */
+    --popover: 215 25% 20%;              /* Slightly lighter */
     --popover-foreground: 0 0% 98%;      /* Light */
-    --primary: 183 35% 76%;              /* #A8DADC - Powder Blue */
-    --primary-foreground: 211 47% 22%;   /* #1D3557 */
-    --secondary: 306 66% 85%;            /* #F1C0E8 - Soft Pink */
-    --secondary-foreground: 211 47% 22%; /* #1D3557 */
-    --muted: 211 39% 32%;                /* Muted dark */
-    --muted-foreground: 0 0% 70%;        /* Light muted */
-    --accent: 263 60% 85%;               /* #CFBAF0 - Lavender */
-    --accent-foreground: 211 47% 22%;    /* Dark text */
-    --destructive: 0 74% 80%;            /* #F4A4A4 - Soft Red */
+    --primary: 204 70% 66%;              /* #7CB9E8 */
+    --primary-foreground: 0 0% 100%;     /* White */
+    --secondary: 343 100% 86%;           /* #FFB7CE */
+    --secondary-foreground: 215 25% 27%; /* Dark text */
+    --muted: 215 25% 25%;                /* Muted dark */
+    --muted-foreground: 215 20% 65%;     /* Light muted */
+    --accent: 260 44% 72%;               /* #B19CD9 */
+    --accent-foreground: 0 0% 100%;      /* White */
+    --destructive: 4 100% 69%;           /* #FF6961 */
     --destructive-foreground: 0 0% 100%; /* White */
-    --border: 211 39% 32%;               /* Dark border */
-    --input: 211 39% 32%;                /* Dark input */
-    --ring: 183 35% 76%;                 /* #A8DADC - Powder Blue */
-
-    /* Custom palette colors for gradients */
-    --primary-rgb: 168, 218, 220;        /* #A8DADC */
-    --secondary-rgb: 241, 192, 232;      /* #F1C0E8 */
-    --accent-rgb: 207, 186, 240;         /* #CFBAF0 */
+    --border: 215 25% 25%;               /* Dark border */
+    --input: 215 25% 25%;                /* Dark input */
+    --ring: 204 70% 66%;                 /* #7CB9E8 */
   }
 }
 

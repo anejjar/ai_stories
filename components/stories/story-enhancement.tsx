@@ -14,6 +14,7 @@ import {
   Crown,
 } from 'lucide-react'
 import { UpgradeModal } from '@/components/modals/upgrade-modal'
+import { ProMaxUpsell } from '@/components/pricing/promax-upsell'
 import type { EnhancementType } from '@/app/api/stories/[id]/enhance/route'
 
 interface StoryEnhancementProps {
@@ -27,6 +28,8 @@ export function StoryEnhancement({ storyId, onEnhanced }: StoryEnhancementProps)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
 
   const isPro = userProfile?.subscriptionTier === 'pro' || userProfile?.subscriptionTier === 'pro_max'
+  const isProMax = userProfile?.subscriptionTier === 'pro_max'
+  const isProOnly = userProfile?.subscriptionTier === 'pro'
 
   const handleEnhance = async (type: EnhancementType) => {
     if (!isPro) {
@@ -123,6 +126,28 @@ export function StoryEnhancement({ storyId, onEnhanced }: StoryEnhancementProps)
       color: 'from-purple-500 to-pink-500',
     },
   ]
+
+  // Show ProMax upsell for Pro users instead of enhancement tools
+  if (isProOnly) {
+    return (
+      <div className="mb-8">
+        <ProMaxUpsell
+          title="Want Illustrated Story Books?"
+          description="Upgrade to PRO MAX to create beautiful illustrated story books with your child as the hero!"
+          features={[
+            "AI-illustrated story books",
+            "5-7 custom illustrations per story",
+            "Your child as the main hero",
+            "Consistent character design",
+            "Beautiful book page format",
+            "Perfect for printing & sharing"
+          ]}
+          ctaText="Upgrade to PRO MAX"
+          compact={false}
+        />
+      </div>
+    )
+  }
 
   return (
     <>

@@ -47,6 +47,7 @@ export function ChildImageUploadModal({
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([])
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [aiAnalysis, setAiAnalysis] = useState<string>('')
 
   const resetState = () => {
     setState('idle')
@@ -54,6 +55,7 @@ export function ChildImageUploadModal({
     setGeneratedImages([])
     setSelectedImageIndex(null)
     setUploadProgress(0)
+    setAiAnalysis('')
   }
 
   const handleClose = () => {
@@ -116,6 +118,7 @@ export function ChildImageUploadModal({
 
       setState('selecting')
       setGeneratedImages(data.data.images || [])
+      setAiAnalysis(data.data.analysis || '') // Store AI description for later use
       setUploadProgress(100)
     } catch (err) {
       console.error('Error processing image:', err)
@@ -129,10 +132,21 @@ export function ChildImageUploadModal({
     
     const selectedImage = generatedImages[selectedImageIndex]
     setState('saving')
+    setError('')
     
     try {
       const token = await getAccessToken()
       if (!token) throw new Error('Authentication required')
+
+      console.log('Saving image selection:', { 
+        profileId, 
+        imageUrl: selectedImage.url.substring(0, 50) + '...',
+        theme: selectedImage.theme 
+      })
+
+      // Add timeout to fetch request (30 seconds)
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30000)
 
       const response = await fetch(`/api/child-profiles/${profileId}/image/select`, {
         method: 'POST',
@@ -142,9 +156,25 @@ export function ChildImageUploadModal({
         },
         body: JSON.stringify({
           imageUrl: selectedImage.url,
-          theme: selectedImage.theme
+          theme: selectedImage.theme,
+          aiDescription: aiAnalysis // Send AI description for consistent illustration generation
         }),
+        signal: controller.signal,
+      }).finally(() => {
+        clearTimeout(timeoutId)
       })
+
+      // Check if response is ok before parsing
+      if (!response.ok) {
+        const errorText = await response.text()
+        let errorData
+        try {
+          errorData = JSON.parse(errorText)
+        } catch {
+          errorData = { error: errorText || `HTTP ${response.status}` }
+        }
+        throw new Error(errorData.error || `Failed to save: ${response.status} ${response.statusText}`)
+      }
 
       const data = await response.json()
 
@@ -152,6 +182,7 @@ export function ChildImageUploadModal({
         throw new Error(data.error || 'Failed to save selection')
       }
 
+      console.log('Image saved successfully:', data.data)
       setState('success')
       setTimeout(() => {
         onUploadSuccess()
@@ -159,7 +190,12 @@ export function ChildImageUploadModal({
       }, 2000)
     } catch (err) {
       console.error('Error saving selection:', err)
-      setError(err instanceof Error ? err.message : 'Failed to save selection')
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : err instanceof DOMException && err.name === 'AbortError'
+        ? 'Request timeout - please try again'
+        : 'Failed to save selection'
+      setError(errorMessage)
       setState('error')
     }
   }
@@ -314,10 +350,17 @@ export function ChildImageUploadModal({
                 </Button>
                 <Button 
                   onClick={handleSaveSelection} 
-                  disabled={selectedImageIndex === null}
-                  className="flex-1 sm:flex-none bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold rounded-full"
+                  disabled={selectedImageIndex === null || state === 'saving'}
+                  className="flex-1 sm:flex-none bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Save Profile Photo
+                  {state === 'saving' ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Profile Photo'
+                  )}
                 </Button>
               </div>
             </>

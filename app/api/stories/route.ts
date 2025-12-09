@@ -8,6 +8,8 @@ import { checkRateLimit, RATE_LIMITS, getRateLimitHeaders } from '@/lib/rate-lim
 import type { ApiResponse, StoryInput, Story } from '@/types'
 import { storyToDatabaseStory, databaseStoryToStory, firestoreStoryToStory, type DatabaseStory } from '@/types/database'
 import { ProviderError } from '@/lib/ai/types'
+import { generateIllustratedBook, type BookPage } from '@/lib/ai/illustrated-book-generator'
+import { uploadImagesToStorage } from '@/lib/supabase/storage'
 
 // Helper to get user profile from Supabase (server-side)
 async function getUserProfile(userId: string) {
@@ -24,6 +26,33 @@ async function getUserProfile(userId: string) {
   return {
     subscriptionTier: data.subscription_tier || 'trial',
   }
+}
+
+// Helper to generate regular (text-only) story
+async function generateRegularStory(
+  providerManager: ReturnType<typeof getProviderManager>,
+  storyInput: StoryInput,
+  isMultiChild: boolean
+): Promise<string> {
+  const generationRequest = isMultiChild
+    ? {
+      children: storyInput.children!,
+      theme: storyInput.theme,
+      moral: storyInput.moral,
+      templateId: storyInput.templateId,
+      // For backward compatibility, also include first child's data
+      childName: storyInput.children![0].name,
+      adjectives: storyInput.children![0].adjectives,
+    }
+    : {
+      childName: storyInput.childName!,
+      adjectives: storyInput.adjectives!,
+      theme: storyInput.theme,
+      moral: storyInput.moral,
+      templateId: storyInput.templateId,
+    }
+
+  return await providerManager.generateText(generationRequest)
 }
 
 // Helper to generate story title from content
@@ -138,6 +167,7 @@ export async function POST(request: NextRequest) {
       generateImages: body.generateImages || false,
       templateId: body.templateId,
       appearance: body.appearance, // PRO MAX only (deprecated, use children[].appearance)
+      profileId: body.profileId, // For illustrated books
     }
 
     // Validate required fields - support both single and multi-child
@@ -215,26 +245,58 @@ export async function POST(request: NextRequest) {
     // Generate story using configured AI provider with fallback
     const providerManager = getProviderManager()
 
-    // Prepare generation request - support both single and multi-child
-    const generationRequest = isMultiChild
-      ? {
-        children: storyInput.children!,
-        theme: storyInput.theme,
-        moral: storyInput.moral,
-        templateId: storyInput.templateId,
-        // For backward compatibility, also include first child's data
-        childName: storyInput.children![0].name,
-        adjectives: storyInput.children![0].adjectives,
-      }
-      : {
-        childName: storyInput.childName!,
-        adjectives: storyInput.adjectives!,
-        theme: storyInput.theme,
-        moral: storyInput.moral,
-        templateId: storyInput.templateId,
-      }
+    let storyContent: string
+    let bookPages: BookPage[] = []
+    let isIllustratedBook = false
 
-    const storyContent = await providerManager.generateText(generationRequest)
+    // Check if this is an illustrated book request (PRO MAX feature)
+    if (storyInput.generateImages && subscriptionTier === 'pro_max' && storyInput.profileId) {
+      console.log('Generating illustrated book for PRO MAX user...')
+
+      // Fetch child profile to get AI description
+      const { data: childProfile, error: profileError } = await supabaseAdmin
+        .from('child_profiles')
+        .select('ai_description, ai_generated_image_url, name')
+        .eq('id', storyInput.profileId)
+        .eq('user_id', userId)
+        .single<{ ai_description: string; ai_generated_image_url: string; name: string }>()
+
+      if (profileError || !childProfile) {
+        console.error('Failed to fetch child profile for illustrated book:', profileError)
+        // Fall back to regular story generation
+        storyContent = await generateRegularStory(providerManager, storyInput, isMultiChild)
+      } else if (!childProfile.ai_description) {
+        console.error('Child profile missing AI description for consistent illustrations')
+        // Fall back to regular story generation
+        storyContent = await generateRegularStory(providerManager, storyInput, isMultiChild)
+      } else {
+        try {
+          // Generate illustrated book with consistent character
+          const illustratedBookResult = await generateIllustratedBook({
+            childName: storyInput.childName || childProfile.name,
+            adjectives: storyInput.adjectives || [],
+            theme: storyInput.theme,
+            moral: storyInput.moral,
+            templateId: storyInput.templateId,
+            aiDescription: childProfile.ai_description,
+            profileImageUrl: childProfile.ai_generated_image_url,
+          })
+
+          storyContent = illustratedBookResult.content
+          bookPages = illustratedBookResult.bookPages
+          isIllustratedBook = true
+
+          console.log(`Successfully generated illustrated book with ${bookPages.length} pages`)
+        } catch (illustratedError) {
+          console.error('Failed to generate illustrated book, falling back to regular story:', illustratedError)
+          // Fall back to regular story generation
+          storyContent = await generateRegularStory(providerManager, storyInput, isMultiChild)
+        }
+      }
+    } else {
+      // Regular story generation (text-only)
+      storyContent = await generateRegularStory(providerManager, storyInput, isMultiChild)
+    }
 
     // Generate story title
     const titleChildName = isMultiChild
@@ -246,12 +308,11 @@ export async function POST(request: NextRequest) {
       storyInput.theme
     )
 
-    // Handle image generation for PRO MAX users
+    // Handle image URLs for illustrated books
     let imageUrls: string[] = []
-    if (storyInput.generateImages && subscriptionTier === 'pro_max') {
-      // For MVP, images are generated after story creation via separate endpoint
-      // This allows users to review the story first, then add illustrations
-      imageUrls = []
+    if (isIllustratedBook && bookPages.length > 0) {
+      // Extract image URLs from book pages
+      imageUrls = bookPages.map(page => page.illustration_url)
     }
 
     // Save story to Supabase
@@ -266,10 +327,13 @@ export async function POST(request: NextRequest) {
       children: isMultiChild ? storyInput.children : undefined,
       theme: storyInput.theme,
       moral: storyInput.moral,
-      hasImages: storyInput.generateImages || false,
+      hasImages: imageUrls.length > 0,
       imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
       // Deprecated: kept for backward compatibility
       appearance: subscriptionTier === 'pro_max' && !isMultiChild ? storyInput.appearance : undefined,
+      // Illustrated book support
+      isIllustratedBook,
+      bookPages: isIllustratedBook && bookPages.length > 0 ? bookPages : undefined,
     })
 
     // Log the data being inserted for debugging

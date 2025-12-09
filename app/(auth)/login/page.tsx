@@ -88,22 +88,22 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4 bg-gradient-to-br from-pink-100 via-yellow-100 to-blue-100 relative overflow-hidden">
+    <div className="flex min-h-screen items-center justify-center p-4 bg-gradient-hero relative overflow-hidden">
       {/* Decorative elements */}
       <div className="absolute top-20 left-10 text-5xl animate-float opacity-30">👋</div>
       <div className="absolute top-40 right-20 text-5xl animate-float opacity-30" style={{ animationDelay: '1s' }}>⭐</div>
       <div className="absolute bottom-40 left-20 text-5xl animate-float opacity-30" style={{ animationDelay: '2s' }}>✨</div>
       <div className="absolute bottom-60 right-10 text-4xl animate-bounce-slow opacity-20">🎈</div>
 
-      <Card className="w-full max-w-md border-4 border-pink-300 shadow-2xl bg-white/95 backdrop-blur-sm relative z-10">
-        <CardHeader className="space-y-2 bg-gradient-to-r from-pink-100 to-purple-100 rounded-t-lg border-b-4 border-pink-200">
+      <Card className="w-full max-w-md border-4 border-primary shadow-2xl bg-card backdrop-blur-sm relative z-10">
+        <CardHeader className="space-y-2 bg-gradient-primary rounded-t-lg border-b-4 border-primary">
           <div className="flex justify-center mb-2">
             <div className="text-6xl animate-bounce-slow">👋</div>
           </div>
-          <CardTitle className="text-4xl font-comic bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent text-center">
+          <CardTitle className="text-4xl font-comic text-gradient-primary text-center">
             Welcome Back!
           </CardTitle>
-          <CardDescription className="text-center text-lg text-gray-700 font-semibold">
+          <CardDescription className="text-center text-lg text-muted-foreground font-semibold">
             Sign in to your account to continue creating magical stories! ✨
           </CardDescription>
         </CardHeader>
@@ -116,7 +116,7 @@ export default function LoginPage() {
             )}
 
             <div className="space-y-2">
-              <label htmlFor="email" className="text-base font-bold text-gray-700 flex items-center gap-2">
+              <label htmlFor="email" className="text-base font-bold text-foreground flex items-center gap-2">
                 <span className="text-xl">📧</span>
                 Email
               </label>
@@ -128,12 +128,12 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={loading}
                 required
-                className="rounded-xl border-2 border-pink-300 focus:border-pink-500 text-lg py-3"
+                className="rounded-xl text-lg py-3"
               />
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="password" className="text-base font-bold text-gray-700 flex items-center gap-2">
+              <label htmlFor="password" className="text-base font-bold text-foreground flex items-center gap-2">
                 <span className="text-xl">🔒</span>
                 Password
               </label>
@@ -145,13 +145,13 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
                 required
-                className="rounded-xl border-2 border-purple-300 focus:border-purple-500 text-lg py-3"
+                className="rounded-xl text-lg py-3"
               />
             </div>
 
             <Button
               type="submit"
-              className="w-full rounded-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all font-bold text-lg py-6"
+              className="w-full rounded-full bg-gradient-primary hover:opacity-90 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all font-bold text-lg py-6"
               disabled={loading}
             >
               {loading ? (
@@ -169,10 +169,10 @@ export default function LoginPage() {
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t-2 border-pink-300" />
+              <span className="w-full border-t-2 border-border" />
             </div>
             <div className="relative flex justify-center text-sm font-bold">
-              <span className="bg-white px-3 text-gray-600 rounded-full border-2 border-pink-200">
+              <span className="bg-card px-3 text-muted-foreground rounded-full border-2 border-border">
                 Or continue with
               </span>
             </div>
@@ -181,7 +181,7 @@ export default function LoginPage() {
           <Button
             type="button"
             variant="outline"
-            className="w-full rounded-full border-2 border-blue-400 hover:bg-blue-50 font-bold text-lg py-6 shadow-md hover:shadow-lg transform hover:scale-105 transition-all"
+            className="w-full rounded-full font-bold text-lg py-6 shadow-md hover:shadow-lg transform hover:scale-105 transition-all"
             onClick={handleGoogleSignIn}
             disabled={loading}
           >
@@ -206,12 +206,12 @@ export default function LoginPage() {
             Sign in with Google 🔵
           </Button>
         </CardContent>
-        <CardFooter className="flex flex-col space-y-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-b-lg border-t-2 border-blue-200">
-          <div className="text-base text-center text-gray-700 font-semibold">
+        <CardFooter className="flex flex-col space-y-4 bg-gradient-secondary rounded-b-lg border-t-2 border-border">
+          <div className="text-base text-center text-foreground font-semibold">
             Don't have an account?{' '}
             <Link
               href="/signup"
-              className="text-pink-600 hover:text-pink-700 underline font-bold"
+              className="text-primary hover:opacity-80 underline font-bold"
             >
               Sign up! 🎉
             </Link>

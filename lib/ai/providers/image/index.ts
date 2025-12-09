@@ -50,13 +50,13 @@ export function getAvailableImageProviders(): ImageProvider[] {
  */
 export function parseImageProviderList(list: string | undefined): ImageProviderType[] {
   if (!list) {
-    return ['gemini-image'] // Default fallback to Gemini
+    return ['gemini-image'] // Default to Gemini/Imagen first
   }
 
   const types = list.split(',').map((t) => t.trim().toLowerCase() as ImageProviderType)
   const validTypes = types.filter((t) => providers.has(t))
 
-  // If no valid types found, return default
+  // If no valid types found, return gemini-image as default
   return validTypes.length > 0 ? validTypes : ['gemini-image']
 }
 

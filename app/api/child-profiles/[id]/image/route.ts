@@ -117,36 +117,65 @@ export async function POST(
       }
     ]
 
+    // Generate images with timeout and fail-fast logic
     const generatePromises = themes.map(async (theme) => {
-      const prompt = `Character illustration of a child: ${description}. 
-      Create this ${theme.promptSuffix}
-      The character should be facing forward or slightly to the side, suitable for a profile picture.
-      Ensure the character looks friendly and approachable.`
+      // Format prompt as a single line (DALL-E works better with single-line prompts)
+      // Limit prompt to 1000 characters (DALL-E 3 has a 4000 char limit, but we'll be conservative)
+      const basePrompt = `Character illustration of a child: ${description}. Create this ${theme.promptSuffix} The character should be facing forward or slightly to the side, suitable for a profile picture. Ensure the character looks friendly and approachable.`
+      const prompt = basePrompt.length > 1000 ? basePrompt.substring(0, 1000) : basePrompt
 
       try {
-        const images = await providerManager.generateImages({
-          prompt,
-          count: 1,
-          size: '1024x1024',
-          style: theme.id === 'pixar' ? 'vivid' : 'natural' // Use vivid for 3D
+        console.log(`Generating ${theme.name} variation with prompt length: ${prompt.length}`)
+        
+        // Add individual timeout per image generation (25 seconds)
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error(`Image generation timeout for ${theme.name}`)), 25000)
         })
 
+        const images = await Promise.race([
+          providerManager.generateImages({
+            prompt,
+            count: 1,
+            size: '1024x1024',
+            style: theme.id === 'pixar' ? 'vivid' : 'natural' // Use vivid for 3D
+          }),
+          timeoutPromise
+        ])
+        
+        console.log(`Successfully generated ${theme.name} variation:`, images.length, 'images')
         return {
           url: images[0],
           theme: theme.name,
           description: description
         }
       } catch (err) {
-        console.error(`Failed to generate ${theme.name} variation:`, err)
+        const errorMessage = err instanceof Error ? err.message : String(err)
+        console.error(`Failed to generate ${theme.name} variation:`, errorMessage)
+        // Don't log full error to reduce noise, just the message
         return null
       }
     })
 
-    const results = await Promise.all(generatePromises)
-    const successfulImages = results.filter(Boolean)
+    // Use Promise.allSettled to get partial results even if some fail
+    const results = await Promise.allSettled(generatePromises)
+    const successfulImages = results
+      .filter((result): result is PromiseFulfilledResult<{ url: string; theme: string; description: string }> => 
+        result.status === 'fulfilled' && result.value !== null
+      )
+      .map(result => result.value)
 
     if (successfulImages.length === 0) {
-      throw new Error('Failed to generate any images')
+      // Provide more helpful error message
+      const failedCount = results.filter(r => r.status === 'rejected').length
+      throw new Error(
+        `Failed to generate any images. ${failedCount} attempts failed. ` +
+        `Please check your image provider configuration (GEMINI_API_KEY or OPENAI_API_KEY).`
+      )
+    }
+
+    // Log partial success
+    if (successfulImages.length < themes.length) {
+      console.log(`Generated ${successfulImages.length} out of ${themes.length} image variations`)
     }
 
     return NextResponse.json({

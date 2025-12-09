@@ -9,6 +9,7 @@ import { StoryEnhancement } from '@/components/stories/story-enhancement'
 import { PDFExportButton } from '@/components/stories/pdf-export-button'
 import { PrintStoryButton } from '@/components/stories/print-story-button'
 import { AudioPlayer } from '@/components/stories/audio-player'
+import { BookViewer } from '@/components/stories/book-viewer'
 import { Share2, ArrowLeft, BookOpen, Image as ImageIcon, Loader2, Crown } from 'lucide-react'
 import Link from 'next/link'
 import { ShareDialog } from '@/components/stories/share-dialog'
@@ -36,6 +37,8 @@ export function StoryDisplay({ story, onBack }: StoryDisplayProps) {
   const [imageErrorStates, setImageErrorStates] = useState<Record<number, boolean>>({})
   const [backgroundFloaters, setBackgroundFloaters] = useState<{ emoji: string, style: React.CSSProperties }[]>([])
   const isProMax = userProfile?.subscriptionTier === 'pro_max'
+  const isPro = userProfile?.subscriptionTier === 'pro' || isProMax
+  const isIllustratedBook = story.isIllustratedBook && story.bookPages && story.bookPages.length > 0
 
   const themeStyles = getThemeStyles(story.theme)
 
@@ -294,11 +297,21 @@ export function StoryDisplay({ story, onBack }: StoryDisplayProps) {
           <AudioPlayer text={story.content} title={story.title} bedtimeMode={false} />
         </div>
 
-        {/* Story Enhancement Tools (PRO) */}
-        <StoryEnhancement storyId={story.id} />
+        {/* Conditional Rendering: Illustrated Book vs Regular Story */}
+        {isIllustratedBook ? (
+          /* Illustrated Book Viewer (PRO MAX) */
+          <BookViewer
+            title={story.title}
+            bookPages={story.bookPages!}
+            theme={story.theme}
+          />
+        ) : (
+          <>
+            {/* Story Enhancement Tools (PRO) - Only for regular stories */}
+            <StoryEnhancement storyId={story.id} />
 
-        {/* Generate Images Button (PRO MAX) */}
-        {isProMax && !storyImages.length && (
+            {/* Generate Images Button (PRO MAX) - Only for regular stories */}
+            {isProMax && !storyImages.length && (
           <div className="mb-6 bg-gradient-to-r from-yellow-50 to-orange-50 border-4 border-yellow-300 rounded-2xl p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -515,6 +528,8 @@ export function StoryDisplay({ story, onBack }: StoryDisplayProps) {
             </div>
           </div>
         </div>
+          </>
+        )}
 
         {/* Footer */}
         <div className={`mt-12 pt-8 border-t-4 ${themeStyles.navBorder} bg-white/80 backdrop-blur-sm p-6 rounded-3xl border-4 ${themeStyles.cardBorder} shadow-lg transition-colors duration-500`}>

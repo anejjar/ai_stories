@@ -2,7 +2,6 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ProtectedRoute } from '@/components/auth/protected-route'
 import { StoryForm } from '@/components/stories/story-form'
 import { DraftComparison } from '@/components/stories/draft-comparison'
 import { UpgradeModal } from '@/components/modals/upgrade-modal'
@@ -147,23 +146,23 @@ function CreateContent() {
   }, [userProfile])
 
   return (
-    <ProtectedRoute>
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-yellow-50 to-blue-50 relative overflow-hidden">
+    <>
+      <div className="min-h-screen bg-gradient-hero relative overflow-hidden">
         {/* Decorative elements */}
         <div className="absolute top-20 right-10 text-5xl animate-float opacity-30">📚</div>
         <div className="absolute bottom-20 left-10 text-5xl animate-float opacity-30" style={{ animationDelay: '1s' }}>✨</div>
         <div className="absolute top-1/2 left-20 text-4xl animate-bounce-slow opacity-20">🎨</div>
 
         <div className="container mx-auto px-4 py-8 max-w-2xl relative z-10">
-          <Card className="border-4 border-pink-300 shadow-2xl bg-white/95 backdrop-blur-sm">
-            <CardHeader className="bg-gradient-to-r from-pink-100 to-purple-100 rounded-t-lg border-b-4 border-pink-200">
+          <Card className="border-4 border-primary shadow-2xl bg-card backdrop-blur-sm">
+            <CardHeader className="bg-gradient-primary rounded-t-lg border-b-4 border-primary">
               <div className="flex items-center gap-3">
                 <div className="text-5xl animate-bounce-slow">🎭</div>
                 <div>
-                  <CardTitle className="text-4xl font-comic bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+                  <CardTitle className="text-4xl font-comic text-gradient-primary">
                     Create a New Story
                   </CardTitle>
-                  <CardDescription className="text-lg text-gray-700 mt-2">
+                  <CardDescription className="text-lg text-muted-foreground mt-2">
                     Fill in the details below to generate a magical story for your child! ✨
                   </CardDescription>
                 </div>
@@ -181,7 +180,7 @@ function CreateContent() {
                   <Button
                     onClick={handleBackToForm}
                     variant="outline"
-                    className="mb-4 rounded-full border-2 border-pink-300 hover:bg-pink-50"
+                    className="mb-4 rounded-full"
                   >
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back to Form
@@ -195,22 +194,22 @@ function CreateContent() {
               ) : (
                 <>
                   {(userProfile?.subscriptionTier === 'pro' || userProfile?.subscriptionTier === 'pro_max') && (
-                    <div className="mb-4 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border-2 border-yellow-300">
+                    <div className="mb-4 p-4 bg-gradient-to-r from-card to-accent/10 rounded-xl border-2 border-accent">
                       <label className="flex items-center gap-3 cursor-pointer">
                         <input
                           type="checkbox"
                           checked={generateDrafts}
                           onChange={(e) => setGenerateDrafts(e.target.checked)}
-                          className="w-5 h-5 rounded border-2 border-pink-400 text-pink-600 focus:ring-pink-500"
+                          className="w-5 h-5 rounded border-2 border-primary text-primary focus:ring-primary"
                         />
                         <div className="flex items-center gap-2">
-                          <Sparkles className="h-5 w-5 text-yellow-600" />
-                          <span className="font-bold text-gray-800">
+                          <Sparkles className="h-5 w-5 text-accent" />
+                          <span className="font-bold text-foreground">
                             Generate Multiple Drafts (PRO Feature) ✨
                           </span>
                         </div>
                       </label>
-                      <p className="text-sm text-gray-600 mt-2 ml-8 font-semibold">
+                      <p className="text-sm text-muted-foreground mt-2 ml-8 font-semibold">
                         Get 3 different versions of your story and choose your favorite! Perfect for finding the perfect bedtime tale. 🌙
                       </p>
                     </div>
@@ -235,15 +234,15 @@ function CreateContent() {
         onOpenChange={setShowUpgradeModal}
         tier={upgradeTier}
       />
-    </ProtectedRoute>
+    </>
   )
 }
 
 export default function CreatePage() {
   return (
     <Suspense fallback={
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500"></div>
+      <div className="flex justify-center items-center min-h-screen bg-gradient-hero">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     }>
       <CreateContent />

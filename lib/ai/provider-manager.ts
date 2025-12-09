@@ -28,7 +28,25 @@ export class ProviderManager {
   constructor() {
     // Parse provider lists from environment variables
     this.textProviders = parseProviderList(process.env.AI_PROVIDER)
-    this.imageProviders = parseImageProviderList(process.env.IMAGE_PROVIDER)
+    const configuredImageProviders = parseImageProviderList(process.env.IMAGE_PROVIDER)
+    
+    // Filter out unavailable providers
+    this.imageProviders = configuredImageProviders.filter((type) => {
+      const provider = getImageProvider(type)
+      return provider !== null
+    })
+    
+    // If no configured providers are available, try to find any available provider
+    if (this.imageProviders.length === 0) {
+      const availableProviders = getAvailableImageProviders()
+      if (availableProviders.length > 0) {
+        // Use the first available provider as fallback
+        this.imageProviders = [availableProviders[0].name]
+        console.warn(
+          `No configured image providers are available. Using fallback: ${availableProviders[0].name}`
+        )
+      }
+    }
   }
 
   /**
@@ -158,6 +176,7 @@ export class ProviderManager {
       return async () => {
         try {
           // We checked for existence above, but TypeScript might need reassurance or the check is enough
+          console.log('Analyzing image with provider:', provider.name)
           if (provider.analyzeImage) {
             return await provider.analyzeImage(base64Image, prompt)
           }
@@ -208,8 +227,16 @@ export class ProviderManager {
         try {
           return await provider.generateImage(request)
         } catch (error) {
+          // Log detailed error information
+          const errorMessage = error instanceof Error ? error.message : String(error)
+          console.error(`Image generation error with ${provider.name}:`, {
+            message: errorMessage,
+            provider: provider.name,
+            error: error
+          })
+          
           throw new ProviderError(
-            `Failed to generate images with ${provider.name}`,
+            `Failed to generate images with ${provider.name}: ${errorMessage}`,
             provider.name,
             error
           )

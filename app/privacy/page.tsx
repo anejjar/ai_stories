@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
     return (
-        <main className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
+        <main className="min-h-screen bg-gradient-hero">
             {/* Header */}
             <section className="bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 py-20 px-4">
                 <div className="container mx-auto max-w-4xl text-center">
@@ -40,8 +40,8 @@ export default function PrivacyPage() {
             <section className="py-16 px-4">
                 <div className="container mx-auto max-w-4xl">
                     {/* Child Safety */}
-                    <Card className="mb-8 border-4 border-green-200 bg-white shadow-xl">
-                        <CardHeader className="bg-gradient-to-r from-green-100 to-emerald-100 border-b-4 border-green-200">
+                    <Card className="mb-8 border-4 border-border bg-white shadow-xl">
+                        <CardHeader className="bg-gradient-to-br from-primary/20 to-accent/20 border-b-4 border-border">
                             <div className="flex items-center gap-3">
                                 <Shield className="h-8 w-8 text-green-600" />
                                 <CardTitle className="text-3xl font-bold text-gray-800">
@@ -76,8 +76,8 @@ export default function PrivacyPage() {
                     </Card>
 
                     {/* Privacy Protection */}
-                    <Card className="mb-8 border-4 border-blue-200 bg-white shadow-xl">
-                        <CardHeader className="bg-gradient-to-r from-blue-100 to-cyan-100 border-b-4 border-blue-200">
+                    <Card className="mb-8 border-4 border-primary/30 bg-white shadow-xl">
+                        <CardHeader className="bg-gradient-primary border-b-4 border-primary/30">
                             <div className="flex items-center gap-3">
                                 <Lock className="h-8 w-8 text-blue-600" />
                                 <CardTitle className="text-3xl font-bold text-gray-800">
@@ -113,7 +113,7 @@ export default function PrivacyPage() {
                                         desc: 'You can view, export, or delete all your data anytime from your account.',
                                     },
                                 ].map((item, idx) => (
-                                    <div key={idx} className="flex items-start gap-3 p-4 bg-blue-50 rounded-lg">
+                                    <div key={idx} className="flex items-start gap-3 p-4 bg-muted rounded-lg">
                                         <item.icon className="h-6 w-6 text-blue-600 flex-shrink-0 mt-1" />
                                         <div>
                                             <h4 className="font-bold text-gray-800 mb-1">{item.title}</h4>
@@ -126,8 +126,8 @@ export default function PrivacyPage() {
                     </Card>
 
                     {/* COPPA Compliance */}
-                    <Card className="mb-8 border-4 border-purple-200 bg-white shadow-xl">
-                        <CardHeader className="bg-gradient-to-r from-purple-100 to-pink-100 border-b-4 border-purple-200">
+                    <Card className="mb-8 border-4 border-primary/30 bg-white shadow-xl">
+                        <CardHeader className="bg-gradient-primary border-b-4 border-primary/30">
                             <div className="flex items-center gap-3">
                                 <Heart className="h-8 w-8 text-purple-600" />
                                 <CardTitle className="text-3xl font-bold text-gray-800">
@@ -159,8 +159,8 @@ export default function PrivacyPage() {
                     </Card>
 
                     {/* What We Collect */}
-                    <Card className="mb-8 border-4 border-orange-200 bg-white shadow-xl">
-                        <CardHeader className="bg-gradient-to-r from-orange-100 to-yellow-100 border-b-4 border-orange-200">
+                    <Card className="mb-8 border-4 border-accent bg-white shadow-xl">
+                        <CardHeader className="bg-gradient-secondary border-b-4 border-accent">
                             <CardTitle className="text-3xl font-bold text-gray-800">
                                 What Information We Collect
                             </CardTitle>
@@ -201,8 +201,8 @@ export default function PrivacyPage() {
                     </Card>
 
                     {/* Your Rights */}
-                    <Card className="border-4 border-pink-200 bg-white shadow-xl">
-                        <CardHeader className="bg-gradient-to-r from-pink-100 to-rose-100 border-b-4 border-pink-200">
+                    <Card className="border-4 border-primary/30 bg-white shadow-xl">
+                        <CardHeader className="bg-gradient-primary border-b-4 border-primary/30">
                             <CardTitle className="text-3xl font-bold text-gray-800">Your Rights</CardTitle>
                         </CardHeader>
                         <CardContent className="pt-6 space-y-4">
@@ -219,7 +219,7 @@ export default function PrivacyPage() {
                                     'Opt-Out: Unsubscribe from marketing emails anytime',
                                 ].map((item, idx) => (
                                     <li key={idx} className="flex items-start gap-3">
-                                        <div className="h-6 w-6 rounded-full bg-pink-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
                                             <span className="text-white text-sm font-bold">✓</span>
                                         </div>
                                         <span className="text-gray-700">{item}</span>

@@ -3,38 +3,7 @@ import { requireAuth } from '@/lib/auth/middleware'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import type { ApiResponse, Story } from '@/types'
 import { databaseStoryToStory, type DatabaseStory } from '@/types/database'
-import { unstable_cache } from 'next/cache'
-
-
-// Cached story fetch function
-const getCachedStory = unstable_cache(
-  async (storyId: string, userId: string) => {
-    // Fetch story from Supabase
-    const { data, error } = await supabaseAdmin
-      .from('stories')
-      .select('*')
-      .eq('id', storyId)
-      .single()
-
-    if (error || !data) {
-      return { error: 'Story not found', status: 404 }
-    }
-
-    // Verify story belongs to user
-    const storyData = data as DatabaseStory
-    if (!storyData || storyData.user_id !== userId) {
-      return { error: 'Unauthorized', status: 403 }
-    }
-
-    const story: Story = databaseStoryToStory(storyData)
-    return { story }
-  },
-  ['story-fetch'],
-  {
-    revalidate: 3600, // Cache for 1 hour
-    tags: (storyId: string) => [`story-${storyId}`],
-  }
-)
+import { unstable_noStore as noStore } from 'next/cache'
 
 export async function GET(
   request: NextRequest,
@@ -45,24 +14,38 @@ export async function GET(
   if (response) return response
 
   try {
+    // Do not cache this endpoint; large payloads (stories + images) can exceed Next.js cache size limits
+    noStore()
+
     const storyId = params.id
 
-    // Use cached fetch
-    const result = await getCachedStory(storyId, userId)
+    // Fetch story directly (no caching to avoid 2MB data cache limits)
+    const { data, error } = await supabaseAdmin
+      .from('stories')
+      .select('*')
+      .eq('id', storyId)
+      .single()
 
-    if ('error' in result) {
+    if (error || !data) {
       return NextResponse.json<ApiResponse>(
-        {
-          success: false,
-          error: result.error,
-        },
-        { status: result.status }
+        { success: false, error: 'Story not found' },
+        { status: 404 }
       )
     }
 
+    const storyData = data as DatabaseStory
+    if (!storyData || storyData.user_id !== userId) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: 'Unauthorized' },
+        { status: 403 }
+      )
+    }
+
+    const story: Story = databaseStoryToStory(storyData)
+
     return NextResponse.json<ApiResponse<Story>>({
       success: true,
-      data: result.story,
+      data: story,
     })
   } catch (error) {
     console.error('Error fetching story:', error)

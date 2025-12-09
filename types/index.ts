@@ -14,25 +14,6 @@ export interface User {
   stripeSubscriptionId?: string
 }
 
-export interface Story {
-  id: string
-  userId: string
-  title: string
-  content: string
-  childName: string
-  adjectives: string[]
-  theme: string
-  moral?: string
-  hasImages: boolean
-  imageUrls?: string[]
-  appearance?: ChildAppearance // PRO MAX only
-  parentStoryId?: string // If set, this is a draft of another story
-  draftNumber?: number // Draft number (1, 2, 3, etc.)
-  isSelectedDraft?: boolean // True if this draft was selected as final
-  createdAt: Date
-  updatedAt: Date
-}
-
 export interface ChildAppearance {
   skinTone?: string
   hairColor?: string
@@ -54,9 +35,18 @@ export interface ChildProfile {
   birthDate?: Date
   appearance?: ChildAppearance
   aiGeneratedImageUrl?: string // AI-processed safe version
+  ai_generated_image_url?: string // Database column name (snake_case)
+  aiDescription?: string // AI description for consistent illustration generation
+  ai_description?: string // Database column name (snake_case)
   originalImageUploadedAt?: Date // When original was uploaded (for tracking)
   createdAt: Date
   updatedAt: Date
+}
+
+export interface BookPage {
+  pageNumber: number
+  text: string
+  illustration_url: string
 }
 
 export interface Story {
@@ -75,6 +65,8 @@ export interface Story {
   parentStoryId?: string // If set, this is a draft of another story
   draftNumber?: number // Draft number (1, 2, 3, etc.)
   isSelectedDraft?: boolean // True if this draft was selected as final
+  isIllustratedBook?: boolean // True if this is an illustrated book format (PRO MAX feature)
+  bookPages?: BookPage[] // Structured pages with illustrations (PRO MAX feature)
   createdAt: Date
   updatedAt: Date
 }
@@ -88,6 +80,7 @@ export interface StoryInput {
   generateImages?: boolean
   templateId?: string // Optional template ID
   appearance?: ChildAppearance // Deprecated: kept for backward compatibility (PRO MAX only)
+  profileId?: string // Optional: for illustrated books with child profile
 }
 
 export interface TrialUsage {

@@ -98,13 +98,13 @@ export default function StoryPage() {
   if (loading) {
     return (
       <ProtectedRoute>
-        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-pink-50 via-yellow-50 to-blue-50">
+        <div className="flex min-h-screen items-center justify-center bg-gradient-hero">
           <div className="flex flex-col items-center space-y-4">
             <div className="relative">
-              <Loader2 className="h-16 w-16 animate-spin text-pink-500" />
+              <Loader2 className="h-16 w-16 animate-spin text-primary" />
               <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl">📚</span>
             </div>
-            <p className="text-lg font-semibold text-gray-700">Loading your magical story... ✨</p>
+            <p className="text-lg font-semibold text-foreground">Loading your magical story... ✨</p>
           </div>
         </div>
       </ProtectedRoute>
@@ -114,16 +114,16 @@ export default function StoryPage() {
   if (error || !story) {
     return (
       <ProtectedRoute>
-        <div className="min-h-screen bg-gradient-to-br from-pink-50 via-yellow-50 to-blue-50 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
           <div className="container mx-auto max-w-2xl">
-            <div className="bg-white/90 backdrop-blur-sm rounded-3xl border-4 border-red-300 shadow-xl p-8 text-center">
+            <div className="bg-card backdrop-blur-sm rounded-3xl border-4 border-destructive shadow-xl p-8 text-center">
               <div className="text-6xl mb-4 animate-bounce-slow">😅</div>
               <div className="p-5 text-lg text-red-700 bg-red-100 border-2 border-red-300 rounded-2xl font-bold mb-6">
                 ⚠️ {error || 'Story not found'}
               </div>
               <Button
                 onClick={() => router.push('/library')}
-                className="rounded-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 font-bold text-lg px-8 py-6"
+                className="rounded-full bg-gradient-primary hover:opacity-90 font-bold text-lg px-8 py-6"
               >
                 Back to Library 📚
               </Button>

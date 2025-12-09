@@ -25,9 +25,9 @@ export default async function BlogPage() {
     const posts = await getAllPosts()
 
     return (
-        <main className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
+        <main className="min-h-screen bg-gradient-hero">
             {/* Header */}
-            <section className="bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 py-20 px-4">
+            <section className="bg-gradient-primary py-20 px-4">
                 <div className="container mx-auto max-w-6xl text-center">
                     <div className="flex justify-center mb-6">
                         <div className="h-20 w-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
@@ -60,7 +60,7 @@ export default async function BlogPage() {
                             {posts.map((post) => (
                                 <Card
                                     key={post.slug}
-                                    className="border-2 border-pink-200 bg-white shadow-lg hover:shadow-2xl transition-all hover:scale-105 cursor-pointer group"
+                                    className="border-2 border-primary/30 bg-white shadow-lg hover:shadow-2xl transition-all hover:scale-105 cursor-pointer group"
                                 >
                                     <Link href={`/blog/${post.slug}`}>
                                         {post.image && (
@@ -74,7 +74,7 @@ export default async function BlogPage() {
                                         )}
                                         <CardHeader>
                                             <div className="flex items-center gap-2 mb-3">
-                                                <Badge className="bg-gradient-to-r from-pink-500 to-purple-500 text-white">
+                                                <Badge className="bg-gradient-primary text-white">
                                                     {post.category}
                                                 </Badge>
                                                 <div className="flex items-center gap-1 text-sm text-gray-500">
@@ -108,7 +108,7 @@ export default async function BlogPage() {
             </section>
 
             {/* CTA Section */}
-            <section className="py-16 px-4 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500">
+            <section className="py-16 px-4 bg-gradient-primary">
                 <div className="container mx-auto max-w-4xl text-center">
                     <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
                         Ready to Create Your Own Bedtime Stories?

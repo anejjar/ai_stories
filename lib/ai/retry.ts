@@ -16,6 +16,14 @@ const DEFAULT_OPTIONS: Required<RetryOptions> = {
   backoffMultiplier: 2,
 }
 
+// Faster options for image generation
+const IMAGE_GENERATION_OPTIONS: Required<RetryOptions> = {
+  maxRetries: 1, // Only 1 retry for images (fail fast)
+  initialDelay: 500, // Shorter initial delay
+  maxDelay: 2000, // Shorter max delay
+  backoffMultiplier: 2,
+}
+
 /**
  * Retry a function with exponential backoff
  */
@@ -99,17 +107,45 @@ export async function retryWithFallback<T>(
     const providerFn = providers[providerIndex]
     
     try {
-      // Try this provider with retries
-      const result = await retryWithBackoff(providerFn, {
-        ...opts,
-        maxRetries: 1, // Only one retry per provider, then move to next
+      // Add timeout for image generation (30 seconds max per provider)
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Request timeout')), 90000)
       })
+
+      // Use faster retry options - only 1 retry with shorter delays
+      const retryOptions = {
+        maxRetries: 1, // Only one retry per provider, then move to next
+        initialDelay: 500, // Shorter initial delay for faster failure
+        maxDelay: 2000,
+        backoffMultiplier: 2,
+      }
+
+      // Try this provider with retries and timeout
+      const result = await Promise.race([
+        retryWithBackoff(providerFn, retryOptions),
+        timeoutPromise
+      ])
       
       return { result, providerIndex }
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error))
-      console.warn(`Provider ${providerIndex} failed:`, lastError.message)
+      const errorMessage = lastError.message
       
+      // Fail fast for certain errors (API not available, authentication, etc.)
+      if (
+        errorMessage.includes('not available') ||
+        errorMessage.includes('not configured') ||
+        errorMessage.includes('timeout') ||
+        errorMessage.includes('404') ||
+        errorMessage.includes('401') ||
+        errorMessage.includes('403')
+      ) {
+        console.warn(`Provider ${providerIndex} failed fast:`, errorMessage)
+        // Continue to next provider immediately
+        continue
+      }
+      
+      console.warn(`Provider ${providerIndex} failed:`, errorMessage)
       // Continue to next provider
       continue
     }
@@ -117,6 +153,7 @@ export async function retryWithFallback<T>(
 
   throw lastError || new Error('All providers failed')
 }
+
 
 
 
