@@ -1,7 +1,10 @@
 /**
  * Waitlist confirmation email template
  * Sent when a user joins the pre-launch waitlist
+ * Clear UI, clear text, fun copy, consistent design
  */
+
+import { generateBaseEmail, createContentSection, createInfoBox } from './base'
 
 interface WaitlistEmailParams {
   email: string
@@ -10,66 +13,70 @@ interface WaitlistEmailParams {
 export function generateWaitlistConfirmationEmail(
   params: WaitlistEmailParams
 ): { subject: string; html: string; text: string } {
-  const subject = 'You’re on the AI Stories waitlist'
+  const subject = "You're on the waitlist! 🌙 Bedtime magic is coming soon"
 
-  const html = `
-    <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background-color: #f3f4f6; padding: 32px 0;">
-      <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
-        <tr>
-          <td align="center">
-            <table width="600" cellpadding="0" cellspacing="0" role="presentation" style="background-color: #ffffff; border-radius: 16px; padding: 32px; box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);">
-              <tr>
-                <td style="text-align: center;">
-                  <div style="font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #6366f1; margin-bottom: 12px;">
-                    Early access confirmed
-                  </div>
-                  <h1 style="margin: 0 0 16px; font-size: 24px; line-height: 1.25; color: #0f172a;">
-                    Thanks for joining the AI Stories waitlist
-                  </h1>
-                  <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.6; color: #4b5563;">
-                    We’ve added <strong>${params.email}</strong> to our early access list.
-                  </p>
-                  <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.6; color: #4b5563;">
-                    We’re putting the final touches on AI Stories — a calm, focused space for turning complex ideas into clear, compelling narratives.
-                    As a waitlist member, you’ll be among the first to try it when we open the doors.
-                  </p>
-                  <p style="margin: 0 0 24px; font-size: 15px; line-height: 1.6; color: #4b5563;">
-                    We’ll reach out soon with launch updates, early access details, and a few behind-the-scenes previews.
-                  </p>
-                  <div style="margin: 24px 0; padding: 16px 20px; border-radius: 999px; background: #f9fafb; display: inline-block; font-size: 13px; color: #6b7280;">
-                    No spam. No noise. Just thoughtful updates when there’s something worth sharing.
-                  </div>
-                  <p style="margin: 0; font-size: 12px; line-height: 1.6; color: #9ca3af;">
-                    If you didn’t request this, you can safely ignore this email.
-                  </p>
-                </td>
-              </tr>
-            </table>
-            <p style="margin-top: 16px; font-size: 11px; color: #9ca3af; text-align: center;">
-              © ${new Date().getFullYear()} AI Stories. All rights reserved.
-            </p>
-          </td>
-        </tr>
-      </table>
-    </div>
+  const content = `
+    ${createContentSection(`
+      <p style="margin: 0 0 16px; font-size: 18px; font-weight: 600; color: #111827;">
+        Hey there! 👋
+      </p>
+      <p style="margin: 0 0 16px;">
+        We're so excited you joined the waitlist! You're now part of a special group of parents who'll be the first to experience <strong>AI Stories</strong> — where bedtime becomes a magical moment where your child is the hero of every adventure.
+      </p>
+      <p style="margin: 0 0 16px;">
+        We're putting the finishing touches on something we think you'll love: personalized, kid-safe bedtime stories that you can generate in seconds, read together, and turn into cherished memories.
+      </p>
+    `)}
+
+    ${createInfoBox(`
+      <strong>What happens next?</strong><br>
+      We'll email you as soon as we're ready to launch. You'll get early access, a behind-the-scenes look at how it works, and the chance to help shape the future of bedtime stories.
+    `, 'info')}
+
+    ${createContentSection(`
+      <p style="margin: 0 0 12px; font-size: 15px; color: #6b7280;">
+        <strong>What to expect:</strong>
+      </p>
+      <ul style="margin: 0; padding-left: 24px; color: #4b5563; line-height: 1.8;">
+        <li>Launch updates (we'll only email when there's real news)</li>
+        <li>Early access invite when we open the doors</li>
+        <li>Tips and ideas for making bedtime magical</li>
+      </ul>
+    `)}
+
+    ${createInfoBox(`
+      <strong>No spam, ever.</strong> We only email when there's something worth sharing. You can unsubscribe anytime.
+    `, 'success')}
   `
 
+  const { html } = generateBaseEmail({
+    headline: "You're on the waitlist!",
+    headerEmoji: "🌙✨",
+    content,
+    footerNote: "We're building something special for you and your family. Can't wait to share it!",
+  })
+
   const text = [
-    'Thanks for joining the AI Stories waitlist.',
-    '',
-    `We’ve added ${params.email} to our early access list.`,
-    '',
-    'We’re putting the final touches on AI Stories — a calm, focused space for turning complex ideas into clear, compelling narratives.',
-    'As a waitlist member, you’ll be among the first to try it when we open the doors.',
-    '',
-    'We’ll reach out soon with launch updates, early access details, and a few behind-the-scenes previews.',
-    '',
-    'No spam. No noise. Just thoughtful updates when there’s something worth sharing.',
-    '',
-    `© ${new Date().getFullYear()} AI Stories. All rights reserved.`,
+    "You're on the waitlist!",
+    "",
+    "Hey there!",
+    "",
+    "We're so excited you joined the waitlist! You're now part of a special group of parents who'll be the first to experience AI Stories — where bedtime becomes a magical moment where your child is the hero of every adventure.",
+    "",
+    "We're putting the finishing touches on something we think you'll love: personalized, kid-safe bedtime stories that you can generate in seconds, read together, and turn into cherished memories.",
+    "",
+    "What happens next?",
+    "We'll email you as soon as we're ready to launch. You'll get early access, a behind-the-scenes look at how it works, and the chance to help shape the future of bedtime stories.",
+    "",
+    "What to expect:",
+    "• Launch updates (we'll only email when there's real news)",
+    "• Early access invite when we open the doors",
+    "• Tips and ideas for making bedtime magical",
+    "",
+    "No spam, ever. We only email when there's something worth sharing. You can unsubscribe anytime.",
+    "",
+    `© ${new Date().getFullYear()} AI Stories. Made with 💖 for families everywhere.`,
   ].join('\n')
 
   return { subject, html, text }
 }
-
-
