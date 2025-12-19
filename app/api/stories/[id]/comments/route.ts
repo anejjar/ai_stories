@@ -7,7 +7,7 @@ import type { StoryComment } from '@/types/discovery'
 interface CommentsParams {
   params: Promise<{
     id: string
-  }
+  }>
 }
 
 /**

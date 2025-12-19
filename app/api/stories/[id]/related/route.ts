@@ -7,7 +7,7 @@ import { databaseStoryToStory, type DatabaseStory } from '@/types/database'
 interface RelatedParams {
   params: Promise<{
     id: string
-  }
+  }>
 }
 
 /**

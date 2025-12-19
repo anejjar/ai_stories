@@ -6,7 +6,7 @@ import type { ReportReason } from '@/types/discovery'
 interface ReportParams {
   params: Promise<{
     id: string
-  }
+  }>
 }
 
 const VALID_REASONS: ReportReason[] = ['inappropriate', 'spam', 'copyright', 'other']

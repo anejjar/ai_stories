@@ -6,7 +6,7 @@ import type { SocialStats } from '@/types/discovery'
 interface SocialStatsParams {
   params: Promise<{
     id: string
-  }
+  }>
 }
 
 /**

@@ -6,7 +6,7 @@ import type { RateStoryResponse } from '@/types/discovery'
 interface RatingParams {
   params: Promise<{
     id: string
-  }
+  }>
 }
 
 /**
