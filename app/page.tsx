@@ -229,7 +229,7 @@ export default function Home() {
 
           {/* Key visual card */}
           <aside
-            className="relative flex items-center justify-center"
+            className="relative hidden lg:flex items-center justify-center"
             aria-label="How AI Stories works"
           >
             <div className="relative w-full max-w-md aspect-[16/10]">
