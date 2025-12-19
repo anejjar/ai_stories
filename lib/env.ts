@@ -30,6 +30,10 @@ const envSchema = z.object({
   STRIPE_PRO_PRICE_ID: z.string().optional(),
   STRIPE_PRO_MAX_PRICE_ID: z.string().optional(),
 
+  // Email (waitlist)
+  RESEND_API_KEY: z.string().min(1).optional(),
+  WAITLIST_FROM_EMAIL: z.string().email().optional(),
+
   // App
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),
 })

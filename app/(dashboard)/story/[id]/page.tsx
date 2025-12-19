@@ -34,9 +34,22 @@ export default function StoryPage() {
   useEffect(() => {
     async function fetchStory() {
       if (!user || !storyId) {
+        // Only stop loading if we're sure there's no user (not just waiting for auth)
+        if (!user && storyId) {
+          setLoading(false)
+        }
+        return
+      }
+
+      // Skip if we already have this story loaded (prevents duplicate fetches)
+      if (story && story.id === storyId) {
         setLoading(false)
         return
       }
+
+      // Reset states when starting fetch
+      setLoading(true)
+      setError('')
 
       try {
         const token = await getAccessToken()
@@ -62,6 +75,7 @@ export default function StoryPage() {
         const result = await response.json()
         if (result.success && result.data) {
           setStory(result.data)
+          setLoading(false) // Only set loading false after story is set
 
           // Show upgrade modal after first story completion (emotional moment)
           // Only show once per session and only if trial was just completed
@@ -83,17 +97,18 @@ export default function StoryPage() {
           }
         } else {
           setError('Invalid story data')
+          setLoading(false)
         }
       } catch (err) {
         console.error('Error fetching story:', err)
         setError('Failed to load story')
-      } finally {
         setLoading(false)
       }
     }
 
     fetchStory()
-  }, [user, storyId, isTrialCompleted, storiesGenerated, hasShownModal, userProfile])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, storyId]) // Only re-fetch when user ID or story ID changes
 
   if (loading) {
     return (
@@ -111,7 +126,7 @@ export default function StoryPage() {
     )
   }
 
-  if (error || !story) {
+  if (!loading && (error || !story)) {
     return (
       <ProtectedRoute>
         <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">

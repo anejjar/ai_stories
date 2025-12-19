@@ -24,7 +24,7 @@ function getPriceIdForTier(tier: SubscriptionTier): string | null {
   const priceIds: Record<SubscriptionTier, string | null> = {
     trial: null,
     pro: process.env.STRIPE_PRO_PRICE_ID || null,
-    pro_max: process.env.STRIPE_PRO_MAX_PRICE_ID || null,
+    family: process.env.STRIPE_FAMILY_PRICE_ID || null,
   }
   return priceIds[tier]
 }
@@ -47,11 +47,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { tier } = body
 
-    if (!tier || (tier !== 'pro' && tier !== 'pro_max')) {
+    if (!tier || (tier !== 'pro' && tier !== 'family')) {
       return NextResponse.json<ApiResponse>(
         {
           success: false,
-          error: 'Invalid tier. Must be "pro" or "pro_max"',
+          error: 'Invalid tier. Must be "pro" or "family"',
         },
         { status: 400 }
       )

@@ -9,7 +9,7 @@
  * Or directly:
  *   npx tsx scripts/apply-migrations.ts
  */
-
+import 'dotenv/config'
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'fs'
 import { join } from 'path'

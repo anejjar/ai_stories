@@ -66,7 +66,7 @@ interface StoryFormProps {
   onSubmit: (data: StoryInput) => Promise<void>
   disabled?: boolean
   loading?: boolean
-  onShowUpgrade?: (tier: 'pro' | 'pro_max') => void
+  onShowUpgrade?: (tier: 'pro' | 'family') => void
 }
 
 export function StoryForm({ onSubmit, disabled, loading, onShowUpgrade }: StoryFormProps) {
@@ -79,7 +79,6 @@ export function StoryForm({ onSubmit, disabled, loading, onShowUpgrade }: StoryF
   const [children, setChildren] = useState<Child[]>([
     { name: '', adjectives: [], appearance: undefined },
   ])
-  const [theme, setTheme] = useState('')
   const [moral, setMoral] = useState('')
   const [templateId, setTemplateId] = useState<string | undefined>(undefined)
   const [error, setError] = useState('')
@@ -93,20 +92,38 @@ export function StoryForm({ onSubmit, disabled, loading, onShowUpgrade }: StoryF
   const [loadingProfiles, setLoadingProfiles] = useState(false)
   const [generateIllustratedBook, setGenerateIllustratedBook] = useState(false)
 
-  const isProMax = userProfile?.subscriptionTier === 'pro_max'
-  const isPro = userProfile?.subscriptionTier === 'pro' || isProMax
-  const showProMaxUpsell = !isProMax
+  const isFamily = userProfile?.subscriptionTier === 'family'
+  const isPro = userProfile?.subscriptionTier === 'pro' || isFamily
+  const showFamilyUpsell = !isFamily
 
-  // Check if selected profile has an image for illustrated book feature
+  // Family Plan users can generate illustrated books with any profile (3-tier system)
   const selectedProfile = childProfiles.find((p) => p.id === selectedProfileId)
-  const canGenerateIllustratedBook = isProMax && selectedProfile?.ai_generated_image_url
+  const canGenerateIllustratedBook = isFamily && !!selectedProfile
 
-  // Fetch child profiles for PRO MAX users
+  // Determine which illustration mode will be used
+  const getIllustrationMode = () => {
+    if (!selectedProfile) return null
+
+    if (selectedProfile.ai_generated_image_url && selectedProfile.ai_description) {
+      return 'character-photo' // Tier 1: Best quality with photo
+    } else if (selectedProfile.appearance &&
+      (selectedProfile.appearance.skinTone ||
+        selectedProfile.appearance.hairColor ||
+        selectedProfile.appearance.hairStyle)) {
+      return 'character-appearance' // Tier 2: Character from appearance settings
+    } else {
+      return 'environment' // Tier 3: Beautiful scenes without character
+    }
+  }
+
+  const illustrationMode = getIllustrationMode()
+
+  // Fetch child profiles for Family Plan users
   useEffect(() => {
-    if (isProMax) {
+    if (isFamily) {
       fetchChildProfiles()
     }
-  }, [isProMax])
+  }, [isFamily])
 
   // Loading messages rotation
   const [loadingMessage, setLoadingMessage] = useState('Generating plot...')
@@ -134,7 +151,7 @@ export function StoryForm({ onSubmit, disabled, loading, onShowUpgrade }: StoryF
   }, [loading])
 
   const fetchChildProfiles = async () => {
-    if (!isProMax) return
+    if (!isFamily) return
 
     setLoadingProfiles(true)
     try {
@@ -274,17 +291,27 @@ export function StoryForm({ onSubmit, disabled, loading, onShowUpgrade }: StoryF
       }
     }
 
-    if (!theme) {
-      setError('Please select a theme')
+    if (!templateId) {
+      setError('Please select a story template')
       return
     }
+
+    // Get the selected template to extract theme
+    const selectedTemplate = STORY_TEMPLATES.find((t) => t.id === templateId)
+    if (!selectedTemplate) {
+      setError('Invalid story template selected')
+      return
+    }
+
+    // Use the first suggested theme from the template, or fallback to template name
+    const theme = selectedTemplate.suggestedThemes[0] || selectedTemplate.name
 
     const storyInput: StoryInput = isMultiChild
       ? {
         children: children.map((child) => ({
           name: child.name.trim(),
           adjectives: child.adjectives,
-          appearance: isProMax && (child.appearance?.skinTone || child.appearance?.hairColor || child.appearance?.hairStyle)
+          appearance: isFamily && (child.appearance?.skinTone || child.appearance?.hairColor || child.appearance?.hairStyle)
             ? child.appearance
             : undefined,
           profileId: child.profileId
@@ -292,7 +319,7 @@ export function StoryForm({ onSubmit, disabled, loading, onShowUpgrade }: StoryF
         theme,
         moral: moral.trim() || undefined,
         generateImages: generateIllustratedBook,
-        templateId: templateId || undefined,
+        templateId: templateId,
       }
       : {
         childName: childName.trim(),
@@ -300,8 +327,8 @@ export function StoryForm({ onSubmit, disabled, loading, onShowUpgrade }: StoryF
         theme,
         moral: moral.trim() || undefined,
         generateImages: generateIllustratedBook,
-        templateId: templateId || undefined,
-        appearance: isProMax && (appearance.skinTone || appearance.hairColor || appearance.hairStyle)
+        templateId: templateId,
+        appearance: isFamily && (appearance.skinTone || appearance.hairColor || appearance.hairStyle)
           ? appearance
           : undefined,
         profileId: selectedProfileId || undefined,
@@ -322,50 +349,12 @@ export function StoryForm({ onSubmit, disabled, loading, onShowUpgrade }: StoryF
         </div>
       )}
 
-      {/* Multi-Child Toggle - PRO Feature */}
-      {isPro && (
-        <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border-2 border-blue-200">
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={isMultiChild}
-              onChange={(e) => {
-                setIsMultiChild(e.target.checked)
-                if (e.target.checked) {
-                  // Initialize with current single child data
-                  setChildren([{ name: childName, adjectives, appearance, profileId: selectedProfileId || undefined }])
-                } else {
-                  // Reset to single child mode
-                  if (children.length > 0) {
-                    setChildName(children[0].name)
-                    setAdjectives(children[0].adjectives)
-                    setAppearance(children[0].appearance || {})
-                    if (children[0].profileId) setSelectedProfileId(children[0].profileId)
-                  }
-                  setChildren([{ name: '', adjectives: [], appearance: undefined }])
-                }
-              }}
-              disabled={disabled || loading}
-              className="w-5 h-5 rounded border-2 border-blue-400 text-blue-600 focus:ring-blue-500"
-            />
-            <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-blue-600" />
-              <span className="font-bold text-gray-800">
-                Create Story with Multiple Children (PRO Feature) 👨‍👩‍👧‍👦
-              </span>
-            </div>
-          </label>
-          <p className="text-sm text-gray-600 mt-2 ml-8 font-semibold">
-            Perfect for siblings or friends! Create stories featuring multiple children as heroes together. ✨
-          </p>
-        </div>
-      )}
 
       {!isMultiChild ? (
         <>
           {/* Single Child Form */}
           <div className="space-y-4">
-            {isProMax && childProfiles.length > 0 && (
+            {isFamily && childProfiles.length > 0 && (
               <div className="bg-purple-50 p-4 rounded-xl border-2 border-purple-200 mb-4">
                 <label className="text-sm font-bold text-purple-800 mb-2 block flex items-center gap-2">
                   <UserCircle className="h-4 w-4" />
@@ -451,7 +440,7 @@ export function StoryForm({ onSubmit, disabled, loading, onShowUpgrade }: StoryF
                     )}
                   </div>
 
-                  {isProMax && childProfiles.length > 0 && (
+                  {isFamily && childProfiles.length > 0 && (
                     <div className="mb-2">
                       <Select
                         value={child.profileId || 'none'}
@@ -527,14 +516,14 @@ export function StoryForm({ onSubmit, disabled, loading, onShowUpgrade }: StoryF
                     </div>
                   </div>
 
-                  {/* Appearance for PRO MAX */}
-                  {isProMax && (
+                  {/* Appearance for Family Plan */}
+                  {isFamily && (
                     <div className="space-y-2 pt-2 border-t-2 border-purple-200">
                       <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
                         <span className="text-lg">🎨</span>
                         Appearance (Auto-filled from Profile)
                         <Badge className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-xs font-bold px-2">
-                          PRO MAX
+                          FAMILY PLAN
                         </Badge>
                       </label>
                       {child.appearance ? (
@@ -630,41 +619,19 @@ export function StoryForm({ onSubmit, disabled, loading, onShowUpgrade }: StoryF
         </div>
       )}
 
-      <div className="space-y-2">
-        <label htmlFor="theme" className="text-base font-bold text-gray-700 flex items-center gap-2">
-          <span className="text-2xl">🎭</span>
-          Theme <span className="text-red-500">*</span>
-        </label>
-        <Select value={theme} onValueChange={setTheme} disabled={disabled || loading}>
-          <SelectTrigger id="theme" className="rounded-xl border-2 border-blue-300 focus:border-blue-500 text-lg py-3">
-            <SelectValue placeholder="Select a theme 🎨" />
-          </SelectTrigger>
-          <SelectContent className="rounded-xl border-2 border-blue-300">
-            {STORY_THEMES.map((t) => (
-              <SelectItem key={t} value={t} className="font-semibold hover:bg-blue-100">
-                {t}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
+      <div className="space-y-2" data-tour="template-section">
         <label htmlFor="template" className="text-base font-bold text-gray-700 flex items-center gap-2">
           <span className="text-2xl">📋</span>
-          Story Template (Optional)
+          Story Template <span className="text-red-500">*</span>
         </label>
         <p className="text-sm text-gray-600 mb-2 font-semibold">
           Choose a story structure to guide the narrative! 🎬
         </p>
-        <Select value={templateId || 'none'} onValueChange={(value) => setTemplateId(value === 'none' ? undefined : value)} disabled={disabled || loading}>
+        <Select value={templateId || ''} onValueChange={setTemplateId} disabled={disabled || loading}>
           <SelectTrigger id="template" className="rounded-xl border-2 border-green-300 focus:border-green-500 text-lg py-3">
-            <SelectValue placeholder="Select a template (or leave blank for free-form) 📖" />
+            <SelectValue placeholder="Select a story template 📖" />
           </SelectTrigger>
           <SelectContent className="rounded-xl border-2 border-green-300 max-h-[400px]">
-            <SelectItem value="none" className="font-semibold hover:bg-green-100">
-              None (Free-form) ✨
-            </SelectItem>
             {STORY_TEMPLATES.map((template) => (
               <SelectItem key={template.id} value={template.id} className="font-semibold hover:bg-green-100">
                 <div className="flex items-center gap-2">
@@ -716,8 +683,8 @@ export function StoryForm({ onSubmit, disabled, loading, onShowUpgrade }: StoryF
         />
       </div>
 
-      {/* Child Profile Info - PRO MAX Only */}
-      {isProMax && (
+      {/* Child Profile Info - Family Plan Only */}
+      {isFamily && (
         <div className="space-y-4 p-6 rounded-2xl border-4 border-purple-300 bg-gradient-to-br from-purple-50 to-pink-50">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-2xl">👨‍👩‍👧‍👦</span>
@@ -725,7 +692,7 @@ export function StoryForm({ onSubmit, disabled, loading, onShowUpgrade }: StoryF
               Child Profiles
             </label>
             <Badge className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white font-bold border-2 border-yellow-500 rounded-full px-3">
-              PRO MAX 👑
+              FAMILY PLAN 👑
             </Badge>
           </div>
           <p className="text-sm text-gray-600 mb-4 font-semibold">
@@ -736,8 +703,8 @@ export function StoryForm({ onSubmit, disabled, loading, onShowUpgrade }: StoryF
         </div>
       )}
 
-      {/* Illustrated Book Option - PRO MAX Only */}
-      {isProMax && canGenerateIllustratedBook && (
+      {/* Illustrated Book Option - Family Plan Only */}
+      {isFamily && canGenerateIllustratedBook && (
         <div className="p-5 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl border-3 border-amber-300">
           <label className="flex items-center gap-3 cursor-pointer">
             <input
@@ -753,22 +720,78 @@ export function StoryForm({ onSubmit, disabled, loading, onShowUpgrade }: StoryF
                 Generate Illustrated Story Book
               </span>
               <Badge className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-xs font-bold px-2 border border-yellow-500">
-                PRO MAX 👑
+                FAMILY PLAN 👑
               </Badge>
             </div>
           </label>
+
           <p className="text-sm text-gray-700 mt-3 ml-8 font-medium">
-            Create a beautiful book-format story with 5-7 AI-generated illustrations featuring <strong>{selectedProfile?.name}</strong> as the hero!
-            Illustrations will be consistent throughout and follow your selected theme. ✨
+            Create a beautiful book-format story with 5-7 AI-generated illustrations following your selected theme. ✨
           </p>
+
+          {/* Illustration Mode Info */}
+          <div className="mt-3 ml-8 p-3 bg-white/60 rounded-lg border-2 border-amber-200">
+            {illustrationMode === 'character-photo' && (
+              <div className="flex items-start gap-2">
+                <span className="text-lg">✨</span>
+                <div>
+                  <p className="text-sm font-semibold text-amber-900">
+                    Best Quality Mode
+                  </p>
+                  <p className="text-xs text-gray-700 mt-1">
+                    <strong>{selectedProfile?.name}</strong> will be featured as the hero with consistent appearance based on their profile picture across all illustrations!
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {illustrationMode === 'character-appearance' && (
+              <div className="flex items-start gap-2">
+                <span className="text-lg">👤</span>
+                <div>
+                  <p className="text-sm font-semibold text-amber-900">
+                    Character Mode
+                  </p>
+                  <p className="text-xs text-gray-700 mt-1">
+                    <strong>{selectedProfile?.name}</strong> will be featured as the hero based on their appearance settings (
+                    {selectedProfile?.appearance?.skinTone && `${selectedProfile.appearance.skinTone} skin`}
+                    {selectedProfile?.appearance?.hairColor && `, ${selectedProfile.appearance.hairColor} hair`}
+                    {selectedProfile?.appearance?.hairStyle && `, ${selectedProfile.appearance.hairStyle}`}
+                    ).
+                  </p>
+                  <p className="text-xs text-amber-700 mt-1 italic">
+                    💡 Tip: Add a profile picture for even better character consistency!
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {illustrationMode === 'environment' && (
+              <div className="flex items-start gap-2">
+                <span className="text-lg">🏞️</span>
+                <div>
+                  <p className="text-sm font-semibold text-amber-900">
+                    Scene & Environment Mode
+                  </p>
+                  <p className="text-xs text-gray-700 mt-1">
+                    Beautiful, immersive illustrations of scenes and environments from the story. The story will still feature <strong>{selectedProfile?.name}</strong>, but illustrations will focus on magical landscapes and settings.
+                  </p>
+                  <p className="text-xs text-amber-700 mt-1 italic">
+                    💡 Tip: Add a profile picture or appearance settings to include your child as the hero in the illustrations!
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
           <p className="text-xs text-amber-700 mt-2 ml-8 italic">
             Note: Illustrated book generation takes 2-3 minutes and no further enhancements will be available.
           </p>
         </div>
       )}
 
-      {/* Soft Upsell: PRO MAX Image Generation */}
-      {showProMaxUpsell && (
+      {/* Soft Upsell: Family Plan Image Generation */}
+      {showFamilyUpsell && (
         <div className="relative p-6 rounded-2xl border-4 border-yellow-300 bg-gradient-to-br from-yellow-50 to-orange-50 overflow-hidden">
           <div className="absolute top-2 right-2">
             <Crown className="h-6 w-6 text-yellow-500 animate-sparkle" />
@@ -789,7 +812,7 @@ export function StoryForm({ onSubmit, disabled, loading, onShowUpgrade }: StoryF
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => onShowUpgrade?.('pro_max')}
+                onClick={() => onShowUpgrade?.('family')}
                 className="rounded-full border-2 border-yellow-400 bg-white/80 font-bold hover:bg-yellow-50 hover:text-yellow-700 transition-colors"
               >
                 <Lock className="h-4 w-4 mr-2" />
@@ -802,6 +825,7 @@ export function StoryForm({ onSubmit, disabled, loading, onShowUpgrade }: StoryF
 
       <Button
         type="submit"
+        data-tour="generate-button"
         className="w-full rounded-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-lg py-6 font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
         disabled={disabled || loading}
         size="lg"

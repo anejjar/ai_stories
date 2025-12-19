@@ -12,34 +12,27 @@ import { databaseUserToUser } from '@/types/database'
 export function useAuth() {
   const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null)
   const [loading, setLoading] = useState(true)
-  const {
-    user: storeUser,
-    setUser: setStoreUser,
-    clearUser,
-    shouldRefresh,
-    sessionChecked,
-    setSessionChecked,
-  } = useAuthStore()
+  const storeUser = useAuthStore((state) => state.user)
+  const setStoreUser = useAuthStore((state) => state.setUser)
+  const clearUser = useAuthStore((state) => state.clearUser)
 
   useEffect(() => {
     let mounted = true
+    let isInitialized = false
 
     async function initializeAuth() {
-      try {
-        // If we have cached user and cache is fresh, use it immediately
-        if (storeUser && !shouldRefresh() && sessionChecked) {
-          console.log('✅ Using cached auth - no API call needed')
-          setLoading(false)
-          return
-        }
+      // Prevent multiple initializations
+      if (isInitialized) return
+      isInitialized = true
 
-        // Failsafe: Always set loading to false after 8 seconds
+      try {
+        // Failsafe: Always set loading to false after 3 seconds
         const failsafeTimeout = setTimeout(() => {
           if (mounted) {
             console.warn('⚠️ Auth loading timeout - forcing loading to false')
             setLoading(false)
           }
-        }, 8000)
+        }, 3000)
 
         // Get session (lightweight check - uses cached session from Supabase)
         const {
@@ -52,15 +45,18 @@ export function useAuth() {
         }
 
         setSupabaseUser(session?.user ?? null)
-        setSessionChecked(true)
 
         if (session?.user) {
-          // Only fetch profile if cache is stale or doesn't exist
-          if (shouldRefresh() || !storeUser) {
-            console.log('🔄 Cache stale or missing - fetching fresh profile')
+          // Check if we have cached profile that's still fresh
+          const cachedUser = useAuthStore.getState().user
+          const cachedTime = useAuthStore.getState().lastFetched
+          const needsRefresh = !cachedUser || !cachedTime || (Date.now() - cachedTime > 5 * 60 * 1000)
+
+          if (needsRefresh) {
+            console.log('🔄 Fetching fresh user profile')
             await fetchUserProfile(session.user.id)
           } else {
-            console.log('✅ Using cached profile - still fresh')
+            console.log('✅ Using cached profile')
             setLoading(false)
           }
         } else {
@@ -77,15 +73,19 @@ export function useAuth() {
       }
     }
 
+    // Initialize auth on mount
     initializeAuth()
 
-    // Listen for auth state changes (login/logout)
+    // Listen for auth state changes (login/logout) - ONLY ONCE
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return
 
-      console.log('🔐 Auth state changed:', event)
+      // Only handle specific events, ignore INITIAL_SESSION
+      if (event === 'INITIAL_SESSION') return
+
+      console.log('🔐 Auth event:', event)
       setSupabaseUser(session?.user ?? null)
 
       if (event === 'SIGNED_IN' && session?.user) {
@@ -101,7 +101,8 @@ export function useAuth() {
       mounted = false
       subscription.unsubscribe()
     }
-  }, [storeUser, shouldRefresh, sessionChecked, setStoreUser, clearUser, setSessionChecked])
+    // Empty dependency array - run only once on mount
+  }, [])
 
   async function fetchUserProfile(userId: string) {
     try {
@@ -109,7 +110,7 @@ export function useAuth() {
 
       // Add timeout to prevent hanging
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 5000) // 5 second timeout
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 15000) // 15 second timeout
       })
 
       const fetchPromise = supabase

@@ -19,7 +19,7 @@ export const stripe = process.env.STRIPE_SECRET_KEY
 export const SUBSCRIPTION_PRICES: Record<SubscriptionTier, number> = {
   trial: 0,
   pro: 999, // $9.99/month
-  pro_max: 1999, // $19.99/month
+  family: 2499, // $24.99/month
 }
 
 /**
@@ -63,9 +63,57 @@ function getPriceIdForTier(tier: SubscriptionTier): string | null {
   const priceIds: Record<SubscriptionTier, string | null> = {
     trial: null,
     pro: process.env.STRIPE_PRO_PRICE_ID || null,
-    pro_max: process.env.STRIPE_PRO_MAX_PRICE_ID || null,
+    family: process.env.STRIPE_FAMILY_PRICE_ID || null,
   }
   return priceIds[tier]
+}
+
+/**
+ * Get tier name for display purposes
+ */
+export function getTierDisplayName(tier: SubscriptionTier): string {
+  const names: Record<SubscriptionTier, string> = {
+    trial: 'Free Trial',
+    pro: 'Pro',
+    family: 'Family Plan',
+  }
+  return names[tier]
+}
+
+/**
+ * Get tier features for display
+ */
+export function getTierFeatures(tier: SubscriptionTier): string[] {
+  const features: Record<SubscriptionTier, string[]> = {
+    trial: [
+      '1 free story',
+      'Save & view stories',
+      '100% kid-safe content',
+      'Personalized with child\'s name',
+    ],
+    pro: [
+      'Unlimited text stories',
+      'Multiple story drafts (3 per request)',
+      'Rewrite & enhance tools',
+      '25+ story themes',
+      '10 story templates',
+      'Text-to-Speech audio',
+      'Unlimited storage',
+      'Ad-free',
+    ],
+    family: [
+      'Everything in Pro',
+      'Up to 3 child profiles',
+      '2 AI-illustrated stories per day',
+      '10 text stories per day',
+      'High-resolution picture books',
+      'Child appearance customization',
+      'PDF export',
+      'Advanced art styles',
+      'Family dashboard',
+    ],
+  }
+  return features[tier]
 }
 
 /**

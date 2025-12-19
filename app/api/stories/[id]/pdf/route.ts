@@ -34,14 +34,10 @@ export async function GET(
       )
     }
 
-    // Check if user has PRO MAX access
-    if (userProfile.subscription_tier !== 'pro_max') {
-      return NextResponse.json<ApiResponse>(
-        {
-          success: false,
-          error: 'PRO MAX subscription required for PDF export',
-          data: { requiresUpgrade: true, requiredTier: 'pro_max' },
-        },
+    // Check if user has Family Plan access
+    if (userProfile.subscription_tier !== 'family') {
+      return NextResponse.json(
+        { success: false, error: 'Family Plan required to export PDF' },
         { status: 403 }
       )
     }

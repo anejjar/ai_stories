@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Check, Sparkles, Crown, Star, Zap, Heart, Shield, Infinity } from 'lucide-react'
+import { Check, Sparkles, Crown, Star, Zap, Heart, Shield, Infinity, Users } from 'lucide-react'
 import type { SubscriptionTier } from '@/types'
 import { useAuth } from '@/hooks/use-auth'
 import { toast } from '@/components/ui/toaster'
@@ -20,7 +20,7 @@ import { toast } from '@/components/ui/toaster'
 interface UpgradeModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  tier: 'pro' | 'pro_max'
+  tier: 'pro' | 'family'
 }
 
 interface Feature {
@@ -39,12 +39,13 @@ const PRO_FEATURES: Feature[] = [
   { text: 'Unlimited story storage', emoji: '💾', icon: Heart },
 ]
 
-const PRO_MAX_FEATURES: Feature[] = [
+const FAMILY_PLAN_FEATURES: Feature[] = [
   { text: 'Everything in PRO', emoji: '⭐', icon: Crown, highlight: true },
-  { text: 'AI-illustrated stories with your child', emoji: '🎨', icon: Sparkles },
+  { text: 'Up to 3 Child Profiles', emoji: '👨‍👩‍👧‍👦', icon: Users },
+  { text: '2 AI-illustrated stories per day', emoji: '🎨', icon: Sparkles },
+  { text: '10 text stories per day', emoji: '📚', icon: Infinity },
   { text: 'High-resolution picture-book images', emoji: '🖼️', icon: Star },
   { text: 'Child appearance customization', emoji: '👤', icon: Heart },
-  { text: 'Unlimited illustrated story generations', emoji: '🚀', icon: Zap },
   { text: 'PDF export for printing', emoji: '📄', icon: Crown },
   { text: 'Advanced themes & art styles', emoji: '🌟', icon: Sparkles },
 ]
@@ -104,9 +105,9 @@ export function UpgradeModal({ open, onOpenChange, tier }: UpgradeModalProps) {
     }
   }
 
-  const features = tier === 'pro' ? PRO_FEATURES : PRO_MAX_FEATURES
-  const price = tier === 'pro' ? '$9.99' : '$19.99'
-  const title = tier === 'pro' ? 'Upgrade to PRO' : 'Upgrade to PRO MAX'
+  const features = tier === 'pro' ? PRO_FEATURES : FAMILY_PLAN_FEATURES
+  const price = tier === 'pro' ? '$9.99' : '$24.99'
+  const title = tier === 'pro' ? 'Upgrade to PRO' : 'Upgrade to FAMILY PLAN'
   const description =
     tier === 'pro'
       ? 'Unlock unlimited stories and powerful features'
@@ -125,7 +126,7 @@ export function UpgradeModal({ open, onOpenChange, tier }: UpgradeModalProps) {
           {/* Compact Header */}
           <DialogHeader className="relative bg-gradient-to-r from-pink-100 via-purple-100 to-blue-100 rounded-t-2xl p-4 border-b-2 border-pink-300 flex-shrink-0">
             {/* Most Popular Badge for PRO MAX */}
-            {tier === 'pro_max' && (
+            {tier === 'family' && (
               <div className="flex justify-center mb-2">
                 <Badge className="bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 text-white font-bold rounded-full px-3 py-1 text-xs border-2 border-white shadow-xl">
                   <Star className="h-3 w-3 mr-1 inline" />
@@ -134,7 +135,7 @@ export function UpgradeModal({ open, onOpenChange, tier }: UpgradeModalProps) {
               </div>
             )}
             <div className="flex items-center gap-3">
-              {tier === 'pro_max' ? (
+              {tier === 'family' ? (
                 <div className="h-12 w-12 rounded-full bg-gradient-to-br from-yellow-400 via-orange-500 to-pink-500 flex items-center justify-center shadow-lg flex-shrink-0">
                   <Crown className="h-6 w-6 text-white" />
                 </div>
@@ -164,7 +165,7 @@ export function UpgradeModal({ open, onOpenChange, tier }: UpgradeModalProps) {
                 </span>
                 <span className="text-lg text-gray-500 font-semibold">/mo</span>
               </div>
-              {tier === 'pro_max' && (
+              {tier === 'family' && (
                 <Badge className="bg-gradient-to-r from-green-400 to-emerald-500 text-white text-xs font-bold px-2 py-0.5 mt-1">
                   Save 33% ✨
                 </Badge>
@@ -218,7 +219,7 @@ export function UpgradeModal({ open, onOpenChange, tier }: UpgradeModalProps) {
             <Button
               onClick={handleUpgrade}
               disabled={loading || authLoading}
-              className={`w-full rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all font-bold text-lg py-4 relative overflow-hidden ${tier === 'pro_max'
+              className={`w-full rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all font-bold text-lg py-4 relative overflow-hidden ${tier === 'family'
                 ? 'bg-gradient-to-r from-yellow-500 via-orange-500 to-pink-500 hover:from-yellow-600 hover:via-orange-600 hover:to-pink-600'
                 : 'bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600'
                 }`}
@@ -233,10 +234,10 @@ export function UpgradeModal({ open, onOpenChange, tier }: UpgradeModalProps) {
                     </>
                   ) : (
                     <>
-                      {tier === 'pro_max' ? (
+                      {tier === 'family' ? (
                         <>
                           <Crown className="h-5 w-5" />
-                          <span>Get PRO MAX Now! 👑</span>
+                          <span>Get Family Plan Now! 👑</span>
                         </>
                       ) : (
                         <>

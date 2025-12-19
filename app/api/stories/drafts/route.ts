@@ -37,7 +37,7 @@ function generateStoryTitle(content: string, childName: string, theme: string): 
 /**
  * POST /api/stories/drafts
  * Generate multiple story drafts from the same input
- * Requires PRO or PRO MAX subscription
+ * Requires PRO or FAMILY PLAN subscription
  */
 export async function POST(request: NextRequest) {
   const { userId, response } = await requireAuth(request)
@@ -58,12 +58,12 @@ export async function POST(request: NextRequest) {
 
     const subscriptionTier = userProfile.subscriptionTier
 
-    // Only PRO and PRO MAX users can generate drafts
+    // Only PRO and FAMILY PLAN users can generate drafts
     if (subscriptionTier === 'trial') {
       return NextResponse.json<ApiResponse>(
         {
           success: false,
-          error: 'Draft generation is available for PRO and PRO MAX subscribers. Please upgrade to continue.',
+          error: 'Draft generation is available for PRO and FAMILY PLAN subscribers. Please upgrade to continue.',
           data: { requiresUpgrade: true },
         },
         { status: 403 }

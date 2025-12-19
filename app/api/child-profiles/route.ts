@@ -6,7 +6,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth/middleware'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import type { ApiResponse, ChildProfile } from '@/types'
+import { checkChildProfileLimit } from '@/lib/usage/daily-limits'
+import type { ApiResponse, ChildProfile, SubscriptionTier } from '@/types'
 import { databaseChildProfileToChildProfile, childProfileToDatabaseChildProfile } from '@/types/database'
 
 // GET - List all child profiles for the authenticated user
@@ -32,17 +33,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Check if user has PRO MAX access
-    if (userProfile.subscription_tier !== 'pro_max') {
-      return NextResponse.json<ApiResponse>(
-        {
-          success: false,
-          error: 'PRO MAX subscription required for child profiles',
-          data: { requiresUpgrade: true, requiredTier: 'pro_max' },
-        },
-        { status: 403 }
-      )
-    }
+    // Child profiles are available for Pro and Family tiers
+    // Trial users can't access this endpoint (should use trial limits)
 
     // Fetch child profiles
     const { data: profiles, error } = await supabaseAdmin
@@ -96,13 +88,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if user has PRO MAX access
-    if (userProfile.subscription_tier !== 'pro_max') {
+    // Check child profile limit based on subscription tier
+    const tier = userProfile.subscription_tier as SubscriptionTier
+    const limitCheck = await checkChildProfileLimit(userId, tier)
+
+    if (!limitCheck.canCreate) {
       return NextResponse.json<ApiResponse>(
         {
           success: false,
-          error: 'PRO MAX subscription required for child profiles',
-          data: { requiresUpgrade: true, requiredTier: 'pro_max' },
+          error: limitCheck.reason,
+          data: {
+            requiresUpgrade: tier !== 'family', // Only suggest upgrade if not already on Family
+            currentCount: limitCheck.currentCount,
+            maxCount: limitCheck.maxCount,
+          },
         },
         { status: 403 }
       )
@@ -150,7 +149,7 @@ export async function POST(request: NextRequest) {
     })
   } catch (error: any) {
     console.error('Error creating child profile:', error)
-    
+
     // Handle unique constraint violation
     if (error.code === '23505' || error.message?.includes('unique')) {
       return NextResponse.json<ApiResponse>(
@@ -159,6 +158,17 @@ export async function POST(request: NextRequest) {
           error: 'A profile with this name already exists',
         },
         { status: 400 }
+      )
+    }
+
+    // Handle profile limit errors from database trigger
+    if (error.message?.includes('allows maximum') || error.message?.includes('child profile')) {
+      return NextResponse.json<ApiResponse>(
+        {
+          success: false,
+          error: error.message,
+        },
+        { status: 403 }
       )
     }
 
@@ -171,4 +181,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-

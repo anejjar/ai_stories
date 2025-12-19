@@ -136,6 +136,13 @@ export const RATE_LIMITS = {
     windowSeconds: 60, // 10 auth attempts per minute
     identifier: 'auth',
   },
+
+  // Waitlist signups - protect expensive email provider
+  waitlist: {
+    limit: 3,
+    windowSeconds: 3600, // 3 signups per hour per IP
+    identifier: 'waitlist',
+  },
 } as const
 
 /**

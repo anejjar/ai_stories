@@ -13,7 +13,7 @@ import { Suspense } from 'react'
 function PaymentSuccessContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const [tier, setTier] = useState<'pro' | 'pro_max' | null>(null)
+  const [upgradeTier, setUpgradeTier] = useState<'pro' | 'family' | null>(null)
 
   useEffect(() => {
     // In a real app, you'd verify the session_id with Stripe

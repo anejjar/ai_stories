@@ -19,9 +19,9 @@ export default function LibraryPage() {
   const { isTrialCompleted, storiesGenerated } = useTrial()
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
 
-  const isProMax = userProfile?.subscriptionTier === 'pro_max'
+  const isFamily = userProfile?.subscriptionTier === 'family'
   const isPro = userProfile?.subscriptionTier === 'pro'
-  const showProMaxUpsell = !isProMax
+  const showFamilyUpsell = !isFamily
 
   return (
     <>
@@ -65,8 +65,8 @@ export default function LibraryPage() {
             </div>
           </div>
 
-          {/* Soft Upsell: PRO MAX Library Card */}
-          {showProMaxUpsell && stories && stories.length > 0 && (
+          {/* Soft Upsell: FAMILY PLAN Library Card */}
+          {showFamilyUpsell && stories && stories.length > 0 && (
             <div className="mb-8 bg-gradient-accent rounded-3xl border-4 border-accent p-6 shadow-xl relative overflow-hidden">
               <div className="absolute top-4 right-4 text-5xl opacity-20 animate-float">👑</div>
               <div className="absolute bottom-4 left-4 text-4xl opacity-20 animate-float" style={{ animationDelay: '1s' }}>⭐</div>
@@ -78,18 +78,18 @@ export default function LibraryPage() {
                       Turn Your Stories Into Picture Books!
                     </h2>
                     <Badge className="bg-gradient-secondary text-secondary-foreground font-bold border-2 border-accent rounded-full px-3 py-1">
-                      PRO MAX 👑
+                      FAMILY PLAN 👑
                     </Badge>
                   </div>
                   <p className="text-foreground font-semibold mb-4">
-                    Unlock magical AI-generated illustrations featuring your child in every story! 🚀
+                    Unlock magical AI-generated illustrations and manage up to 3 child profiles! 🚀
                   </p>
                   <Button
                     onClick={() => setShowUpgradeModal(true)}
                     className="rounded-full bg-gradient-secondary hover:opacity-90 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all font-bold"
                   >
                     <Crown className="h-5 w-5 mr-2" />
-                    Upgrade to PRO MAX! ✨
+                    Upgrade to FAMILY PLAN! ✨
                   </Button>
                 </div>
               </div>
@@ -152,7 +152,7 @@ export default function LibraryPage() {
       <UpgradeModal
         open={showUpgradeModal}
         onOpenChange={setShowUpgradeModal}
-        tier="pro_max"
+        tier="family"
       />
     </>
   )

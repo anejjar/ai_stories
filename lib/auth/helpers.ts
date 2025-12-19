@@ -68,7 +68,7 @@ export function hasFeatureAccess(
   const tierHierarchy: Record<SubscriptionTier, number> = {
     trial: 0,
     pro: 1,
-    pro_max: 2,
+    family: 2,
   }
   return tierHierarchy[userTier] >= tierHierarchy[requiredTier]
 }
@@ -83,13 +83,13 @@ export function canGenerateStory(
   if (userTier === 'trial') {
     return storiesGenerated < 1
   }
-  return userTier === 'pro' || userTier === 'pro_max'
+  return userTier === 'pro' || userTier === 'family'
 }
 
 /**
  * Check if user can generate images
  */
 export function canGenerateImages(userTier: SubscriptionTier): boolean {
-  return userTier === 'pro_max'
+  return userTier === 'family'
 }
 

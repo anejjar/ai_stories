@@ -1,4 +1,5 @@
 import { MainNav } from '@/components/nav/main-nav'
+import { OnboardingManager, ChecklistWidget } from '@/components/onboarding'
 
 export default function DashboardLayout({
   children,
@@ -9,7 +10,8 @@ export default function DashboardLayout({
     <>
       <MainNav />
       {children}
+      <OnboardingManager />
+      <ChecklistWidget />
     </>
   )
 }
-

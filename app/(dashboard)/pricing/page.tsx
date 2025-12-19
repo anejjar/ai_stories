@@ -14,12 +14,13 @@ import { Shield, DollarSign, Users, CheckCircle, Star, Zap, Crown } from 'lucide
 export const metadata: Metadata = {
     title: 'Pricing - Safe AI Bedtime Stories for Kids',
     description:
-        'Choose the perfect plan for your family. Start with 1 free story, upgrade to unlimited text stories (PRO) or illustrated stories (PRO MAX). Cancel anytime.',
+        'Choose the perfect plan for your family. Start with 1 free story, upgrade to unlimited text stories (PRO) or AI-illustrated picture books (FAMILY PLAN). Cancel anytime.',
     keywords: [
         'ai bedtime stories pricing',
         'bedtime story generator cost',
         'personalized stories subscription',
         'ai story app pricing',
+        'family plan pricing',
     ],
 }
 
@@ -130,7 +131,7 @@ export default function PricingPage() {
                             </CardContent>
                         </Card>
 
-                        {/* PRO MAX Plan */}
+                        {/* FAMILY PLAN */}
                         <Card className="border-4 border-accent bg-card shadow-2xl relative">
                             <div className="absolute -top-4 right-4">
                                 <Badge className="bg-gradient-accent text-accent-foreground font-bold px-4 py-2 text-sm">
@@ -143,12 +144,12 @@ export default function PricingPage() {
                                         <Crown className="h-6 w-6 text-white" />
                                     </div>
                                     <div>
-                                        <CardTitle className="text-2xl font-bold text-foreground">PRO MAX</CardTitle>
-                                        <p className="text-sm text-muted-foreground font-semibold">Premium experience</p>
+                                        <CardTitle className="text-2xl font-bold text-foreground">FAMILY PLAN</CardTitle>
+                                        <p className="text-sm text-muted-foreground font-semibold">Perfect for families</p>
                                     </div>
                                 </div>
                                 <div className="text-4xl font-bold text-foreground">
-                                    $19.99
+                                    $24.99
                                     <span className="text-lg text-muted-foreground font-normal">/month</span>
                                 </div>
                             </CardHeader>
@@ -156,12 +157,14 @@ export default function PricingPage() {
                                 <ul className="space-y-3 mb-6">
                                     {[
                                         'Everything in PRO',
-                                        'AI-Illustrated Stories',
+                                        'Up to 3 Child Profiles',
+                                        '2 AI-Illustrated Stories/Day',
+                                        '10 Text Stories/Day',
                                         'High-Res Picture Books',
                                         'Child Appearance Customization',
-                                        'Unlimited Illustrations',
                                         'PDF Export for Printing',
                                         'Advanced Art Styles',
+                                        'Family Dashboard',
                                     ].map((feature, idx) => (
                                         <li key={idx} className="flex items-center gap-3">
                                             <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
@@ -169,9 +172,9 @@ export default function PricingPage() {
                                         </li>
                                     ))}
                                 </ul>
-                                <Link href="/signup?tier=pro_max">
+                                <Link href="/signup?tier=family">
                                     <Button className="w-full bg-gradient-secondary hover:opacity-90 text-white font-bold py-6 rounded-full shadow-lg">
-                                        Get PRO MAX Now
+                                        Get Family Plan Now
                                     </Button>
                                 </Link>
                             </CardContent>
@@ -193,25 +196,26 @@ export default function PricingPage() {
                                     <th className="p-4 text-left font-bold text-foreground">Feature</th>
                                     <th className="p-4 text-center font-bold text-foreground">Free</th>
                                     <th className="p-4 text-center font-bold text-foreground">PRO</th>
-                                    <th className="p-4 text-center font-bold text-foreground">PRO MAX</th>
+                                    <th className="p-4 text-center font-bold text-foreground">FAMILY</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {[
-                                    { feature: 'Text Stories', free: '1', pro: 'Unlimited', max: 'Unlimited' },
-                                    { feature: 'Illustrated Stories', free: '—', pro: '—', max: 'Unlimited' },
-                                    { feature: 'Story Drafts', free: '—', pro: 'Multiple', max: 'Multiple' },
-                                    { feature: 'Rewrite Tools', free: '—', pro: '✓', max: '✓' },
-                                    { feature: 'Text-to-Speech', free: '—', pro: '✓', max: '✓' },
-                                    { feature: 'PDF Export', free: '—', pro: '—', max: '✓' },
-                                    { feature: 'Custom Art Styles', free: '—', pro: '—', max: '✓' },
-                                    { feature: 'Ad-Free', free: '✓', pro: '✓', max: '✓' },
+                                    { feature: 'Child Profiles', free: '1', pro: '2', family: '3' },
+                                    { feature: 'Text Stories/Day', free: '1 (lifetime)', pro: 'Unlimited', family: '10' },
+                                    { feature: 'Illustrated Stories/Day', free: '—', pro: '—', family: '2' },
+                                    { feature: 'Story Drafts', free: '—', pro: 'Multiple', family: 'Multiple' },
+                                    { feature: 'Rewrite Tools', free: '—', pro: '✓', family: '✓' },
+                                    { feature: 'Text-to-Speech', free: '—', pro: '✓', family: '✓' },
+                                    { feature: 'PDF Export', free: '—', pro: '—', family: '✓' },
+                                    { feature: 'Custom Art Styles', free: '—', pro: '—', family: '✓' },
+                                    { feature: 'Ad-Free', free: '✓', pro: '✓', family: '✓' },
                                 ].map((row, idx) => (
                                     <tr key={idx} className="border-b border-border">
                                         <td className="p-4 font-semibold text-foreground">{row.feature}</td>
                                         <td className="p-4 text-center text-muted-foreground">{row.free}</td>
                                         <td className="p-4 text-center text-muted-foreground">{row.pro}</td>
-                                        <td className="p-4 text-center text-muted-foreground font-semibold">{row.max}</td>
+                                        <td className="p-4 text-center text-muted-foreground font-semibold">{row.family}</td>
                                     </tr>
                                 ))}
                             </tbody>

@@ -14,7 +14,7 @@ import {
   Crown,
 } from 'lucide-react'
 import { UpgradeModal } from '@/components/modals/upgrade-modal'
-import { ProMaxUpsell } from '@/components/pricing/promax-upsell'
+import { FamilyPlanUpsell } from '@/components/pricing/family-upsell'
 import type { EnhancementType } from '@/app/api/stories/[id]/enhance/route'
 
 interface StoryEnhancementProps {
@@ -27,8 +27,8 @@ export function StoryEnhancement({ storyId, onEnhanced }: StoryEnhancementProps)
   const [loading, setLoading] = useState<EnhancementType | null>(null)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
 
-  const isPro = userProfile?.subscriptionTier === 'pro' || userProfile?.subscriptionTier === 'pro_max'
-  const isProMax = userProfile?.subscriptionTier === 'pro_max'
+  const isFamily = userProfile?.subscriptionTier === 'family'
+  const isPro = userProfile?.subscriptionTier === 'pro' || isFamily
   const isProOnly = userProfile?.subscriptionTier === 'pro'
 
   const handleEnhance = async (type: EnhancementType) => {
@@ -93,56 +93,56 @@ export function StoryEnhancement({ storyId, onEnhanced }: StoryEnhancementProps)
     description: string
     color: string
   }> = [
-    {
-      type: 'calmer',
-      label: 'Make Calmer',
-      emoji: '🌙',
-      icon: <Moon className="h-5 w-5" />,
-      description: 'Perfect for bedtime - peaceful and soothing',
-      color: 'from-blue-500 to-indigo-500',
-    },
-    {
-      type: 'funnier',
-      label: 'Make Funnier',
-      emoji: '😄',
-      icon: <Smile className="h-5 w-5" />,
-      description: 'Add more humor and playful moments',
-      color: 'from-yellow-500 to-orange-500',
-    },
-    {
-      type: 'extend',
-      label: 'Extend Story',
-      emoji: '➕',
-      icon: <Plus className="h-5 w-5" />,
-      description: 'Add more details and adventures',
-      color: 'from-green-500 to-emerald-500',
-    },
-    {
-      type: 'shorten',
-      label: 'Shorten Story',
-      emoji: '➖',
-      icon: <Minus className="h-5 w-5" />,
-      description: 'Make it more concise',
-      color: 'from-purple-500 to-pink-500',
-    },
-  ]
+      {
+        type: 'calmer',
+        label: 'Make Calmer',
+        emoji: '🌙',
+        icon: <Moon className="h-5 w-5" />,
+        description: 'Perfect for bedtime - peaceful and soothing',
+        color: 'from-blue-500 to-indigo-500',
+      },
+      {
+        type: 'funnier',
+        label: 'Make Funnier',
+        emoji: '😄',
+        icon: <Smile className="h-5 w-5" />,
+        description: 'Add more humor and playful moments',
+        color: 'from-yellow-500 to-orange-500',
+      },
+      {
+        type: 'extend',
+        label: 'Extend Story',
+        emoji: '➕',
+        icon: <Plus className="h-5 w-5" />,
+        description: 'Add more details and adventures',
+        color: 'from-green-500 to-emerald-500',
+      },
+      {
+        type: 'shorten',
+        label: 'Shorten Story',
+        emoji: '➖',
+        icon: <Minus className="h-5 w-5" />,
+        description: 'Make it more concise',
+        color: 'from-purple-500 to-pink-500',
+      },
+    ]
 
   // Show ProMax upsell for Pro users instead of enhancement tools
   if (isProOnly) {
     return (
       <div className="mb-8">
-        <ProMaxUpsell
+        <FamilyPlanUpsell
           title="Want Illustrated Story Books?"
-          description="Upgrade to PRO MAX to create beautiful illustrated story books with your child as the hero!"
+          description="Upgrade to FAMILY PLAN to create beautiful illustrated story books with your family!"
           features={[
-            "AI-illustrated story books",
-            "5-7 custom illustrations per story",
-            "Your child as the main hero",
-            "Consistent character design",
-            "Beautiful book page format",
-            "Perfect for printing & sharing"
+            "Up to 3 Child Profiles",
+            "2 AI-illustrated stories/day",
+            "High-res picture books",
+            "Child appearance customization",
+            "PDF export for printing",
+            "Advanced art styles"
           ]}
-          ctaText="Upgrade to PRO MAX"
+          ctaText="Upgrade to FAMILY PLAN"
           compact={false}
         />
       </div>
@@ -184,9 +184,8 @@ export function StoryEnhancement({ storyId, onEnhanced }: StoryEnhancementProps)
               key={enhancement.type}
               onClick={() => handleEnhance(enhancement.type)}
               disabled={loading !== null || !isPro}
-              className={`h-auto p-4 rounded-2xl border-4 border-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all bg-gradient-to-r ${enhancement.color} text-white font-bold text-left flex flex-col items-start gap-2 ${
-                !isPro ? 'opacity-60' : ''
-              }`}
+              className={`h-auto p-4 rounded-2xl border-4 border-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all bg-gradient-to-r ${enhancement.color} text-white font-bold text-left flex flex-col items-start gap-2 ${!isPro ? 'opacity-60' : ''
+                }`}
             >
               <div className="flex items-center gap-3 w-full">
                 {loading === enhancement.type ? (

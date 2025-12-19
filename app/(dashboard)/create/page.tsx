@@ -11,6 +11,9 @@ import { useAuth } from '@/hooks/use-auth'
 import { toast } from '@/components/ui/toaster'
 import { Sparkles, ArrowLeft } from 'lucide-react'
 import type { StoryInput, Story } from '@/types'
+import { CreatePageTour } from '@/components/onboarding/create-page-tour'
+import { SuccessModal } from '@/components/onboarding/success-modal'
+import { useOnboarding } from '@/hooks/use-onboarding'
 
 function CreateContent() {
   const router = useRouter()
@@ -19,10 +22,14 @@ function CreateContent() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
-  const [upgradeTier, setUpgradeTier] = useState<'pro' | 'pro_max'>('pro')
+  const [upgradeTier, setUpgradeTier] = useState<'pro' | 'family'>('pro')
   const [drafts, setDrafts] = useState<Story[]>([])
   const [parentStoryId, setParentStoryId] = useState<string | undefined>(undefined)
   const [generateDrafts, setGenerateDrafts] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [createdStory, setCreatedStory] = useState<Story | null>(null)
+  const { onboardingStep } = useOnboarding()
+  const isFirstStory = onboardingStep === 'tour_active' || onboardingStep === 'first_story'
 
   const handleSubmit = async (data: StoryInput) => {
     if (!user) {
@@ -41,7 +48,7 @@ function CreateContent() {
       }
 
       // If generating drafts, use the drafts endpoint
-      if (generateDrafts && (userProfile?.subscriptionTier === 'pro' || userProfile?.subscriptionTier === 'pro_max')) {
+      if (generateDrafts && (userProfile?.subscriptionTier === 'pro' || userProfile?.subscriptionTier === 'family')) {
         const response = await fetch('/api/stories/drafts', {
           method: 'POST',
           headers: {
@@ -101,9 +108,15 @@ function CreateContent() {
 
         if (result.success && result.data) {
           const story = result.data as Story
-          toast.success('Story created! 🎉', 'Your magical story is ready!')
-          // Redirect to story viewer
-          router.push(`/story/${story.id}`)
+
+          // Show success modal for first-time users
+          if (isFirstStory) {
+            setCreatedStory(story)
+            setShowSuccessModal(true)
+          } else {
+            toast.success('Story created! 🎉', 'Your magical story is ready!')
+            router.push(`/story/${story.id}`)
+          }
         } else {
           throw new Error('Invalid response from server')
         }
@@ -192,38 +205,15 @@ function CreateContent() {
                   />
                 </div>
               ) : (
-                <>
-                  {(userProfile?.subscriptionTier === 'pro' || userProfile?.subscriptionTier === 'pro_max') && (
-                    <div className="mb-4 p-4 bg-gradient-to-r from-card to-accent/10 rounded-xl border-2 border-accent">
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={generateDrafts}
-                          onChange={(e) => setGenerateDrafts(e.target.checked)}
-                          className="w-5 h-5 rounded border-2 border-primary text-primary focus:ring-primary"
-                        />
-                        <div className="flex items-center gap-2">
-                          <Sparkles className="h-5 w-5 text-accent" />
-                          <span className="font-bold text-foreground">
-                            Generate Multiple Drafts (PRO Feature) ✨
-                          </span>
-                        </div>
-                      </label>
-                      <p className="text-sm text-muted-foreground mt-2 ml-8 font-semibold">
-                        Get 3 different versions of your story and choose your favorite! Perfect for finding the perfect bedtime tale. 🌙
-                      </p>
-                    </div>
-                  )}
-                  <StoryForm
-                    onSubmit={handleSubmit}
-                    disabled={loading}
-                    loading={loading}
-                    onShowUpgrade={(tier) => {
-                      setUpgradeTier(tier)
-                      setShowUpgradeModal(true)
-                    }}
-                  />
-                </>
+                <StoryForm
+                  onSubmit={handleSubmit}
+                  disabled={loading}
+                  loading={loading}
+                  onShowUpgrade={(tier) => {
+                    setUpgradeTier(tier)
+                    setShowUpgradeModal(true)
+                  }}
+                />
               )}
             </CardContent>
           </Card>
@@ -233,6 +223,13 @@ function CreateContent() {
         open={showUpgradeModal}
         onOpenChange={setShowUpgradeModal}
         tier={upgradeTier}
+      />
+      <CreatePageTour />
+      <SuccessModal
+        open={showSuccessModal}
+        onOpenChange={setShowSuccessModal}
+        storyId={createdStory?.id}
+        storyTitle={createdStory?.title}
       />
     </>
   )

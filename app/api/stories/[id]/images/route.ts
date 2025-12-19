@@ -53,13 +53,13 @@ export async function POST(
       )
     }
 
-    // Check if user has PRO MAX access
-    if (userProfile.subscription_tier !== 'pro_max') {
+    // Check if user has Family Plan access
+    if (userProfile.subscription_tier !== 'family') {
       return NextResponse.json<ApiResponse>(
         {
           success: false,
-          error: 'PRO MAX subscription required for image generation',
-          data: { requiresUpgrade: true, requiredTier: 'pro_max' },
+          error: 'Family Plan subscription required for image generation',
+          data: { requiresUpgrade: true, requiredTier: 'family' },
         },
         { status: 403 }
       )

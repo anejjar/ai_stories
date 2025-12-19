@@ -42,7 +42,7 @@ export async function POST(
       )
     }
 
-    // Check if user has PRO or PRO MAX access
+    // Check if user has PRO or FAMILY PLAN access
     if (userProfile.subscription_tier === 'trial') {
       return NextResponse.json<ApiResponse>(
         {

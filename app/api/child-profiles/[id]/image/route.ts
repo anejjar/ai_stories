@@ -1,5 +1,5 @@
 /**
- * Child Profile Image Upload & Generation API - PRO MAX Feature
+ * Child Profile Image Upload & Generation API - FAMILY PLAN Feature
  * Handles image upload, analysis, and generation of stylized variations
  */
 
@@ -50,6 +50,35 @@ export async function POST(
       )
     }
 
+    // Check subscription tier
+    const { data: userProfile, error: profileError } = await supabaseAdmin
+      .from('users')
+      .select('subscription_tier')
+      .eq('id', userId)
+      .single<{ subscription_tier: string }>()
+
+    if (profileError || !userProfile) {
+      return NextResponse.json(
+        { success: false, error: 'User profile not found' },
+        { status: 404 }
+      )
+    }
+
+    if (userProfile.subscription_tier !== 'family' && userProfile.subscription_tier !== 'pro') {
+      // Allow Pro for now as per some logic, OR strictly Family? 
+      // The original check was for 'family' (which I added).
+      // Let's stick to 'family' as per requirement "Upgrade to FAMILY PLAN".
+      // Actually, wait. Is it only Family?
+      // The "Family Plan" is the new top tier.
+    }
+
+    if (userProfile.subscription_tier !== 'family') {
+      return NextResponse.json(
+        { success: false, error: 'Family Plan required to add photos to child profiles' },
+        { status: 403 }
+      )
+    }
+
     if (existingProfile.user_id !== userId) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Unauthorized' },
@@ -82,21 +111,38 @@ export async function POST(
 
     const providerManager = getProviderManager()
 
-    // Step 1: Analyze Image
+    // Step 1: Analyze Image with Enhanced Prompt for Better Consistency
     console.log(`Analyzing image for profile ${profileId}...`)
     const description = await providerManager.analyzeImage(
       base64Image,
-      `Describe this child for a character illustration. Focus on:
-      1. Hair color and style
-      2. Eye color
-      3. Skin tone
-      4. Distinctive features (freckles, glasses, etc.)
-      5. Clothing style/colors
-      6. Facial expression
-      Keep it concise (under 50 words). Do not include background details.`
+      `You are analyzing a child's photo to create a detailed character description for consistent AI illustration generation across multiple images.
+
+CRITICAL: Your description will be used to generate illustrations where the character MUST look identical every time. Be extremely specific and detailed.
+
+Describe this child with precise details:
+
+1. **Hair**: Exact color (e.g., "light brown with golden highlights"), exact style (e.g., "shoulder-length wavy", "short curly", "long straight with bangs"), texture, and any distinctive patterns
+
+2. **Eyes**: Exact color (e.g., "bright hazel with green flecks", "deep brown"), shape (round, almond, wide-set), expression quality
+
+3. **Skin Tone**: Precise description (e.g., "fair with rosy cheeks", "medium tan", "rich dark brown", "light olive")
+
+4. **Face Shape & Features**: Face shape (round, oval, heart-shaped), distinctive features like freckles, dimples, nose shape, smile characteristics
+
+5. **Physical Build**: Age-appropriate body type and height indicators (small/average/tall for age)
+
+6. **Distinctive Characteristics**: Glasses, birthmarks, unique expressions, or other memorable features
+
+7. **Typical Appearance**: Common clothing colors/styles that reflect their personality
+
+Format your response as a single, detailed paragraph (60-100 words) that an AI can use to draw this exact same child repeatedly. Focus on permanent physical features, not temporary elements like specific outfits or backgrounds.
+
+Example: "A 5-year-old girl with shoulder-length wavy brown hair with natural highlights, bright hazel eyes with green flecks, and fair skin with rosy cheeks. She has a round, friendly face with a distinctive dimple on her right cheek when she smiles. Medium height for her age with a cheerful, expressive demeanor. Often wears bright, playful colors like pink and purple."
+
+Do NOT include: background details, props, or temporary elements.`
     )
 
-    console.log('Image analysis result:', description)
+    console.log('Enhanced image analysis result:', description)
 
     // Step 2: Generate 3 Variations
     const themes = [
@@ -126,7 +172,7 @@ export async function POST(
 
       try {
         console.log(`Generating ${theme.name} variation with prompt length: ${prompt.length}`)
-        
+
         // Add individual timeout per image generation (25 seconds)
         const timeoutPromise = new Promise<never>((_, reject) => {
           setTimeout(() => reject(new Error(`Image generation timeout for ${theme.name}`)), 25000)
@@ -141,7 +187,7 @@ export async function POST(
           }),
           timeoutPromise
         ])
-        
+
         console.log(`Successfully generated ${theme.name} variation:`, images.length, 'images')
         return {
           url: images[0],
@@ -159,7 +205,7 @@ export async function POST(
     // Use Promise.allSettled to get partial results even if some fail
     const results = await Promise.allSettled(generatePromises)
     const successfulImages = results
-      .filter((result): result is PromiseFulfilledResult<{ url: string; theme: string; description: string }> => 
+      .filter((result): result is PromiseFulfilledResult<{ url: string; theme: string; description: string }> =>
         result.status === 'fulfilled' && result.value !== null
       )
       .map(result => result.value)

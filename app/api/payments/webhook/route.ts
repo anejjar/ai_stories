@@ -77,8 +77,8 @@ export async function POST(request: NextRequest) {
           let tier = 'trial'
           if (priceId === process.env.STRIPE_PRO_PRICE_ID) {
             tier = 'pro'
-          } else if (priceId === process.env.STRIPE_PRO_MAX_PRICE_ID) {
-            tier = 'pro_max'
+          } else if (priceId === process.env.STRIPE_FAMILY_PRICE_ID) {
+            tier = 'family'
           }
 
           await (supabaseAdmin
@@ -88,6 +88,8 @@ export async function POST(request: NextRequest) {
               stripe_subscription_id: subscription.id,
             })
             .eq('id', user.id)
+
+          console.log(`[Webhook] Updated user ${user.id} to tier ${tier}`)
         }
         break
       }

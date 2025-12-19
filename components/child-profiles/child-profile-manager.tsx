@@ -1,5 +1,5 @@
 /**
- * Child Profile Manager Component - PRO MAX Feature
+ * Child Profile Manager Component - FAMILY PLAN Feature
  * Allows parents to create and manage profiles for their children
  */
 
@@ -11,21 +11,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { DatePicker } from '@/components/ui/date-picker'
-import { 
+import { BirthdayPicker } from '@/components/ui/birthday-picker'
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Upload, 
-  Crown, 
-  Shield, 
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Upload,
+  Crown,
+  Shield,
   Image as ImageIcon,
   Loader2,
   AlertCircle,
@@ -46,11 +46,11 @@ export function ChildProfileManager() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingProfile, setEditingProfile] = useState<ChildProfile | null>(null)
   const [showCreateForm, setShowCreateForm] = useState(false)
-  
+
   // Image upload modal state
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
   const [uploadProfileId, setUploadProfileId] = useState<string | null>(null)
-  
+
   // Form state for creating profile
   const [formName, setFormName] = useState('')
   const [formNickname, setFormNickname] = useState('')
@@ -58,20 +58,20 @@ export function ChildProfileManager() {
   const [formSkinTone, setFormSkinTone] = useState('none')
   const [formHairColor, setFormHairColor] = useState('none')
   const [formHairStyle, setFormHairStyle] = useState('none')
-  
+
   // Edit form state
   const [editingBirthDate, setEditingBirthDate] = useState<Date | undefined>(undefined)
 
-  const isProMax = userProfile?.subscriptionTier === 'pro_max'
+  const isFamily = userProfile?.subscriptionTier === 'family'
 
   useEffect(() => {
-    if (isProMax) {
+    if (isFamily) {
       fetchProfiles()
     }
-  }, [isProMax])
+  }, [isFamily])
 
   const fetchProfiles = async () => {
-    if (!isProMax) return
+    if (!isFamily) return
 
     setLoading(true)
     setError('')
@@ -199,6 +199,14 @@ export function ChildProfileManager() {
 
   const handleUpdateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    // Capture form element immediately before any async operations
+    const form = e.currentTarget
+
+    console.log('handleUpdateProfile called')
+    console.log('editingId:', editingId)
+    console.log('editingProfile:', editingProfile)
+    console.log('editingBirthDate:', editingBirthDate)
+
     if (!editingId || !editingProfile) return
 
     setError('')
@@ -208,16 +216,15 @@ export function ChildProfileManager() {
       const token = await getAccessToken()
       if (!token) throw new Error('Failed to get access token')
 
-      const form = e.currentTarget
       const formData = new FormData(form)
       const name = formData.get('name') as string
       const nickname = formData.get('nickname') as string
-      
+
       // Get Select values from the form
       const skinToneSelect = form.querySelector('[name="skinTone"]') as HTMLSelectElement
       const hairColorSelect = form.querySelector('[name="hairColor"]') as HTMLSelectElement
       const hairStyleSelect = form.querySelector('[name="hairStyle"]') as HTMLSelectElement
-      
+
       const skinTone = skinToneSelect?.value || 'none'
       const hairColor = hairColorSelect?.value || 'none'
       const hairStyle = hairStyleSelect?.value || 'none'
@@ -231,21 +238,26 @@ export function ChildProfileManager() {
       if (hairColor && hairColor !== 'none') appearance.hairColor = hairColor
       if (hairStyle && hairStyle !== 'none') appearance.hairStyle = hairStyle
 
+      const requestBody = {
+        name: name.trim(),
+        nickname: nickname?.trim() || undefined,
+        birthDate: editingBirthDate ? editingBirthDate.toISOString().split('T')[0] : undefined,
+        appearance: Object.keys(appearance).length > 0 ? appearance : undefined,
+      }
+
+      console.log('Request body:', requestBody)
+
       const response = await fetch(`/api/child-profiles/${editingId}`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: name.trim(),
-          nickname: nickname?.trim() || undefined,
-          birthDate: editingBirthDate ? editingBirthDate.toISOString().split('T')[0] : undefined,
-          appearance: Object.keys(appearance).length > 0 ? appearance : undefined,
-        }),
+        body: JSON.stringify(requestBody),
       })
 
       const data = await response.json()
+      console.log('Response:', data)
 
       if (!data.success) {
         throw new Error(data.error || 'Failed to update profile')
@@ -257,6 +269,7 @@ export function ChildProfileManager() {
       await fetchProfiles()
       setTimeout(() => setSuccess(''), 3000)
     } catch (err) {
+      console.error('Update error:', err)
       setError(err instanceof Error ? err.message : 'Failed to update profile')
     }
   }
@@ -280,7 +293,7 @@ export function ChildProfileManager() {
     setTimeout(() => setSuccess(''), 5000)
   }
 
-  if (!isProMax) {
+  if (!isFamily) {
     return (
       <Card className="border-4 border-yellow-300 bg-gradient-to-br from-yellow-50 to-orange-50">
         <CardHeader>
@@ -292,10 +305,10 @@ export function ChildProfileManager() {
         <CardContent>
           <div className="text-center p-6">
             <p className="text-gray-700 font-semibold mb-4">
-              Upgrade to PRO MAX to create and manage profiles for your children!
+              Upgrade to FAMILY PLAN to create and manage profiles for your children!
             </p>
             <Badge className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white font-bold">
-              PRO MAX Feature 👑
+              FAMILY PLAN Feature 👑
             </Badge>
           </div>
         </CardContent>
@@ -308,7 +321,7 @@ export function ChildProfileManager() {
       {/* Decorative background elements */}
       <div className="absolute top-0 right-0 text-6xl opacity-10 animate-float">👶</div>
       <div className="absolute bottom-0 left-0 text-5xl opacity-10 animate-float" style={{ animationDelay: '1s' }}>🌟</div>
-      
+
       <CardHeader className="bg-gradient-to-r from-purple-200 via-pink-200 to-yellow-200 border-b-4 border-purple-300 relative z-10">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -343,8 +356,8 @@ export function ChildProfileManager() {
                 🔒 Image Safety & Privacy
               </h3>
               <p className="text-sm text-blue-800 font-semibold leading-relaxed">
-                <strong>Important:</strong> When you upload a photo of your child, the original image is processed by AI 
-                to create a safe, stylized version. <strong>The original image is never stored or uploaded.</strong> Only 
+                <strong>Important:</strong> When you upload a photo of your child, the original image is processed by AI
+                to create a safe, stylized version. <strong>The original image is never stored or uploaded.</strong> Only
                 the AI-generated version is saved. This ensures maximum privacy and safety for your children. ✨
               </p>
             </div>
@@ -438,7 +451,7 @@ export function ChildProfileManager() {
                       <span>🎂</span>
                       Birth Date (Optional)
                     </label>
-                    <DatePicker
+                    <BirthdayPicker
                       date={editingBirthDate}
                       onDateChange={setEditingBirthDate}
                       placeholder="Select birth date"
@@ -558,7 +571,7 @@ export function ChildProfileManager() {
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}
                     placeholder="Enter child's name"
-                      className="rounded-xl border-2 border-pink-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all"
+                    className="rounded-xl border-2 border-pink-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all"
                   />
                 </div>
                 <div>
@@ -571,7 +584,7 @@ export function ChildProfileManager() {
                     value={formNickname}
                     onChange={(e) => setFormNickname(e.target.value)}
                     placeholder="Enter nickname"
-                      className="rounded-xl border-2 border-pink-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all"
+                    className="rounded-xl border-2 border-pink-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all"
                   />
                 </div>
                 <div>
@@ -579,7 +592,7 @@ export function ChildProfileManager() {
                     <span>🎂</span>
                     Birth Date (Optional)
                   </label>
-                  <DatePicker
+                  <BirthdayPicker
                     date={formBirthDate}
                     onDateChange={setFormBirthDate}
                     placeholder="Select birth date"
@@ -695,8 +708,8 @@ export function ChildProfileManager() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {profiles.map((profile, index) => (
-              <Card 
-                key={profile.id} 
+              <Card
+                key={profile.id}
                 className="border-4 border-purple-300 bg-gradient-to-br from-white to-purple-50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 rounded-2xl overflow-hidden group animate-in fade-in slide-in-from-bottom-4"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
@@ -736,10 +749,10 @@ export function ChildProfileManager() {
                         <div className="mb-3 p-2 bg-blue-50 rounded-lg border-2 border-blue-200">
                           <p className="text-xs text-gray-600 font-semibold mb-1">🎂 Birth Date</p>
                           <p className="text-sm font-bold text-gray-800">
-                            {new Date(profile.birthDate).toLocaleDateString('en-US', { 
-                              year: 'numeric', 
-                              month: 'long', 
-                              day: 'numeric' 
+                            {new Date(profile.birthDate).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
                             })}
                           </p>
                         </div>

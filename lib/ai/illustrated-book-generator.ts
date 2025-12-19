@@ -5,6 +5,15 @@
 
 import { getProviderManager } from './provider-manager'
 import type { ImageGenerationRequest } from './types'
+import type { ChildAppearance } from '@/types'
+import {
+  buildEnhancedIllustrationPrompt,
+  buildAppearanceDescription,
+  determineCharacterTier,
+  determineMoodFromScene,
+  selectArtStyle,
+  type IllustrationRequest
+} from './illustration-prompt-builder'
 
 export interface BookScene {
   sceneNumber: number
@@ -26,6 +35,7 @@ export interface IllustratedBookResult {
 
 /**
  * Generate an illustrated book with consistent character representation
+ * Supports 3-tier character rendering: photo description > appearance settings > environment only
  */
 export async function generateIllustratedBook(params: {
   childName: string
@@ -33,8 +43,10 @@ export async function generateIllustratedBook(params: {
   theme: string
   moral?: string
   templateId?: string
-  aiDescription: string // AI description of child from profile
-  profileImageUrl: string // Child's profile image URL
+  aiDescription?: string // AI description from profile picture (Tier 1)
+  appearance?: ChildAppearance // Manual appearance settings (Tier 2)
+  profileImageUrl?: string // Profile image URL for reference
+  childAge?: number // Optional age for better appearance descriptions
 }): Promise<IllustratedBookResult> {
   const providerManager = getProviderManager()
 
@@ -49,8 +61,41 @@ export async function generateIllustratedBook(params: {
     customPrompt: storyPrompt,
   })
 
+  // Determine character rendering tier
+  const characterTier = determineCharacterTier(params.aiDescription, params.appearance)
+
+  // Build character description based on tier
+  let characterDescription: string | undefined
+  let includeCharacter = true
+
+  if (characterTier === 'photo' && params.aiDescription) {
+    characterDescription = params.aiDescription
+  } else if (characterTier === 'appearance' && params.appearance) {
+    characterDescription = buildAppearanceDescription(
+      params.appearance,
+      params.childName,
+      params.childAge
+    )
+  } else {
+    // Tier 3: No character data - environment only
+    includeCharacter = false
+    characterDescription = undefined
+  }
+
+  console.log(`Using character rendering tier: ${characterTier}`)
+  if (characterDescription) {
+    console.log(`Character description: ${characterDescription}`)
+  }
+
   // Step 2: Split story into scenes (5-7 scenes)
-  const scenes = extractScenesFromStory(storyContent, params.childName, params.theme, params.aiDescription)
+  const scenes = extractScenesFromStory(
+    storyContent,
+    params.childName,
+    params.theme,
+    characterDescription,
+    includeCharacter,
+    params.profileImageUrl
+  )
 
   // Step 3: Generate illustrations for each scene
   const bookPages: BookPage[] = []
@@ -60,15 +105,22 @@ export async function generateIllustratedBook(params: {
 
     try {
       console.log(`Generating illustration ${i + 1}/${scenes.length} for illustrated book...`)
+      console.log(`Scene ${i + 1} prompt length: ${scene.illustrationPrompt.length} chars`)
 
       const imageRequest: ImageGenerationRequest = {
         prompt: scene.illustrationPrompt,
         count: 1,
-        size: '1024x1024',
+        size: '1024x1792', // Portrait mode for better book layout
         style: 'vivid', // Use vivid style for more engaging illustrations
       }
 
       const urls = await providerManager.generateImages(imageRequest)
+
+      if (!urls || urls.length === 0 || !urls[0]) {
+        throw new Error('No image URL returned from provider')
+      }
+
+      console.log(`Image URL length: ${urls[0].length} chars`)
 
       bookPages.push({
         pageNumber: i + 1,
@@ -76,9 +128,13 @@ export async function generateIllustratedBook(params: {
         illustration_url: urls[0],
       })
 
-      console.log(`Successfully generated illustration ${i + 1}/${scenes.length}`)
+      console.log(`✅ Successfully generated illustration ${i + 1}/${scenes.length}`)
     } catch (error) {
-      console.error(`Error generating illustration for scene ${i + 1}:`, error)
+      console.error(`❌ Error generating illustration for scene ${i + 1}:`, error)
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      })
       // Create placeholder page with error message
       bookPages.push({
         pageNumber: i + 1,
@@ -139,7 +195,9 @@ function extractScenesFromStory(
   content: string,
   childName: string,
   theme: string,
-  aiDescription: string
+  characterDescription: string | undefined,
+  includeCharacter: boolean,
+  profileImageUrl?: string
 ): BookScene[] {
   // Split by double line breaks to get scenes/sections
   const sections = content
@@ -156,8 +214,12 @@ function extractScenesFromStory(
       .slice(0, 7)
 
     if (altSections.length >= 5) {
+      // Determine art style ONCE for the entire story (use neutral mood for consistency)
+      const storyArtStyle = selectArtStyle(theme, 'exciting')
+      const totalScenes = altSections.length
+
       return altSections.map((section, index) =>
-        createBookScene(section, index + 1, childName, theme, aiDescription)
+        createBookScene(section, index + 1, totalScenes, childName, theme, characterDescription, includeCharacter, storyArtStyle, profileImageUrl)
       )
     }
 
@@ -172,14 +234,54 @@ function extractScenesFromStory(
       generatedSections.push(words.slice(start, end).join(' '))
     }
 
+    // Determine art style ONCE for the entire story
+    const storyArtStyle = selectArtStyle(theme, 'exciting')
+    const totalScenes = generatedSections.length
+
     return generatedSections.map((section, index) =>
-      createBookScene(section, index + 1, childName, theme, aiDescription)
+      createBookScene(section, index + 1, totalScenes, childName, theme, characterDescription, includeCharacter, storyArtStyle, profileImageUrl)
     )
   }
 
+  // Determine art style ONCE for the entire story
+  const storyArtStyle = selectArtStyle(theme, 'exciting')
+  const totalScenes = sections.length
+
   return sections.map((section, index) =>
-    createBookScene(section, index + 1, childName, theme, aiDescription)
+    createBookScene(section, index + 1, totalScenes, childName, theme, characterDescription, includeCharacter, storyArtStyle, profileImageUrl)
   )
+}
+
+/**
+ * Extract the key visual moment from scene text
+ */
+function extractKeyVisualMoment(text: string, childName: string): string {
+  // Find action verbs and key moments in the text
+  const lowerText = text.toLowerCase()
+
+  // Common action patterns to identify key moments
+  const actionPatterns = [
+    /(?:was |were |is |are |started |began )([\w\s]+ing)/i,  // Progressive verbs
+    new RegExp(`${childName.toLowerCase()}[^.!?]*?(discovered|found|saw|met|touched|held|climbed|jumped|ran|flew|opened|closed|picked|grabbed|hugged|smiled|laughed|cried|looked|gazed|pointed|waved|danced|sang|played|built|created|drew|painted)`, 'i'),
+  ]
+
+  // Try to find a clear action
+  for (const pattern of actionPatterns) {
+    const match = text.match(pattern)
+    if (match) {
+      // Extract sentence containing the action
+      const sentences = text.split(/[.!?]/)
+      for (const sentence of sentences) {
+        if (sentence.toLowerCase().includes(match[0].toLowerCase())) {
+          return sentence.trim()
+        }
+      }
+    }
+  }
+
+  // Fallback: use first meaningful sentence
+  const sentences = text.split(/[.!?]/).filter(s => s.trim().length > 20)
+  return sentences[0]?.trim() || text.substring(0, 200).trim()
 }
 
 /**
@@ -188,28 +290,44 @@ function extractScenesFromStory(
 function createBookScene(
   text: string,
   sceneNumber: number,
+  totalScenes: number,
   childName: string,
   theme: string,
-  aiDescription: string
+  characterDescription: string | undefined,
+  includeCharacter: boolean,
+  storyArtStyle: 'classic-picture-book' | 'watercolor' | 'modern-flat' | 'whimsical',
+  profileImageUrl?: string
 ): BookScene {
-  // Extract key visual elements from the text
-  const scenePreview = text
-    .substring(0, 300)
+  // Extract the ONE key visual moment from the scene
+  const keyMoment = extractKeyVisualMoment(text, childName)
+
+  // Create simple, focused description
+  const simplifiedMoment = keyMoment
     .replace(/[^\w\s.,!?-]/g, '')
+    .replace(/\s+/g, ' ')
     .trim()
 
-  // Build illustration prompt with AI description for character consistency
-  const illustrationPrompt = `A beautiful, vibrant children's storybook illustration.
-Scene: ${scenePreview}
+  // Determine mood from scene (still use for emotional tone, but not for art style)
+  const mood = determineMoodFromScene(text)
 
-Main character: ${childName} - ${aiDescription}
+  // Build enhanced illustration prompt with 3-tier character system
+  const illustrationRequest: IllustrationRequest = {
+    sceneDescription: simplifiedMoment,
+    childName,
+    childDescription: characterDescription,
+    theme,
+    mood,
+    artStyle: storyArtStyle, // Use story-level art style for consistency
+    includeCharacter,
+    profileImageUrl,
+    sceneNumber, // Pass scene context for consistency instructions
+    totalScenes,
+  }
 
-Style: High-quality children's book illustration, colorful, whimsical, warm and friendly atmosphere, ${theme.toLowerCase()} theme.
-The illustration should clearly feature ${childName} as the hero of the scene.
-Art style: Similar to modern children's picture books (Pixar/Disney style), with soft lighting, rich colors, and expressive characters.
-Safe for children, no scary elements, positive and uplifting mood.
+  const illustrationPrompt = buildEnhancedIllustrationPrompt(illustrationRequest)
 
-Technical: Professional quality, detailed but not overwhelming, perfect for a printed children's book, 8k resolution.`
+  // Log prompt details for debugging
+  console.log(`Scene ${sceneNumber}/${totalScenes} - Character: ${includeCharacter}, Style: ${storyArtStyle}, Prompt: ${illustrationPrompt.length} chars`)
 
   return {
     sceneNumber,
@@ -235,29 +353,36 @@ export function generateMultiChildIllustrationPrompts(
     .slice(0, 7)
 
   return sections.map((section, index) => {
-    const scenePreview = section
-      .substring(0, 300)
+    // Extract key visual moment
+    const keyMoment = extractKeyVisualMoment(section, children[0]?.name || '')
+
+    const simplifiedMoment = keyMoment
       .replace(/[^\w\s.,!?-]/g, '')
+      .replace(/\s+/g, ' ')
       .trim()
 
-    // Build character descriptions
-    const characterDescriptions = children
-      .map(child => {
-        const desc = child.aiDescription || ''
-        return `${child.name}${desc ? ` - ${desc}` : ''}`
-      })
-      .join(', ')
+    // Build character descriptions (use first child's description, mention others in scene)
+    const mainChildName = children[0]?.name || ''
+    const mainChildDesc = children[0]?.aiDescription || 'friendly child'
+    const otherChildren = children.slice(1).map(c => c.name).join(', ')
+    const childDescription = otherChildren
+      ? `${mainChildDesc}. With friends: ${otherChildren}`
+      : mainChildDesc
 
-    return `A beautiful, vibrant children's storybook illustration.
-Scene: ${scenePreview}
+    // Determine mood and art style
+    const mood = determineMoodFromScene(section)
+    const artStyle = selectArtStyle(theme, mood)
 
-Main characters: ${characterDescriptions}
+    // Build enhanced illustration prompt
+    const illustrationRequest: IllustrationRequest = {
+      sceneDescription: simplifiedMoment,
+      childName: mainChildName,
+      childDescription: childDescription,
+      theme,
+      mood,
+      artStyle,
+    }
 
-Style: High-quality children's book illustration, colorful, whimsical, warm and friendly atmosphere, ${theme.toLowerCase()} theme.
-All children should be featured as heroes of the scene, working together.
-Art style: Similar to modern children's picture books (Pixar/Disney style), with soft lighting, rich colors, and expressive characters.
-Safe for children, no scary elements, positive and uplifting mood.
-
-Technical: Professional quality, detailed but not overwhelming, perfect for a printed children's book, 8k resolution.`
+    return buildEnhancedIllustrationPrompt(illustrationRequest)
   })
 }

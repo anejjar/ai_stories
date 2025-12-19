@@ -1,5 +1,5 @@
 /**
- * Individual Child Profile API - PRO MAX Feature
+ * Individual Child Profile API - FAMILY PLAN Feature
  */
 
 import { NextRequest, NextResponse } from 'next/server'

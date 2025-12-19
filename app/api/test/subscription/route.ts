@@ -30,11 +30,11 @@ export async function POST(request: NextRequest) {
     const { tier }: { tier: SubscriptionTier } = body
 
     // Validate tier
-    if (!['trial', 'pro', 'pro_max'].includes(tier)) {
+    if (!['trial', 'pro', 'family'].includes(tier)) {
       return NextResponse.json<ApiResponse>(
         {
           success: false,
-          error: 'Invalid subscription tier. Must be: trial, pro, or pro_max',
+          error: 'Invalid subscription tier. Must be: trial, pro, or family',
         },
         { status: 400 }
       )

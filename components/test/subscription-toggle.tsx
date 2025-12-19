@@ -56,7 +56,7 @@ export function SubscriptionToggle() {
 
       setSuccess(`Successfully updated to ${tier.toUpperCase()}!`)
       await refreshProfile()
-      
+
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(''), 3000)
     } catch (err) {
@@ -72,21 +72,21 @@ export function SubscriptionToggle() {
       label: 'Trial',
       icon: Star,
       color: 'from-blue-400 to-cyan-400',
-      description: '1 free story',
+      description: '1 free story, 1 child profile',
     },
     {
       tier: 'pro',
       label: 'PRO',
       icon: Sparkles,
       color: 'from-pink-400 to-purple-400',
-      description: 'Unlimited stories, drafts, TTS',
+      description: 'Unlimited stories, 2 child profiles',
     },
     {
-      tier: 'pro_max',
-      label: 'PRO MAX',
+      tier: 'family',
+      label: 'FAMILY PLAN',
       icon: Crown,
       color: 'from-yellow-400 via-orange-400 to-pink-400',
-      description: 'Everything + AI illustrations',
+      description: '3 profiles, Daily AI Illustrations',
     },
   ]
 
@@ -146,11 +146,10 @@ export function SubscriptionToggle() {
                 key={tier}
                 onClick={() => handleUpdateTier(tier)}
                 disabled={loading || currentTier === tier}
-                className={`h-auto p-4 rounded-xl border-2 transition-all ${
-                  currentTier === tier
+                className={`h-auto p-4 rounded-xl border-2 transition-all ${currentTier === tier
                     ? `bg-gradient-to-r ${color} text-white border-white shadow-xl cursor-default`
                     : 'bg-white hover:bg-gray-50 border-gray-300 hover:border-gray-400'
-                }`}
+                  }`}
               >
                 <div className="flex flex-col items-center gap-2 w-full">
                   {loading && currentTier === tier ? (

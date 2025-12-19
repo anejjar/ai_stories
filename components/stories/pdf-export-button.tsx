@@ -18,10 +18,10 @@ export function PDFExportButton({ story }: PDFExportButtonProps) {
   const [loading, setLoading] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
 
-  const isProMax = userProfile?.subscriptionTier === 'pro_max'
+  const isFamily = userProfile?.subscriptionTier === 'family'
 
   const handleExportPDF = async () => {
-    if (!isProMax) {
+    if (!isFamily) {
       setShowUpgradeModal(true)
       return
     }
@@ -86,11 +86,10 @@ export function PDFExportButton({ story }: PDFExportButtonProps) {
         onClick={handleExportPDF}
         disabled={loading}
         variant="outline"
-        className={`rounded-full border-2 font-bold ${
-          isProMax
+        className={`rounded-full border-2 font-bold ${isFamily
             ? 'border-green-400 hover:bg-green-100 text-green-700'
             : 'border-yellow-400 hover:bg-yellow-100 text-yellow-700 opacity-60'
-        }`}
+          }`}
       >
         {loading ? (
           <>
@@ -99,7 +98,7 @@ export function PDFExportButton({ story }: PDFExportButtonProps) {
           </>
         ) : (
           <>
-            {isProMax ? (
+            {isFamily ? (
               <>
                 <Download className="h-4 w-4 mr-2" />
                 Export PDF 📄
@@ -107,7 +106,7 @@ export function PDFExportButton({ story }: PDFExportButtonProps) {
             ) : (
               <>
                 <Crown className="h-4 w-4 mr-2" />
-                PRO MAX Feature 👑
+                Family Plan Feature 👑
               </>
             )}
           </>
@@ -117,7 +116,7 @@ export function PDFExportButton({ story }: PDFExportButtonProps) {
       <UpgradeModal
         open={showUpgradeModal}
         onOpenChange={setShowUpgradeModal}
-        tier="pro_max"
+        tier="family"
       />
     </>
   )

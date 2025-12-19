@@ -1,5 +1,5 @@
 /**
- * Child Profile Image Selection API - PRO MAX Feature
+ * Child Profile Image Selection API - FAMILY PLAN Feature
  * Saves the selected AI-generated image to permanent storage
  */
 
@@ -33,10 +33,23 @@ export async function POST(
       )
     }
 
-    // @ts-expect-error - Supabase type inference issue with Manual Database definition
-    if (existingProfile.user_id !== userId) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'Unauthorized' },
+    // Check subscription tier
+    const { data: userProfile, error: profileError } = await supabaseAdmin
+      .from('users')
+      .select('subscription_tier')
+      .eq('id', userId)
+      .single<{ subscription_tier: string }>()
+
+    if (profileError || !userProfile) {
+      return NextResponse.json(
+        { success: false, error: 'User profile not found' },
+        { status: 404 }
+      )
+    }
+
+    if (userProfile.subscription_tier !== 'family') {
+      return NextResponse.json(
+        { success: false, error: 'Family Plan required to manage child profiles' },
         { status: 403 }
       )
     }

@@ -8,6 +8,8 @@ import { OptimizedImage } from '@/components/ui/optimized-image'
 import { BookOpen, Eye, Crown, Clock, Sparkles, User, Calendar } from 'lucide-react'
 import type { Story } from '@/types'
 import { formatDistanceToNow } from 'date-fns'
+import { PublishToggle } from './publish-toggle'
+import { useState } from 'react'
 
 interface StoryCardProps {
   story: Story
@@ -15,7 +17,11 @@ interface StoryCardProps {
 
 export function StoryCard({ story }: StoryCardProps) {
   const preview = story.content.substring(0, 120).trim()
-  
+
+  const [visibility, setVisibility] = useState<'public' | 'private'>(
+    story.visibility || 'private'
+  )
+
   // Safely format date
   let timeAgo = 'Recently'
   try {
@@ -30,9 +36,9 @@ export function StoryCard({ story }: StoryCardProps) {
   // Determine cover image
   // Use first generated image if available, otherwise a thematic gradient
   const coverImage = story.imageUrls && story.imageUrls.length > 0 ? story.imageUrls[0] : null
-  
+
   // Get child name(s) to display
-  const childNames = story.children && story.children.length > 0 
+  const childNames = story.children && story.children.length > 0
     ? story.children.map(c => c.name).join(', ')
     : story.childName || 'Child'
 
@@ -41,8 +47,8 @@ export function StoryCard({ story }: StoryCardProps) {
       {/* Cover Image Area */}
       <div className="relative h-48 w-full overflow-hidden bg-gray-100">
         {coverImage ? (
-          <OptimizedImage 
-            src={coverImage} 
+          <OptimizedImage
+            src={coverImage}
             alt={story.title}
             fill
             className="transition-transform duration-700 group-hover:scale-110"
@@ -52,16 +58,16 @@ export function StoryCard({ story }: StoryCardProps) {
             <BookOpen className="h-16 w-16 text-white opacity-80" />
           </div>
         )}
-        
+
         {/* Floating Badges */}
         <div className="absolute top-3 right-3 flex gap-2">
           {story.hasImages && (
             <Badge className="bg-yellow-400 text-yellow-900 border-2 border-white shadow-lg font-bold px-2 py-1">
-              <Crown className="h-3 w-3 mr-1" /> PRO MAX
+              <Crown className="h-3 w-3 mr-1" /> FAMILY PLAN
             </Badge>
           )}
         </div>
-        
+
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4 pt-12">
           <div className="flex items-center text-white/90 text-xs font-medium">
             <Clock className="h-3 w-3 mr-1" />
@@ -110,6 +116,17 @@ export function StoryCard({ story }: StoryCardProps) {
       </div>
 
       <CardFooter className="p-5 pt-4 border-t border-gray-100 bg-gray-50/50 mt-auto">
+        {!story.isIllustratedBook && (
+          <div className="w-full mb-3">
+            <PublishToggle
+              storyId={story.id}
+              initialVisibility={visibility}
+              isIllustratedBook={story.isIllustratedBook || false}
+              onVisibilityChange={setVisibility}
+              size="sm"
+            />
+          </div>
+        )}
         <Link href={`/story/${story.id}`} className="w-full">
           <Button className="w-full rounded-xl bg-white border-2 border-purple-100 text-purple-700 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-800 shadow-sm hover:shadow transition-all font-bold group-hover:bg-purple-600 group-hover:border-purple-600 group-hover:text-white">
             <Eye className="h-4 w-4 mr-2" />

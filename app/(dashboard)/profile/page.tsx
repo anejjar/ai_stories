@@ -12,21 +12,22 @@ import { Crown, Sparkles, User, BookOpen, TrendingUp } from 'lucide-react'
 import { useState } from 'react'
 import { SubscriptionToggle } from '@/components/test/subscription-toggle'
 import { ChildProfileManager } from '@/components/child-profiles/child-profile-manager'
+import { UsageDashboard } from '@/components/usage/usage-dashboard'
 
 export default function ProfilePage() {
   const { userProfile } = useAuth()
   const { data: stories } = useStories()
   const { isTrialCompleted, storiesGenerated } = useTrial()
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
-  const [upgradeTier, setUpgradeTier] = useState<'pro' | 'pro_max'>('pro')
+  const [upgradeTier, setUpgradeTier] = useState<'pro' | 'family'>('pro')
 
   const getTierBadge = (tier: string) => {
     switch (tier) {
-      case 'pro_max':
+      case 'family':
         return (
           <Badge className="bg-gradient-accent text-white font-bold rounded-full px-4 py-2 border-2 border-accent">
             <Crown className="h-4 w-4 mr-2" />
-            PRO MAX 👑
+            FAMILY PLAN 👑
           </Badge>
         )
       case 'pro':
@@ -133,16 +134,16 @@ export default function ProfilePage() {
               {userProfile.subscriptionTier === 'pro' && (
                 <div className="bg-gradient-to-r from-accent/10 to-secondary/10 border-4 border-accent rounded-2xl p-4">
                   <p className="text-sm text-gray-800 font-bold mb-3 text-center">
-                    👑 Unlock PRO MAX for magical illustrations!
+                    👑 Unlock Family Plan for AI-illustrated stories!
                   </p>
                   <Button
                     onClick={() => {
-                      setUpgradeTier('pro_max')
+                      setUpgradeTier('family')
                       setShowUpgradeModal(true)
                     }}
                     className="w-full rounded-full bg-gradient-secondary hover:from-yellow-600 hover:to-orange-600 font-bold"
                   >
-                    Upgrade to PRO MAX! 👑
+                    Upgrade to Family Plan! 👑
                   </Button>
                 </div>
               )}
@@ -184,7 +185,24 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
 
-          {/* Child Profiles Section - PRO MAX Only */}
+          {/* Usage Dashboard - Show for Pro and Family tiers */}
+          {(userProfile.subscriptionTier === 'pro' || userProfile.subscriptionTier === 'family') && (
+            <div className="md:col-span-2">
+              <Card className="border-4 border-primary/30 shadow-xl bg-white/95 backdrop-blur-sm rounded-3xl">
+                <CardHeader className="bg-gradient-primary rounded-t-2xl border-b-4 border-primary/30">
+                  <CardTitle className="text-2xl font-comic">Usage & Limits 📊</CardTitle>
+                  <CardDescription className="text-gray-700 font-semibold">
+                    Track your daily story generation
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <UsageDashboard />
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Child Profiles Section - Pro and Family Plans */}
           <div className="md:col-span-2">
             <ChildProfileManager />
           </div>
