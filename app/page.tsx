@@ -87,20 +87,29 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-indigo-900 via-slate-900 to-slate-950 text-slate-50 flex flex-col">
-      {/* Starry background */}
+    <main className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 text-slate-50 flex flex-col relative overflow-hidden">
+      {/* Christmas-themed background with subtle snowflakes */}
       <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(129,140,248,0.25),transparent_55%),radial-gradient(circle_at_bottom,_rgba(248,250,252,0.05),transparent_55%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(236,252,203,0.2),transparent_55%),radial-gradient(circle_at_80%_0%,rgba(248,250,252,0.08),transparent_55%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(220,38,38,0.15),transparent_55%),radial-gradient(circle_at_bottom,_rgba(34,197,94,0.12),transparent_55%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(234,179,8,0.1),transparent_55%),radial-gradient(circle_at_80%_0%,rgba(220,38,38,0.08),transparent_55%)]" />
+        {/* Subtle snowflakes */}
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute top-10 left-10 text-white/20 text-2xl animate-pulse" style={{ animationDelay: '0s' }}>❄</div>
+          <div className="absolute top-32 left-1/4 text-white/20 text-xl animate-pulse" style={{ animationDelay: '1s' }}>❄</div>
+          <div className="absolute top-20 right-1/4 text-white/20 text-lg animate-pulse" style={{ animationDelay: '2s' }}>❄</div>
+          <div className="absolute top-48 right-20 text-white/20 text-xl animate-pulse" style={{ animationDelay: '0.5s' }}>❄</div>
+          <div className="absolute bottom-32 left-1/3 text-white/20 text-lg animate-pulse" style={{ animationDelay: '1.5s' }}>❄</div>
+          <div className="absolute bottom-20 right-1/3 text-white/20 text-2xl animate-pulse" style={{ animationDelay: '2.5s' }}>❄</div>
+        </div>
       </div>
 
       <div className="flex-1 px-4 py-10 sm:px-6 lg:px-8">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-10 lg:grid lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:items-center">
           {/* Hero & form */}
           <section className="space-y-7" aria-labelledby="hero-heading">
-            <div className="inline-flex items-center gap-2 rounded-full bg-indigo-500/15 px-3 py-1 text-[11px] font-medium text-indigo-200 ring-1 ring-indigo-400/40 backdrop-blur">
+            <div className="inline-flex items-center gap-2 rounded-full bg-red-500/15 px-3 py-1 text-[11px] font-medium text-red-200 ring-1 ring-red-400/40 backdrop-blur">
               <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-300 ring-4 ring-emerald-400/30" />
-              Early access for modern parents • Limited spots
+              🎄 Early access for modern parents • Limited spots
             </div>
 
             <div className="space-y-4">
@@ -109,7 +118,7 @@ export default function Home() {
                 className="text-3xl sm:text-4xl lg:text-[2.9rem] font-semibold tracking-tight text-slate-50"
               >
                 Turn bedtime into a magical story
-                <span className="block text-indigo-200">where your child is the hero.</span>
+                <span className="block bg-gradient-to-r from-red-300 to-emerald-300 bg-clip-text text-transparent">where your child is the hero.</span>
               </h1>
               <p className="max-w-xl text-sm sm:text-base text-slate-200/80 leading-relaxed">
                 Safe AI-crafted bedtime stories, written just for your child in seconds — so you can slow down,
@@ -134,9 +143,9 @@ export default function Home() {
                 <div className="flex-1 min-w-0">
                   <label
                     htmlFor="email"
-                    className="mb-1 block text-[11px] font-medium text-indigo-100/80"
+                    className="mb-1 block text-[11px] font-medium text-red-100/80"
                   >
-                    Join the early access waitlist
+                    🎁 Join the early access waitlist
                   </label>
                   <input
                     id="email"
@@ -145,19 +154,19 @@ export default function Home() {
                     autoComplete="email"
                     required
                     placeholder="you@familyemail.com"
-                    className="block w-full rounded-full border border-indigo-300/40 bg-slate-900/60 px-5 py-3.5 text-base text-slate-50 shadow-sm outline-none ring-0 transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-300/40"
+                    className="block w-full rounded-full border border-red-300/40 bg-slate-900/60 px-5 py-3.5 text-base text-slate-50 shadow-sm outline-none ring-0 transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-300/40"
                     aria-describedby="email-helper"
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center justify-center rounded-full bg-emerald-400 px-7 py-3.5 text-sm sm:text-base font-semibold text-slate-900 shadow-[0_18px_40px_rgba(16,185,129,0.40)] transition hover:bg-emerald-300 hover:shadow-[0_22px_50px_rgba(16,185,129,0.55)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 disabled:cursor-not-allowed disabled:opacity-70"
+                  className="inline-flex items-center justify-center rounded-full bg-emerald-500 px-7 py-3.5 text-sm sm:text-base font-semibold text-white shadow-[0_18px_40px_rgba(16,185,129,0.40)] transition hover:bg-emerald-400 hover:shadow-[0_22px_50px_rgba(16,185,129,0.55)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 disabled:cursor-not-allowed disabled:opacity-70"
                   aria-label="Join the AI Stories waitlist"
                 >
                   {isSubmitting ? 'Joining…' : 'Join the waitlist'}
                   <span aria-hidden="true" className="ml-1.5">
-                    ✨
+                    🎄
                   </span>
                 </button>
               </div>
@@ -193,7 +202,7 @@ export default function Home() {
             <div className="mt-3 grid gap-3 text-[11px] text-slate-200/80 sm:grid-cols-3">
               <div className="flex items-start gap-2 rounded-xl bg-slate-900/40 p-3 ring-1 ring-slate-700/60">
                 <span className="mt-0.5 text-lg" aria-hidden>
-                  🌙
+                  🎄
                 </span>
                 <div>
                   <p className="font-semibold text-slate-50">Designed for calm</p>
@@ -204,21 +213,21 @@ export default function Home() {
               </div>
               <div className="flex items-start gap-2 rounded-xl bg-slate-900/40 p-3 ring-1 ring-slate-700/60">
                 <span className="mt-0.5 text-lg" aria-hidden>
-                  🔒
+                  🎁
                 </span>
                 <div>
                   <p className="font-semibold text-slate-50">Privacy-first</p>
                   <p className="leading-relaxed text-slate-300/90">
-                    Your child’s details stay private. No selling data, no hidden tracking.
+                    Your child's details stay private. No selling data, no hidden tracking.
                   </p>
                 </div>
               </div>
               <div className="flex items-start gap-2 rounded-xl bg-slate-900/40 p-3 ring-1 ring-slate-700/60">
                 <span className="mt-0.5 text-lg" aria-hidden>
-                  ❤️
+                  ⭐
                 </span>
                 <div>
-                  <p className="font-semibold text-slate-50">You’re in control</p>
+                  <p className="font-semibold text-slate-50">You're in control</p>
                   <p className="leading-relaxed text-slate-300/90">
                     Choose themes, tone, and length so every story feels right for your family.
                   </p>
@@ -250,7 +259,7 @@ export default function Home() {
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm px-4">
           <div className="w-full max-w-sm rounded-2xl bg-slate-950/95 p-6 shadow-2xl ring-1 ring-slate-800">
             <h2 className="text-base font-semibold text-slate-50 mb-2">
-              You’re on the waitlist ✨
+              You're on the waitlist 🎄
             </h2>
             <p className="text-sm text-slate-200/90 leading-relaxed mb-5">
               {modalMessage ||
@@ -259,7 +268,7 @@ export default function Home() {
             <button
               type="button"
               onClick={() => setIsModalOpen(false)}
-              className="inline-flex w-full items-center justify-center rounded-full bg-emerald-400 px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-md shadow-emerald-400/40 transition hover:bg-emerald-300 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+              className="inline-flex w-full items-center justify-center rounded-full bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-emerald-400/40 transition hover:bg-emerald-400 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
             >
               Close
             </button>
@@ -285,7 +294,7 @@ export default function Home() {
               form?.scrollIntoView({ behavior: 'smooth', block: 'start' })
               form?.querySelector<HTMLInputElement>('input[type="email"]')?.focus()
             }}
-            className="inline-flex items-center justify-center rounded-full bg-emerald-400 px-4 py-2 text-[11px] font-semibold text-slate-900 shadow-md shadow-emerald-400/40 transition hover:bg-emerald-300 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+            className="inline-flex items-center justify-center rounded-full bg-emerald-500 px-4 py-2 text-[11px] font-semibold text-white shadow-md shadow-emerald-400/40 transition hover:bg-emerald-400 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
           >
             Join the waitlist
           </button>
