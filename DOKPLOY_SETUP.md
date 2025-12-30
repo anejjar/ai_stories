@@ -29,7 +29,7 @@ Go to the **Environment** tab of your application and add the following variable
 | `NODE_ENV` | `production` | No |
 | `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL | **Yes** |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anon key | **Yes** |
-| `SUPABASE_SERVICE_ROLE_KEY` | Your Supabase service role key | No |
+| `SUPABASE_SERVICE_ROLE_KEY` | Your Supabase service role key | **Yes** |
 | `RESEND_API_KEY` | Your Resend API key for emails | No |
 | `OPENAI_API_KEY` | Your OpenAI API key | No |
 | `ANTHROPIC_API_KEY` | Your Anthropic API key | No |
@@ -68,7 +68,36 @@ Dokploy has a built-in **Crons** feature. We will use it to trigger our Next.js 
    curl -X GET "http://localhost:3000/api/cron/weekly-summary" -H "Authorization: Bearer YOUR_CRON_SECRET"
    ```
 
-## 4. Troubleshooting
+## 4. Important Notes
+
+### Build Arguments Configuration
+When setting up build arguments in Dokploy, you must add **both** the variable name and its actual value. For example:
+- **Incorrect**: `NEXT_PUBLIC_SUPABASE_URL=` (empty value)
+- **Correct**: `NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co`
+
+The following variables **must** be added as Build Arguments (not just Environment Variables):
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (required during build for API route prerendering)
+- `NEXT_PUBLIC_APP_URL`
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+
+### Why SUPABASE_SERVICE_ROLE_KEY is a Build Argument
+Next.js attempts to collect page data during the build process, which includes evaluating API routes. Some API routes (like `/api/child-profiles/verify-migration`) use the Supabase admin client, which requires the service role key. Without this key available during build, you'll see errors like:
+```
+Error: supabaseKey is required.
+```
+
+## 5. Troubleshooting
+
+### "supabaseKey is required" Error
+If you see this error during build:
+1. Go to the **Build Arguments** tab in Dokploy
+2. Ensure `SUPABASE_SERVICE_ROLE_KEY` is added with the actual key value (not empty)
+3. Verify all `NEXT_PUBLIC_*` variables are also in Build Arguments with values
+4. Redeploy the application
+
+### Other Common Issues
 - **Build Errors**: Check the **Logs** tab in Dokploy for build errors.
 - **Port Mapping**: Ensure the internal port `3000` is mapped correctly in Dokploy.
 - **Database Connection**: Verify your Supabase URL and keys if the app fails to start or connect to the database.
