@@ -33,11 +33,8 @@ export default function StoryPage() {
 
   useEffect(() => {
     async function fetchStory() {
-      if (!user || !storyId) {
-        // Only stop loading if we're sure there's no user (not just waiting for auth)
-        if (!user && storyId) {
-          setLoading(false)
-        }
+      if (!storyId) {
+        setLoading(false)
         return
       }
 
@@ -52,19 +49,29 @@ export default function StoryPage() {
       setError('')
 
       try {
-        const token = await getAccessToken()
-        if (!token) {
-          throw new Error('Failed to get access token')
+        // Try to get token if user is logged in, but don't require it
+        let token: string | null = null
+        if (user) {
+          token = await getAccessToken()
         }
+
+        // Build headers - only include Authorization if we have a token
+        const headers: HeadersInit = {
+          'Content-Type': 'application/json',
+        }
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
+        }
+
         const response = await fetch(`/api/stories/${storyId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers,
         })
 
         if (!response.ok) {
           if (response.status === 404) {
             setError('Story not found')
+          } else if (response.status === 403) {
+            setError('You do not have permission to view this story')
           } else {
             setError('Failed to load story')
           }
@@ -79,7 +86,9 @@ export default function StoryPage() {
 
           // Show upgrade modal after first story completion (emotional moment)
           // Only show once per session and only if trial was just completed
+          // Only show if user is logged in
           if (
+            user &&
             userProfile?.subscriptionTier === 'trial' &&
             isTrialCompleted &&
             storiesGenerated === 1 &&
