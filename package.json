@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "migrate": "npx tsx scripts/apply-migrations.ts"
+    "migrate": "npx tsx scripts/apply-migrations.ts",
+    "test:email": "npx tsx scripts/test-cron-email.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",

@@ -332,6 +332,41 @@ export async function sendAchievementNotification(
 }
 
 /**
+ * Send a test email to a specific address
+ */
+export async function sendTestCronEmail(email: string): Promise<boolean> {
+  try {
+    console.log(`Sending test email to ${email}...`)
+
+    const { html, text } = generateBedtimeReminderEmail({
+      userName: 'Test User',
+      childName: 'Alex',
+      reminderTime: '8:00 PM',
+      currentStreak: 5,
+      recentStories: [
+        {
+          title: 'The Brave Little Lion',
+          theme: 'Courage',
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    })
+
+    const result = await sendEmail({
+      to: email,
+      subject: '🧪 AI Stories - Cron Test Email',
+      html,
+      text,
+    })
+
+    return result.success
+  } catch (error) {
+    console.error('Error sending test email:', error)
+    return false
+  }
+}
+
+/**
  * Helper function to format time
  */
 function formatTime(time: string): string {
