@@ -35,17 +35,21 @@ interface UseOnboardingReturn {
 }
 
 export function useOnboarding(): UseOnboardingReturn {
-  const { user, profile, refreshProfile } = useAuth()
+  const { user, userProfile: profile, refreshProfile, getAccessToken } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
 
   // Extract onboarding state from profile
-  const onboardingCompleted = (profile as any)?.onboarding_completed ?? false
-  const onboardingStep = (profile as any)?.onboarding_step ?? 'welcome' as OnboardingStep
-  const onboardingDismissedAt = (profile as any)?.onboarding_dismissed_at ? new Date((profile as any).onboarding_dismissed_at) : null
-  const onboardingChecklist = (profile as any)?.onboarding_checklist ?? null
+  const onboardingCompleted = profile?.onboardingCompleted ?? false
+  const onboardingStep = profile?.onboardingStep ?? 'welcome'
+  const onboardingDismissedAt = profile?.onboardingDismissedAt ?? null
+  const onboardingChecklist = profile?.onboardingChecklist ?? null
 
   // Computed values
-  const shouldShowWelcome = !onboardingCompleted && !onboardingDismissedAt && onboardingStep === 'welcome'
+  const now = new Date()
+  const oneDayInMs = 24 * 60 * 60 * 1000
+  const isDismissedRecently = onboardingDismissedAt && (now.getTime() - onboardingDismissedAt.getTime() < oneDayInMs)
+  
+  const shouldShowWelcome = !onboardingCompleted && !isDismissedRecently && onboardingStep === 'welcome'
   const shouldShowTour = !onboardingCompleted && onboardingStep === 'tour_active'
   const shouldShowChecklist = !onboardingChecklist?.dismissed && !onboardingCompleted
 
@@ -68,16 +72,24 @@ export function useOnboarding(): UseOnboardingReturn {
 
       setIsLoading(true)
       try {
+        const token = await getAccessToken()
+        if (!token) {
+          throw new Error('No access token found')
+        }
+
         const response = await fetch('/api/users/onboarding', {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify(updates),
         })
 
         if (!response.ok) {
-          throw new Error('Failed to update onboarding')
+          const errorData = await response.json().catch(() => ({}))
+          console.error('Onboarding API error:', errorData)
+          throw new Error(errorData.error || 'Failed to update onboarding')
         }
 
         const data = await response.json()

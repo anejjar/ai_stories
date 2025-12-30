@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import * as Sentry from '@sentry/browser'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AlertTriangle, RefreshCw, Home, Bug } from 'lucide-react'
@@ -16,6 +17,7 @@ export default function Error({
   useEffect(() => {
     // Log the error to an error reporting service
     console.error('Page error:', error)
+    Sentry.captureException(error)
   }, [error])
 
   return (

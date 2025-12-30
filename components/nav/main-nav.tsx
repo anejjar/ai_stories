@@ -52,25 +52,20 @@ export function MainNav() {
   const handleLogout = async () => {
     const { error } = await signOutUser()
     if (!error) {
-      // Force full page reload to clear all state and redirect to home
       window.location.href = '/'
     }
   }
 
-  // Only show essential links in header
   const mainNavLinks = [
     { href: '/library', label: 'Library', icon: Library },
     { href: '/discover', label: 'Discover', icon: Compass },
     { href: '/create', label: 'Create', icon: Plus },
   ]
 
-  // Secondary links go in user menu
   const secondaryNavLinks = [
     { href: '/achievements', label: 'Achievements', icon: Trophy },
     { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
     { href: '/profile', label: 'Profile', icon: User },
-    // Voice Settings disabled until core features are production ready
-    // { href: '/settings/voice', label: 'Voice Settings', icon: Mic },
     { href: '/settings/notifications', label: 'Notifications', icon: Bell },
   ]
 
@@ -82,26 +77,21 @@ export function MainNav() {
   }
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200/50 shadow-sm">
+    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100 selection:bg-blue-100">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 lg:h-20">
+        <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link href="/library" className="flex items-center gap-2 group">
-            <div className="relative">
-              <div className="h-9 w-9 lg:h-10 lg:w-10 rounded-xl bg-gradient-to-br from-pink-500 via-purple-500 to-indigo-500 flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
-                <BookOpen className="h-5 w-5 text-white" />
-              </div>
-              <div className="absolute -top-1 -right-1">
-                <Sparkles className="h-3 w-3 text-yellow-400 animate-pulse" />
-              </div>
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="h-12 w-12 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-100 transition-transform group-hover:scale-110">
+              <BookOpen className="h-6 w-6 text-white" />
             </div>
-            <span className="font-bold text-xl lg:text-2xl bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+            <span className="font-extrabold text-2xl text-gray-900 tracking-tight">
               AI Stories
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-4">
             {mainNavLinks.map((link) => {
               const Icon = link.icon
               const active = isActive(link.href)
@@ -109,13 +99,13 @@ export function MainNav() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  className={`flex items-center gap-2 px-6 py-2.5 rounded-2xl text-sm font-bold transition-all ${
                     active
-                      ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-md'
-                      : 'text-gray-700 hover:bg-gray-100 hover:text-purple-600'
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-100'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-blue-600'
                   }`}
                 >
-                  <Icon className={`h-4 w-4 ${active ? 'text-white' : 'text-gray-600'}`} />
+                  <Icon className="h-4 w-4" />
                   <span>{link.label}</span>
                 </Link>
               )
@@ -123,82 +113,62 @@ export function MainNav() {
 
             {/* User Menu */}
             {user && (
-              <div className="relative ml-2" data-user-menu>
-                <Button
-                  variant="ghost"
-                  size="sm"
+              <div className="relative ml-4" data-user-menu>
+                <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center gap-2 h-9 px-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="flex items-center gap-2 p-1.5 rounded-2xl hover:bg-gray-50 transition-colors border border-gray-100"
                 >
                   {user.photoURL ? (
                     <img
                       src={user.photoURL}
                       alt={user.displayName || 'User'}
-                      className="h-8 w-8 rounded-full ring-2 ring-purple-200"
+                      className="h-9 w-9 rounded-xl object-cover"
                     />
                   ) : (
-                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center">
-                      <User className="h-4 w-4 text-white" />
+                    <div className="h-9 w-9 rounded-xl bg-blue-100 flex items-center justify-center">
+                      <User className="h-5 w-5 text-blue-600" />
                     </div>
                   )}
-                </Button>
+                </button>
 
                 {userMenuOpen && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-10"
-                      onClick={() => setUserMenuOpen(false)}
-                    />
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 z-20 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                      <div className="p-2">
-                        <div className="px-3 py-2 mb-2 border-b border-gray-100">
-                          <p className="text-sm font-semibold text-gray-900">
-                            {user.displayName || 'User'}
-                          </p>
-                          <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                        </div>
-                        
-                        {/* Streak Counter in Menu */}
-                        <div className="px-3 py-2 mb-2">
-                          <StreakCounter compact />
-                        </div>
-                        
-                        <div className="my-2 border-t border-gray-100" />
-                        
-                        {secondaryNavLinks.map((link) => {
-                          const Icon = link.icon
-                          const active = isActive(link.href)
-                          return (
-                            <Link
-                              key={link.href}
-                              href={link.href}
-                              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                active
-                                  ? 'bg-purple-50 text-purple-700'
-                                  : 'text-gray-700 hover:bg-gray-100'
-                              }`}
-                              onClick={() => setUserMenuOpen(false)}
-                            >
-                              <Icon className="h-4 w-4" />
-                              {link.label}
-                            </Link>
-                          )
-                        })}
-                        
-                        <div className="my-2 border-t border-gray-100" />
-                        <button
-                          onClick={() => {
-                            handleLogout()
-                            setUserMenuOpen(false)
-                          }}
-                          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
-                        >
-                          <LogOut className="h-4 w-4" />
-                          Logout
-                        </button>
+                  <div className="absolute right-0 mt-3 w-64 bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                    <div className="p-3">
+                      <div className="px-4 py-3 mb-2 bg-gray-50 rounded-2xl">
+                        <p className="text-sm font-bold text-gray-900 truncate">
+                          {user.displayName || 'User'}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate font-medium">{user.email}</p>
                       </div>
+                      
+                      <div className="px-3 py-2">
+                        <StreakCounter compact />
+                      </div>
+                      
+                      <div className="my-2 border-t border-gray-50" />
+                      
+                      {secondaryNavLinks.map((link) => (
+                        <Link
+                          key={link.href}
+                          href={link.href}
+                          className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          <link.icon className="h-4 w-4" />
+                          {link.label}
+                        </Link>
+                      ))}
+                      
+                      <div className="my-2 border-t border-gray-50" />
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 transition-colors"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Logout
+                      </button>
                     </div>
-                  </>
+                  </div>
                 )}
               </div>
             )}
@@ -206,115 +176,59 @@ export function MainNav() {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            className="md:hidden p-3 rounded-2xl hover:bg-gray-50 transition-colors text-gray-600"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle menu"
           >
-            {mobileMenuOpen ? (
-              <X className="h-6 w-6 text-gray-700" />
-            ) : (
-              <Menu className="h-6 w-6 text-gray-700" />
-            )}
+            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 bg-white animate-in slide-in-from-top duration-200">
-            <div className="px-4 py-3 space-y-1">
-              {mainNavLinks.map((link) => {
-                const Icon = link.icon
-                const active = isActive(link.href)
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
-                      active
-                        ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <Icon className={`h-5 w-5 ${active ? 'text-white' : 'text-gray-600'}`} />
-                    {link.label}
-                  </Link>
-                )
-              })}
-              
-              {user && (
-                <>
-                  <div className="my-2 border-t border-gray-200" />
-                  
-                  {/* Streak Counter */}
-                  <div className="px-4 py-2">
-                    <StreakCounter compact />
-                  </div>
-                  
-                  <div className="my-2 border-t border-gray-200" />
-                  
-                  {/* User Info */}
-                  <div className="px-4 py-2">
-                    <div className="flex items-center gap-3 px-2 py-2">
-                      {user.photoURL ? (
-                        <img
-                          src={user.photoURL}
-                          alt={user.displayName || 'User'}
-                          className="h-8 w-8 rounded-full"
-                        />
-                      ) : (
-                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center">
-                          <User className="h-4 w-4 text-white" />
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 truncate">
-                          {user.displayName || 'User'}
-                        </p>
-                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Secondary Links */}
-                  {secondaryNavLinks.map((link) => {
-                    const Icon = link.icon
-                    const active = isActive(link.href)
-                    return (
-                      <Link
-                        key={link.href}
-                        href={link.href}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
-                          active
-                            ? 'bg-purple-50 text-purple-700'
-                            : 'text-gray-700 hover:bg-gray-100'
-                        }`}
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        <Icon className="h-5 w-5" />
-                        {link.label}
-                      </Link>
-                    )
-                  })}
-                  
-                  <div className="my-2 border-t border-gray-200" />
-                  <button
-                    onClick={() => {
-                      handleLogout()
-                      setMobileMenuOpen(false)
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-red-600 hover:bg-red-50 transition-colors"
-                  >
-                    <LogOut className="h-5 w-5" />
-                    Logout
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-gray-50 bg-white p-4 space-y-2 animate-in slide-in-from-top duration-300">
+          {mainNavLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`flex items-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all ${
+                isActive(link.href)
+                  ? 'bg-blue-600 text-white shadow-xl shadow-blue-100'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <link.icon className="h-5 w-5" />
+              {link.label}
+            </Link>
+          ))}
+          {user && (
+            <div className="pt-4 space-y-2 border-t border-gray-50 mt-4">
+              <div className="px-6 py-2">
+                <StreakCounter compact />
+              </div>
+              {secondaryNavLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="flex items-center gap-3 px-6 py-4 rounded-2xl font-bold text-gray-600 hover:bg-gray-50"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <link.icon className="h-5 w-5" />
+                  {link.label}
+                </Link>
+              ))}
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-bold text-red-500 hover:bg-red-50"
+              >
+                <LogOut className="h-5 w-5" />
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </nav>
   )
 }
-

@@ -5,7 +5,7 @@ import type { ApiResponse } from '@/types'
 import { databaseStoryToStory, type DatabaseStory } from '@/types/database'
 
 /**
- * Generate PDF for a story (PRO MAX feature)
+ * Generate PDF for a story (Family Plan feature)
  * Returns PDF as base64 or blob URL
  */
 export async function GET(

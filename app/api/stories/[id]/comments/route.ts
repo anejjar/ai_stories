@@ -165,6 +165,26 @@ export async function POST(
       )
     }
 
+    // Ensure user profile exists in public.users table (fix for foreign key violation)
+    const { data: profile } = await supabase
+      .from('users')
+      .select('id')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile) {
+      console.log(`👤 Profile missing for user ${user.id}, creating one...`)
+      await supabase
+        .from('users')
+        .insert({
+          id: user.id,
+          email: user.email || '',
+          display_name: user.user_metadata?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0],
+          photo_url: user.user_metadata?.avatar_url,
+          subscription_tier: 'trial'
+        })
+    }
+
     const { id: storyId } = await params
 
     // Parse request body

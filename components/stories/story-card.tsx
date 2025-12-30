@@ -43,81 +43,80 @@ export function StoryCard({ story }: StoryCardProps) {
     : story.childName || 'Child'
 
   return (
-    <Card className="group h-full flex flex-col hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border-0 bg-white rounded-3xl overflow-hidden shadow-lg">
+    <Card className="group h-full flex flex-col hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-4 border-gray-100 bg-white rounded-[3rem] overflow-hidden shadow-sm">
       {/* Cover Image Area */}
-      <div className="relative h-48 w-full overflow-hidden bg-gray-100">
+      <div className="relative h-56 w-full overflow-hidden bg-gray-50 border-b-4 border-gray-100">
         {coverImage ? (
           <OptimizedImage
             src={coverImage}
             alt={story.title}
             fill
-            className="transition-transform duration-700 group-hover:scale-110"
+            className="transition-transform duration-700 group-hover:scale-110 object-cover"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-purple-400 via-pink-400 to-yellow-400 flex items-center justify-center p-6">
-            <BookOpen className="h-16 w-16 text-white opacity-80" />
+          <div className="w-full h-full bg-purple-50 flex items-center justify-center p-6 relative">
+            <div className="absolute inset-0 circle-pattern opacity-20" />
+            <BookOpen className="h-20 w-20 text-playwize-purple opacity-30 relative z-10" />
           </div>
         )}
 
         {/* Floating Badges */}
-        <div className="absolute top-3 right-3 flex gap-2">
+        <div className="absolute top-4 right-4 flex gap-2">
           {story.hasImages && (
-            <Badge className="bg-yellow-400 text-yellow-900 border-2 border-white shadow-lg font-bold px-2 py-1">
-              <Crown className="h-3 w-3 mr-1" /> FAMILY PLAN
+            <Badge className="bg-playwize-orange text-white border-0 shadow-lg font-black px-4 py-1.5 rounded-full text-xs">
+              <Crown className="h-3 w-3 mr-2" /> FAMILY PLAN
             </Badge>
           )}
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4 pt-12">
-          <div className="flex items-center text-white/90 text-xs font-medium">
-            <Clock className="h-3 w-3 mr-1" />
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-6 pt-16">
+          <div className="flex items-center text-white/90 text-xs font-black uppercase tracking-widest">
+            <Clock className="h-3 w-3 mr-2" />
             {timeAgo}
           </div>
         </div>
       </div>
 
-      <CardContent className="flex-1 pt-5 px-5 pb-2">
-        <div className="mb-3">
-          <Badge variant="outline" className="mb-2 border-purple-200 bg-purple-50 text-purple-700 rounded-full px-2 py-0.5 text-xs font-semibold tracking-wide uppercase">
+      <CardContent className="flex-1 pt-8 px-8 pb-4 space-y-4">
+        <div className="space-y-3">
+          <Badge className="bg-orange-100 text-playwize-orange border-0 rounded-full px-4 py-1 text-[10px] font-black tracking-widest uppercase">
             {story.theme}
           </Badge>
-          <h3 className="text-xl font-bold text-gray-900 line-clamp-2 font-comic leading-tight group-hover:text-purple-600 transition-colors">
+          <h3 className="text-2xl font-black text-gray-900 line-clamp-2 leading-tight group-hover:text-playwize-purple transition-colors">
             {story.title}
           </h3>
         </div>
 
         {/* Child Info */}
-        <div className="flex items-center gap-2 mb-4 text-sm text-gray-600 font-medium bg-gray-50 p-2 rounded-lg border border-gray-100">
-          <div className="bg-white p-1 rounded-full shadow-sm">
-            <User className="h-3 w-3 text-purple-500" />
+        <div className="flex items-center gap-3 text-sm font-bold text-gray-600 bg-gray-50 p-4 rounded-[1.5rem] border-2 border-white">
+          <div className="h-8 w-8 rounded-full bg-white flex items-center justify-center shadow-sm shrink-0">
+            <User className="h-4 w-4 text-playwize-purple" />
           </div>
           <span className="truncate">For: {childNames}</span>
         </div>
 
-        <p className="text-sm text-gray-500 line-clamp-3 mb-4 leading-relaxed">
+        <p className="text-gray-500 font-medium line-clamp-3 leading-relaxed">
           {preview}...
         </p>
-      </CardContent>
 
-      <div className="px-5 pb-2">
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-2 pt-2">
           {story.adjectives.slice(0, 3).map((adj) => (
-            <span key={adj} className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-pink-50 text-pink-700 border border-pink-100">
-              <Sparkles className="h-2 w-2 mr-1" />
+            <span key={adj} className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-purple-50 text-playwize-purple">
+              <Sparkles className="h-2 w-2 mr-1.5" />
               {adj}
             </span>
           ))}
           {story.adjectives.length > 3 && (
-            <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-50 text-gray-600 border border-gray-100">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-gray-50 text-gray-400">
               +{story.adjectives.length - 3}
             </span>
           )}
         </div>
-      </div>
+      </CardContent>
 
-      <CardFooter className="p-5 pt-4 border-t border-gray-100 bg-gray-50/50 mt-auto">
-        {!story.isIllustratedBook && (
-          <div className="w-full mb-3">
+      <CardFooter className="p-8 pt-4 bg-gray-50/50 mt-auto border-t-2 border-white">
+        <div className="w-full space-y-4">
+          {!story.isIllustratedBook && (
             <PublishToggle
               storyId={story.id}
               initialVisibility={visibility}
@@ -125,14 +124,14 @@ export function StoryCard({ story }: StoryCardProps) {
               onVisibilityChange={setVisibility}
               size="sm"
             />
-          </div>
-        )}
-        <Link href={`/story/${story.id}`} className="w-full">
-          <Button className="w-full rounded-xl bg-white border-2 border-purple-100 text-purple-700 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-800 shadow-sm hover:shadow transition-all font-bold group-hover:bg-purple-600 group-hover:border-purple-600 group-hover:text-white">
-            <Eye className="h-4 w-4 mr-2" />
-            Read Story
-          </Button>
-        </Link>
+          )}
+          <Link href={`/story/${story.id}`} className="block">
+            <Button className="w-full h-14 rounded-full bg-white border-2 border-playwize-purple text-playwize-purple hover:bg-playwize-purple hover:text-white font-black text-lg shadow-sm hover:shadow-xl transition-all">
+              <Eye className="h-5 w-5 mr-2" />
+              Read Story
+            </Button>
+          </Link>
+        </div>
       </CardFooter>
     </Card>
   )

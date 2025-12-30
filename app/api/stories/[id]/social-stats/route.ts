@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import type { ApiResponse } from '@/types'
 import type { SocialStats } from '@/types/discovery'
+import { unstable_noStore as noStore } from 'next/cache'
 
 interface SocialStatsParams {
   params: Promise<{
@@ -19,6 +20,9 @@ export async function GET(
   { params }: SocialStatsParams
 ) {
   try {
+    // Prevent caching to ensure stats are fresh
+    noStore()
+
     const supabase = await createServerSupabaseClient()
 
     // Check authentication

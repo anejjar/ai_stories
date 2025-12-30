@@ -50,8 +50,8 @@ supabase/migrations/003_user_profile_trigger.sql
    - Name: AI Stories PRO
    - Price: $9.99/month (or your price)
    - Note the Price ID
-3. Create "PRO MAX" subscription:
-   - Name: AI Stories PRO MAX
+3. Create "Family Plan" subscription:
+   - Name: AI Stories Family Plan
    - Price: $19.99/month (or your price)
    - Note the Price ID
 
@@ -91,7 +91,7 @@ STRIPE_SECRET_KEY=sk_live_xxx
 STRIPE_PUBLISHABLE_KEY=pk_live_xxx
 STRIPE_WEBHOOK_SECRET=whsec_xxx
 STRIPE_PRO_PRICE_ID=price_xxx
-STRIPE_PRO_MAX_PRICE_ID=price_xxx
+STRIPE_FAMILY_PRICE_ID=price_xxx
 
 # App URL
 NEXT_PUBLIC_APP_URL=https://yourdomain.com
@@ -117,7 +117,7 @@ NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
 - [ ] User can sign up/login
 - [ ] Story generation works
 - [ ] Payment flow works (use Stripe test card first)
-- [ ] Images are generated (PRO MAX)
+- [ ] Images are generated (Family Plan)
 - [ ] PDF export works
 - [ ] Audio playback works
 
@@ -145,7 +145,7 @@ NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
 | `STRIPE_PUBLISHABLE_KEY` | Yes | Stripe publishable key |
 | `STRIPE_WEBHOOK_SECRET` | Yes | Stripe webhook signing secret |
 | `STRIPE_PRO_PRICE_ID` | Yes | Stripe PRO price ID |
-| `STRIPE_PRO_MAX_PRICE_ID` | Yes | Stripe PRO MAX price ID |
+| `STRIPE_FAMILY_PRICE_ID` | Yes | Stripe Family Plan price ID |
 | `NEXT_PUBLIC_APP_URL` | Yes | Production app URL |
 | `NEXT_PUBLIC_GA_ID` | No | Google Analytics ID |
 

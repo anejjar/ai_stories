@@ -66,6 +66,7 @@ export default function SignupPage() {
     const { user, error: authError } = await signUpWithEmail(email, password)
 
     if (authError) {
+      console.error('Sign up error:', authError)
       setError(authError)
       setLoading(false)
       return
@@ -116,159 +117,155 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4 bg-gradient-hero relative overflow-hidden">
-      {/* Decorative elements */}
-      <div className="absolute top-20 left-10 text-5xl animate-float opacity-30">🎉</div>
-      <div className="absolute top-40 right-20 text-5xl animate-float opacity-30" style={{ animationDelay: '1s' }}>⭐</div>
-      <div className="absolute bottom-40 left-20 text-5xl animate-float opacity-30" style={{ animationDelay: '2s' }}>✨</div>
-      <div className="absolute bottom-60 right-10 text-4xl animate-bounce-slow opacity-20">🎈</div>
-      <div className="absolute top-1/2 left-20 text-4xl animate-bounce-slow opacity-20">🎨</div>
+    <div className="flex min-h-screen items-center justify-center p-4 playwize-bg relative overflow-hidden selection:bg-playwize-purple selection:text-white">
+      {/* Background Ornaments */}
+      <div className="absolute top-40 -left-20 w-80 h-80 circle-pattern opacity-30" />
+      <div className="absolute top-[60%] -right-20 w-96 h-96 circle-pattern opacity-30" />
+      <div className="absolute bottom-[10%] left-[20%] w-[30%] h-[30%] blob-purple blur-3xl opacity-10"></div>
 
-      <Card className="w-full max-w-md border-4 border-primary shadow-2xl bg-card backdrop-blur-sm relative z-10">
-        <CardHeader className="space-y-2 bg-gradient-primary rounded-t-lg border-b-4 border-primary">
-          <div className="flex justify-center mb-2">
-            <div className="text-6xl animate-bounce-slow">🎉</div>
-          </div>
-          <CardTitle className="text-4xl font-comic text-gradient-primary text-center">
-            Create Account!
-          </CardTitle>
-          <CardDescription className="text-center text-lg text-muted-foreground font-semibold">
-            Sign up to start creating magical stories for your child! ✨
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {error && (
-              <div className="p-4 text-sm text-red-700 bg-red-100 border-2 border-red-300 rounded-2xl font-bold">
-                ⚠️ {error}
+      <div className="relative z-10 w-full max-w-md">
+        <div className="absolute -inset-4 bg-playwize-orange rounded-[4rem] rotate-1 opacity-5" />
+        <Card className="relative border-4 border-gray-100 shadow-2xl bg-white rounded-[3rem] overflow-hidden">
+          <div className="h-4 bg-playwize-orange w-full" />
+          <CardHeader className="space-y-4 px-10 pt-10 pb-6">
+            <div className="flex justify-center mb-2">
+              <div className="h-20 w-20 rounded-[2rem] bg-orange-50 flex items-center justify-center text-5xl animate-bounce-slow">
+                🎉
               </div>
-            )}
-
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-base font-bold text-foreground flex items-center gap-2">
-                <span className="text-xl">📧</span>
-                Email
-              </label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com ✨"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
-                required
-                className="rounded-xl text-lg py-3"
-              />
             </div>
+            <CardTitle className="text-4xl font-black text-gray-900 text-center tracking-tight">
+              Create <span className="text-playwize-orange">Account!</span>
+            </CardTitle>
+            <CardDescription className="text-center text-lg text-gray-500 font-bold leading-relaxed">
+              Sign up to start creating magical stories for your child! ✨
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="px-10 pb-8">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {error && (
+                <div className={`p-5 text-sm ${error.includes('✅') ? 'text-green-700 bg-green-50 border-green-200' : 'text-red-700 bg-red-50 border-red-200'} border-2 rounded-[2rem] font-black flex items-center gap-3`}>
+                  <div className="h-8 w-8 rounded-full bg-white flex items-center justify-center shrink-0">{error.includes('✅') ? '🎉' : '⚠️'}</div>
+                  {error}
+                </div>
+              )}
 
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-base font-bold text-foreground flex items-center gap-2">
-                <span className="text-xl">🔒</span>
-                Password
-              </label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="At least 6 characters 🔐"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
-                required
-                minLength={6}
-                className="rounded-xl text-lg py-3"
-              />
-              <p className="text-sm text-muted-foreground font-semibold">
-                Password must be at least 6 characters long
-              </p>
-            </div>
+              <div className="space-y-3">
+                <label htmlFor="email" className="text-sm font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                  <span>📧 Email Address</span>
+                </label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                  required
+                  className="rounded-2xl text-lg h-14 border-2 border-gray-100 focus:border-playwize-orange bg-gray-50/50 font-bold transition-all"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <label htmlFor="confirmPassword" className="text-base font-bold text-foreground flex items-center gap-2">
-                <span className="text-xl">✅</span>
-                Confirm Password
-              </label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="Confirm your password 🔐"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+              <div className="space-y-3">
+                <label htmlFor="password" className="text-sm font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                  <span>🔒 Password</span>
+                </label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="At least 6 characters"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                  required
+                  className="rounded-2xl text-lg h-14 border-2 border-gray-100 focus:border-playwize-orange bg-gray-50/50 font-bold transition-all"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <label htmlFor="confirmPassword" className="text-sm font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                  <span>✅ Confirm Password</span>
+                </label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="Repeat your password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={loading}
+                  required
+                  className="rounded-2xl text-lg h-14 border-2 border-gray-100 focus:border-playwize-orange bg-gray-50/50 font-bold transition-all"
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full h-16 rounded-full bg-playwize-orange hover:bg-orange-600 text-white font-black text-xl shadow-xl shadow-orange-100 transition-all hover:scale-[1.02] active:scale-95"
                 disabled={loading}
-                required
-                minLength={6}
-                className="rounded-xl text-lg py-3"
-              />
+              >
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="animate-spin text-2xl">⏳</span>
+                    CREATING...
+                  </span>
+                ) : (
+                  "SIGN UP! 🎉"
+                )}
+              </Button>
+            </form>
+
+            <div className="relative my-8">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t-2 border-gray-100" />
+              </div>
+              <div className="relative flex justify-center text-xs font-black uppercase tracking-widest">
+                <span className="bg-white px-4 text-gray-400">
+                  Or continue with
+                </span>
+              </div>
             </div>
 
             <Button
-              type="submit"
-              className="w-full rounded-full bg-gradient-primary hover:opacity-90 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all font-bold text-lg py-6"
+              type="button"
+              variant="outline"
+              className="w-full h-16 rounded-full border-2 border-gray-100 font-black text-lg text-gray-700 hover:bg-gray-50 transition-all flex items-center justify-center gap-3"
+              onClick={handleGoogleSignUp}
               disabled={loading}
             >
-              {loading ? (
-                <>
-                  <span className="animate-spin mr-2">⏳</span>
-                  Creating account...
-                </>
-              ) : (
-                <>
-                  Sign Up! 🎉
-                </>
-              )}
+              <svg className="h-6 w-6" viewBox="0 0 24 24">
+                <path
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  fill="#4285F4"
+                />
+                <path
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  fill="#34A853"
+                />
+                <path
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                  fill="#FBBC05"
+                />
+                <path
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  fill="#EA4335"
+                />
+              </svg>
+              Google
             </Button>
-          </form>
 
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t-2 border-border" />
+            <div className="mt-8 pt-8 border-t-2 border-gray-100 text-center">
+              <p className="text-gray-500 font-bold">
+                Already have an account?{' '}
+                <Link
+                  href="/login"
+                  className="text-playwize-orange hover:underline font-black"
+                >
+                  SIGN IN! 👋
+                </Link>
+              </p>
             </div>
-            <div className="relative flex justify-center text-sm font-bold">
-              <span className="bg-card px-3 text-muted-foreground rounded-full border-2 border-border">
-                Or continue with
-              </span>
-            </div>
-          </div>
-
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full rounded-full font-bold text-lg py-6 shadow-md hover:shadow-lg transform hover:scale-105 transition-all"
-            onClick={handleGoogleSignUp}
-            disabled={loading}
-          >
-            <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
-              <path
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                fill="#4285F4"
-              />
-              <path
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                fill="#34A853"
-              />
-              <path
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                fill="#FBBC05"
-              />
-              <path
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                fill="#EA4335"
-              />
-            </svg>
-            Sign up with Google 🔵
-          </Button>
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-4 bg-gradient-secondary rounded-b-lg border-t-2 border-border">
-          <div className="text-base text-center text-foreground font-semibold">
-            Already have an account?{' '}
-            <Link
-              href="/login"
-              className="text-primary hover:opacity-80 underline font-bold"
-            >
-              Sign in! 👋
-            </Link>
-          </div>
-        </CardFooter>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

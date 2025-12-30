@@ -13,6 +13,10 @@ export interface DatabaseUser {
   updated_at: string // ISO timestamp
   stripe_customer_id: string | null
   stripe_subscription_id: string | null
+  onboarding_completed: boolean
+  onboarding_step: 'welcome' | 'profile_setup' | 'tour_active' | 'first_story' | 'completed'
+  onboarding_dismissed_at: string | null // ISO timestamp
+  onboarding_checklist: OnboardingChecklist | null // JSONB
 }
 
 // Database Story Row (matches PostgreSQL stories table)
@@ -28,12 +32,19 @@ export interface DatabaseStory {
   moral: string | null
   has_images: boolean
   image_urls: string[] | null
-  appearance: ChildAppearance | null // JSONB column for PRO MAX customization (deprecated, use children[].appearance)
+  appearance: ChildAppearance | null // JSONB column for Family Plan customization (deprecated, use children[].appearance)
   parent_story_id: string | null // If set, this is a draft of another story
   draft_number: number | null // Draft number (1, 2, 3, etc.)
   is_selected_draft: boolean | null // True if this draft was selected as final
-  is_illustrated_book: boolean | null // True if this is an illustrated book format (PRO MAX feature)
-  book_pages: BookPage[] | null // JSONB array of structured pages with illustrations (PRO MAX feature)
+  is_illustrated_book: boolean | null // True if this is an illustrated book format (Family Plan feature)
+  book_pages: BookPage[] | null // JSONB array of structured pages with illustrations (Family Plan feature)
+  visibility: 'public' | 'private' | null
+  published_at: string | null // ISO timestamp
+  view_count: number | null
+  likes_count: number | null
+  comments_count: number | null
+  average_rating: number | null
+  ratings_count: number | null
   created_at: string // ISO timestamp
   updated_at: string // ISO timestamp
 }
@@ -132,6 +143,10 @@ export function databaseUserToUser(data: DatabaseUser): User {
     updatedAt: new Date(data.updated_at),
     stripeCustomerId: data.stripe_customer_id || undefined,
     stripeSubscriptionId: data.stripe_subscription_id || undefined,
+    onboardingCompleted: data.onboarding_completed,
+    onboardingStep: data.onboarding_step as any,
+    onboardingDismissedAt: data.onboarding_dismissed_at ? new Date(data.onboarding_dismissed_at) : undefined,
+    onboardingChecklist: data.onboarding_checklist,
   }
 }
 
@@ -215,6 +230,15 @@ export function databaseStoryToStory(data: DatabaseStory): Story {
     isSelectedDraft: data.is_selected_draft || false,
     isIllustratedBook: data.is_illustrated_book || false,
     bookPages,
+    visibility: data.visibility || 'private',
+    publishedAt: data.published_at ? new Date(data.published_at) : undefined,
+    viewCount: data.view_count || 0,
+    likesCount: data.likes_count || 0,
+    commentsCount: data.comments_count || 0,
+    averageRating: typeof data.average_rating === 'string'
+      ? parseFloat(data.average_rating)
+      : (data.average_rating || 0),
+    ratingsCount: data.ratings_count || 0,
     createdAt: validCreatedAt,
     updatedAt: validUpdatedAt,
   }
@@ -243,6 +267,8 @@ export function storyToDatabaseStory(story: Partial<Story>): Partial<DatabaseSto
     is_selected_draft: story.isSelectedDraft ?? false, // Ensure boolean, never undefined
     is_illustrated_book: story.isIllustratedBook ?? false, // Ensure boolean, never undefined
     book_pages: story.bookPages || null, // JSONB array of pages
+    visibility: story.visibility || 'private',
+    published_at: story.publishedAt ? story.publishedAt.toISOString() : null,
   } as Partial<DatabaseStory>
 }
 

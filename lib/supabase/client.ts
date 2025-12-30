@@ -13,5 +13,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // Initialize Supabase client with browser client (handles cookies automatically)
+console.log('🔌 Initializing Supabase client with URL:', supabaseUrl.substring(0, 15) + '...')
 export const supabase = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey)
 

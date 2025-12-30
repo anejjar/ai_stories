@@ -7,6 +7,7 @@ import { StreakCounter } from '@/components/achievements/streak-counter'
 import { Card } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
+import { Trophy, Sparkles, Award, TrendingUp } from 'lucide-react'
 import {
   getAllAchievements,
   getAchievementsByCategory,
@@ -62,100 +63,82 @@ export default function AchievementsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 py-8 px-4">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen playwize-bg relative selection:bg-playwize-purple selection:text-white py-12 px-4 overflow-hidden">
+      {/* Background Ornaments */}
+      <div className="absolute top-40 -left-20 w-80 h-80 circle-pattern opacity-30 pointer-events-none" />
+      <div className="absolute top-[60%] -right-20 w-96 h-96 circle-pattern opacity-30 pointer-events-none" />
+      
+      <div className="max-w-6xl mx-auto space-y-12 relative z-10">
         {/* Header */}
         <div className="text-center space-y-4">
-          <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
-            🏆 Your Achievements
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-100 text-playwize-purple text-sm font-bold border border-purple-200">
+            <Trophy className="h-4 w-4" />
+            <span>Rewards & Badges</span>
+          </div>
+          <h1 className="text-4xl md:text-6xl font-black text-gray-900 tracking-tight">
+            Your <span className="text-playwize-purple">Achievements</span>
           </h1>
-          <p className="text-gray-600">
-            Track your progress and earn badges as you read!
+          <p className="text-gray-600 text-lg font-medium max-w-2xl mx-auto">
+            Track your progress and earn badges as you embark on magical reading adventures!
           </p>
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Total Points */}
-          <Card className="p-4 bg-gradient-to-br from-purple-500 to-pink-500 text-white">
-            <div className="text-center">
-              <div className="text-3xl font-bold">{userStats?.totalPoints || 0}</div>
-              <div className="text-sm opacity-90">Total Points</div>
-            </div>
-          </Card>
-
-          {/* Reader Level */}
-          <Card className={`p-4 ${TIER_COLORS[userStats?.readerLevel || 'bronze'].bg}`}>
-            <div className="text-center">
-              <div className="text-2xl font-bold capitalize">{userStats?.readerLevel || 'Bronze'}</div>
-              <div className="text-sm">Reader Level</div>
-              {nextLevel && (
-                <div className="text-xs mt-2">
-                  {nextLevel.pointsNeeded} pts to {nextLevel.level}
-                </div>
-              )}
-            </div>
-          </Card>
-
-          {/* Achievements Unlocked */}
-          <Card className="p-4 bg-gradient-to-br from-yellow-400 to-orange-500 text-white">
-            <div className="text-center">
-              <div className="text-3xl font-bold">
-                {unlockedIds.size}/{allAchievements.length}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+          {[
+            { label: 'Total Points', value: userStats?.totalPoints || 0, icon: Sparkles, color: 'bg-playwize-purple' },
+            { label: 'Reader Level', value: userStats?.readerLevel || 'Bronze', icon: Award, color: 'bg-playwize-orange', capitalize: true },
+            { label: 'Achievements', value: `${unlockedIds.size}/${allAchievements.length}`, icon: Trophy, color: 'bg-playwize-purple' },
+            { label: 'Day Streak', value: `🔥 ${userStats?.streak.current || 0}`, icon: TrendingUp, color: 'bg-playwize-orange' },
+          ].map((stat, i) => (
+            <div key={i} className={`p-8 rounded-[2.5rem] ${stat.color} text-white shadow-xl relative overflow-hidden group hover:scale-105 transition-all`}>
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl" />
+              <div className="text-center space-y-2 relative z-10">
+                <div className="text-3xl font-black">{stat.value}</div>
+                <div className="text-xs font-black uppercase tracking-widest opacity-80">{stat.label}</div>
               </div>
-              <div className="text-sm opacity-90">Achievements</div>
             </div>
-          </Card>
-
-          {/* Current Streak */}
-          <Card className="p-4 bg-gradient-to-br from-orange-400 to-red-500 text-white">
-            <div className="text-center">
-              <div className="text-3xl font-bold flex items-center justify-center gap-2">
-                🔥 {userStats?.streak.current || 0}
-              </div>
-              <div className="text-sm opacity-90">Day Streak</div>
-            </div>
-          </Card>
+          ))}
         </div>
 
-        {/* Streak Card */}
-        <StreakCounter showMessage className="w-full" />
+        <div className="w-full">
+          <StreakCounter showMessage className="w-full" />
+        </div>
 
         {/* Progress to Next Level */}
         {nextLevel && (
-          <Card className="p-6">
-            <h3 className="font-bold text-lg mb-4">Progress to {nextLevel.level} Level</h3>
-            <div className="relative">
-              <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
+          <div className="bg-white p-10 rounded-[3rem] border-4 border-gray-100 shadow-sm space-y-6">
+            <h3 className="font-black text-2xl text-gray-900">Progress to {nextLevel.level} Level</h3>
+            <div className="space-y-4">
+              <div className="w-full h-6 bg-gray-100 rounded-full overflow-hidden border-2 border-gray-50 p-1">
                 <div
-                  className={`h-full bg-gradient-to-r ${TIER_COLORS[nextLevel.level].gradient} transition-all duration-500`}
+                  className={`h-full bg-playwize-purple rounded-full transition-all duration-1000 ease-out`}
                   style={{
                     width: `${((userStats?.totalPoints || 0) / READER_LEVEL_POINTS[nextLevel.level]) * 100}%`,
                   }}
                 />
               </div>
-              <p className="text-sm text-gray-600 mt-2">
-                {nextLevel.pointsNeeded} points to go!
+              <p className="text-sm text-gray-500 font-bold uppercase tracking-widest text-center">
+                {nextLevel.pointsNeeded} points to go! 🚀
               </p>
             </div>
-          </Card>
+          </div>
         )}
 
         {/* Achievements Tabs */}
-        <Card className="p-6">
+        <div className="bg-white p-8 md:p-12 rounded-[4rem] border-4 border-gray-100 shadow-sm">
           <Tabs defaultValue="all" className="w-full">
-            <TabsList className="grid grid-cols-6 w-full">
-              <TabsTrigger value="all">All</TabsTrigger>
+            <TabsList className="grid grid-cols-2 md:grid-cols-6 w-full gap-2 bg-gray-50 p-2 rounded-[2.5rem] h-auto border-2 border-gray-100 mb-10">
+              <TabsTrigger value="all" className="rounded-full font-black py-3 data-[state=active]:bg-playwize-purple data-[state=active]:text-white">All</TabsTrigger>
               {categories.map(cat => (
-                <TabsTrigger key={cat} value={cat} className="capitalize">
+                <TabsTrigger key={cat} value={cat} className="rounded-full font-black py-3 capitalize data-[state=active]:bg-playwize-purple data-[state=active]:text-white">
                   {CATEGORY_EMOJIS[cat]} {cat}
                 </TabsTrigger>
               ))}
             </TabsList>
 
-            {/* All Achievements */}
-            <TabsContent value="all" className="mt-6">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <TabsContent value="all" className="mt-0">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
                 {allAchievements.map(achievement => {
                   const isUnlocked = unlockedIds.has(achievement.id)
                   const currentProgress = progress.get(achievement.id) || 0
@@ -174,10 +157,9 @@ export default function AchievementsPage() {
               </div>
             </TabsContent>
 
-            {/* Category Tabs */}
             {categories.map(category => (
-              <TabsContent key={category} value={category} className="mt-6">
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              <TabsContent key={category} value={category} className="mt-0">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
                   {getAchievementsByCategory(category).map(achievement => {
                     const isUnlocked = unlockedIds.has(achievement.id)
                     const currentProgress = progress.get(achievement.id) || 0
@@ -197,37 +179,32 @@ export default function AchievementsPage() {
               </TabsContent>
             ))}
           </Tabs>
-        </Card>
+        </div>
 
         {/* Stats Summary */}
-        <Card className="p-6">
-          <h3 className="font-bold text-xl mb-4">Your Story Stats</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <div className="text-3xl mb-2">📚</div>
-              <div className="text-2xl font-bold">{userStats?.totalStories || 0}</div>
-              <div className="text-sm text-gray-600">Stories Created</div>
-            </div>
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-3xl mb-2">📖</div>
-              <div className="text-2xl font-bold">{userStats?.totalReadingSessions || 0}</div>
-              <div className="text-sm text-gray-600">Reading Sessions</div>
-            </div>
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-3xl mb-2">🎨</div>
-              <div className="text-2xl font-bold">{userStats?.illustratedStories || 0}</div>
-              <div className="text-sm text-gray-600">Illustrated Books</div>
-            </div>
-            <div className="text-center p-4 bg-yellow-50 rounded-lg">
-              <div className="text-3xl mb-2">🗺️</div>
-              <div className="text-2xl font-bold">{userStats?.uniqueThemes || 0}</div>
-              <div className="text-sm text-gray-600">Themes Explored</div>
-            </div>
+        <div className="bg-white p-10 rounded-[3rem] border-4 border-gray-100 shadow-sm space-y-8">
+          <h3 className="font-black text-2xl text-gray-900 text-center">Your Story Stats</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {[
+              { label: 'Stories Created', value: userStats?.totalStories || 0, icon: '📚', color: 'bg-purple-50', text: 'text-playwize-purple' },
+              { label: 'Reading Sessions', value: userStats?.totalReadingSessions || 0, icon: '📖', color: 'bg-orange-50', text: 'text-playwize-orange' },
+              { label: 'Illustrated Books', value: userStats?.illustratedStories || 0, icon: '🎨', color: 'bg-purple-50', text: 'text-playwize-purple' },
+              { label: 'Themes Explored', value: userStats?.uniqueThemes || 0, icon: '🗺️', color: 'bg-orange-50', text: 'text-playwize-orange' },
+            ].map((s, i) => (
+              <div key={i} className="text-center space-y-4">
+                <div className={`h-24 w-24 rounded-[2rem] ${s.color} mx-auto flex items-center justify-center text-4xl shadow-inner`}>
+                  {s.icon}
+                </div>
+                <div>
+                  <div className={`text-3xl font-black ${s.text}`}>{s.value}</div>
+                  <div className="text-xs font-black text-gray-400 uppercase tracking-widest">{s.label}</div>
+                </div>
+              </div>
+            ))}
           </div>
-        </Card>
+        </div>
       </div>
 
-      {/* Achievement Detail Modal */}
       {selectedAchievement && (
         <AchievementUnlockModal
           achievement={selectedAchievement}

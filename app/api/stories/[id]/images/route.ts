@@ -10,7 +10,7 @@ import { ProviderError } from '@/lib/ai/types'
 import type { DatabaseStory } from '@/types/database'
 
 /**
- * Generate images for an existing story (PRO MAX feature)
+ * Generate images for an existing story (Family Plan feature)
  */
 export async function POST(
   request: NextRequest,

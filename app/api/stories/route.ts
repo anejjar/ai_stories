@@ -12,21 +12,15 @@ import { ProviderError } from '@/lib/ai/types'
 import { generateIllustratedBook, type BookPage } from '@/lib/ai/illustrated-book-generator'
 import { uploadImageToStorage } from '@/lib/supabase/storage'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { getMemoizedUserProfile } from '@/lib/api/user'
 
-// Helper to get user profile from Supabase (server-side)
+// Helper to get user profile from Supabase (server-side) - Now using memoized version
 async function getUserProfile(userId: string) {
-  const { data, error } = await supabaseAdmin
-    .from('users')
-    .select('subscription_tier')
-    .eq('id', userId)
-    .single<{ subscription_tier: string }>()
-
-  if (error || !data) {
-    return null
-  }
-
+  const profile = await getMemoizedUserProfile(userId)
+  if (!profile) return null
+  
   return {
-    subscriptionTier: data.subscription_tier || 'trial',
+    subscriptionTier: profile.subscriptionTier,
   }
 }
 

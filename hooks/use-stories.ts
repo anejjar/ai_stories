@@ -35,7 +35,8 @@ export function useStories() {
       return fetchStories(token)
     },
     enabled: !!user,
-    staleTime: 60000, // 60 seconds - cache stories longer
+    staleTime: 5 * 60 * 1000, // 5 minutes - cache stories longer
+    gcTime: 10 * 60 * 1000, // 10 minutes cache duration
     refetchOnMount: false, // Don't refetch if data is still fresh
     retry: 1, // Only retry once to fail faster
   })

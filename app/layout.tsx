@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from 'next'
 import { Comic_Neue, Nunito } from 'next/font/google'
 import { QueryProvider } from '@/lib/providers/query-provider'
+import { GlitchTipProvider } from '@/lib/providers/glitchtip-provider'
 import { Toaster } from '@/components/ui/toaster'
-import { GoogleAnalytics, AnalyticsTracker, UmamiAnalytics } from '@/lib/analytics'
+import { GoogleAnalytics, AnalyticsTracker } from '@/lib/analytics'
 import { SoftwareApplicationSchema, OrganizationSchema } from '@/components/schema/schema-markup'
 import './globals.css'
 
@@ -114,16 +115,17 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <GoogleAnalytics />
-        <UmamiAnalytics />
         <SoftwareApplicationSchema />
         <OrganizationSchema />
       </head>
       <body className={`${comicNeue.variable} ${nunito.variable} font-sans`}>
-        <QueryProvider>
-          <AnalyticsTracker />
-          {children}
-          <Toaster />
-        </QueryProvider>
+        <GlitchTipProvider>
+          <QueryProvider>
+            <AnalyticsTracker />
+            {children}
+            <Toaster />
+          </QueryProvider>
+        </GlitchTipProvider>
       </body>
     </html>
   )

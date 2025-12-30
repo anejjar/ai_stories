@@ -51,7 +51,13 @@ export async function generateIllustratedBook(params: {
   const providerManager = getProviderManager()
 
   // Step 1: Generate story content structured into 5-7 scenes
-  const storyPrompt = buildIllustratedStoryPrompt(params)
+  const storyPrompt = buildIllustratedStoryPrompt({
+    childName: params.childName,
+    adjectives: params.adjectives,
+    theme: params.theme,
+    moral: params.moral,
+    childAge: params.childAge
+  })
   const storyContent = await providerManager.generateText({
     childName: params.childName,
     adjectives: params.adjectives,
@@ -166,22 +172,27 @@ function buildIllustratedStoryPrompt(params: {
   adjectives: string[]
   theme: string
   moral?: string
+  childAge?: number
 }): string {
   const adjectivesStr = params.adjectives.join(', ')
   const moralSection = params.moral ? `\nMoral/Lesson: ${params.moral}` : ''
 
-  return `Create a children's story about ${params.childName}, a ${adjectivesStr} child.
+  return `Create a magical children's story about ${params.childName}, a ${adjectivesStr} child.
 Theme: ${params.theme}${moralSection}
 
-IMPORTANT: Structure the story into exactly 5-7 distinct scenes/sections, separated by double line breaks.
-Each scene should be 2-3 paragraphs and represent a key moment in the story that can be illustrated.
-Make ${params.childName} the main hero who takes action and drives the story forward.
+IMPORTANT STRUCTURE:
+1. Divide the story into exactly 5-7 distinct scenes, separated by double line breaks.
+2. Each scene must have a clear visual focus for illustration.
+3. Include **BOLD ALL CAPS** for sound effects (e.g., **WHOOSH**, **CRACKLE**) to help parents read aloud.
+4. Include 2-3 interaction cues in [brackets] (e.g., [Action: Point to the dragon], [Sound: Make a soft wind sound]).
+5. Include 2-3 "Sparkle Words" (advanced vocabulary) explained naturally in context.
+6. The final scene must include a "Bedtime Bridge" with rhythmic, calming language to help the child settle for sleep.
 
 The story should:
-- Be engaging and age-appropriate (4-8 years old)
+- Be engaging and age-appropriate (for a ${params.childAge || 5} year old)
 - Have clear visual moments perfect for illustration
 - Show ${params.childName} as an active protagonist
-- Be 300-500 words total
+- Be 400-600 words total
 - Have a clear beginning, middle, and end
 - Be wholesome and educational
 

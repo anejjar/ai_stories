@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/use-auth'
 import { toast } from '@/components/ui/toaster'
-import { Sparkles, ArrowLeft } from 'lucide-react'
+import { Sparkles, ArrowLeft, Wand2 } from 'lucide-react'
 import type { StoryInput, Story } from '@/types'
 import { CreatePageTour } from '@/components/onboarding/create-page-tour'
 import { SuccessModal } from '@/components/onboarding/success-modal'
@@ -160,40 +160,38 @@ function CreateContent() {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-hero relative overflow-hidden">
-        {/* Decorative elements */}
-        <div className="absolute top-20 right-10 text-5xl animate-float opacity-30">📚</div>
-        <div className="absolute bottom-20 left-10 text-5xl animate-float opacity-30" style={{ animationDelay: '1s' }}>✨</div>
-        <div className="absolute top-1/2 left-20 text-4xl animate-bounce-slow opacity-20">🎨</div>
+      <div className="py-12 px-4 max-w-3xl mx-auto space-y-12">
+        <div className="text-center space-y-4">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-100 text-playwize-orange text-sm font-bold border border-orange-200">
+            <Wand2 className="h-4 w-4" />
+            <span>AI Story Generator</span>
+          </div>
+          <h1 className="text-4xl md:text-6xl font-black text-gray-900 tracking-tight">
+            Create a New <span className="text-playwize-purple">Story</span>
+          </h1>
+          <p className="text-gray-600 text-lg font-medium">
+            Fill in the details below to generate a magical story for your child! ✨
+          </p>
+        </div>
 
-        <div className="container mx-auto px-4 py-8 max-w-2xl relative z-10">
-          <Card className="border-4 border-primary shadow-2xl bg-card backdrop-blur-sm">
-            <CardHeader className="bg-gradient-primary rounded-t-lg border-b-4 border-primary">
-              <div className="flex items-center gap-3">
-                <div className="text-5xl animate-bounce-slow">🎭</div>
-                <div>
-                  <CardTitle className="text-4xl font-comic text-gradient-primary">
-                    Create a New Story
-                  </CardTitle>
-                  <CardDescription className="text-lg text-muted-foreground mt-2">
-                    Fill in the details below to generate a magical story for your child! ✨
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-6">
+        <div className="relative">
+          <div className="absolute -inset-4 bg-playwize-purple rounded-[4rem] rotate-1 opacity-5" />
+          <Card className="relative border-4 border-gray-100 shadow-2xl bg-white rounded-[3rem] overflow-hidden">
+            <div className="h-4 bg-playwize-purple w-full" />
+            <CardContent className="p-8 md:p-12">
               {error && (
-                <div className="mb-4 p-4 text-sm text-red-700 bg-red-100 border-2 border-red-300 rounded-2xl font-semibold">
-                  ⚠️ {error}
+                <div className="mb-8 p-6 text-base text-red-700 bg-red-50 border-2 border-red-200 rounded-[2rem] font-bold flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center shrink-0">⚠️</div>
+                  {error}
                 </div>
               )}
 
               {drafts.length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-8">
                   <Button
                     onClick={handleBackToForm}
                     variant="outline"
-                    className="mb-4 rounded-full"
+                    className="rounded-full border-2 border-gray-100 font-bold px-6 h-12 hover:bg-gray-50 transition-all"
                   >
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back to Form

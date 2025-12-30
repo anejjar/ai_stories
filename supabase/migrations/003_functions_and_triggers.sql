@@ -5,21 +5,35 @@
 -- USER SIGNUP TRIGGER
 -- =====================================================
 
--- Function to handle new user creation
+-- Function to handle new user creation and preferences
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.users (id, email, subscription_tier)
+  -- 1. Create user profile in public.users
+  INSERT INTO public.users (id, email, subscription_tier, display_name, photo_url, avatar_url)
   VALUES (
     NEW.id,
     NEW.email,
-    'trial'
+    'trial',
+    COALESCE(NEW.raw_user_meta_data->>'display_name', NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name'),
+    COALESCE(NEW.raw_user_meta_data->>'avatar_url', NEW.raw_user_meta_data->>'picture'),
+    COALESCE(NEW.raw_user_meta_data->>'avatar_url', NEW.raw_user_meta_data->>'picture')
   )
-  ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id) DO UPDATE SET
+    email = EXCLUDED.email,
+    display_name = COALESCE(EXCLUDED.display_name, public.users.display_name),
+    photo_url = COALESCE(EXCLUDED.photo_url, public.users.photo_url),
+    avatar_url = COALESCE(EXCLUDED.avatar_url, public.users.avatar_url),
+    updated_at = NOW();
 
-  -- Initialize trial usage
+  -- 2. Initialize trial usage
   INSERT INTO public.usage (user_id, stories_generated, trial_completed)
   VALUES (NEW.id, 0, false)
+  ON CONFLICT (user_id) DO NOTHING;
+
+  -- 3. Create default email preferences
+  INSERT INTO public.email_preferences (user_id)
+  VALUES (NEW.id)
   ON CONFLICT (user_id) DO NOTHING;
 
   RETURN NEW;
@@ -32,6 +46,9 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_new_user();
+
+-- Drop the old email preferences trigger as it's now combined
+DROP TRIGGER IF EXISTS create_email_preferences_trigger ON auth.users;
 
 -- Grant necessary permissions
 GRANT USAGE ON SCHEMA public TO anon, authenticated;
@@ -439,23 +456,7 @@ GRANT EXECUTE ON FUNCTION check_and_award_achievements TO authenticated;
 -- EMAIL PREFERENCE FUNCTIONS
 -- =====================================================
 
--- Function to create default email preferences for new users
-CREATE OR REPLACE FUNCTION create_default_email_preferences()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO email_preferences (user_id)
-  VALUES (NEW.id)
-  ON CONFLICT (user_id) DO NOTHING;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Trigger to create email preferences on user signup
-DROP TRIGGER IF EXISTS create_email_preferences_trigger ON auth.users;
-CREATE TRIGGER create_email_preferences_trigger
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION create_default_email_preferences();
+-- Old email preferences trigger removed (combined with handle_new_user above)
 
 -- Function to get weekly summary data
 CREATE OR REPLACE FUNCTION get_weekly_summary(user_uuid UUID)

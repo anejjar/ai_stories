@@ -4,60 +4,53 @@
 
 @layer base {
   /*
-   * Pastel Dreams Color Palette - Soft, calming, gentle!
+   * Modern EdTech Palette - Clean, Professional, and Friendly
    *
-   * To change the color palette, edit lib/colors.ts and change ACTIVE_PALETTE
-   * Current palette: Pastel Dreams
-   *
-   * Colors:
-   * - Primary: #7CB9E8 (Sky Blue)
-   * - Secondary: #FFB7CE (Cotton Candy Pink)
-   * - Accent: #B19CD9 (Soft Purple)
-   * - Background: #FAFBFC (Very Light Gray-Blue)
+   * Inspired by high-quality educational landing pages.
    */
   :root {
-    --background: 210 40% 98%;           /* #FAFBFC - Very Light Gray-Blue */
-    --foreground: 215 25% 27%;           /* #2D3748 - Dark Slate */
-    --card: 0 0% 100%;                   /* White */
-    --card-foreground: 215 25% 27%;      /* #2D3748 */
-    --popover: 0 0% 100%;                /* White */
-    --popover-foreground: 215 25% 27%;   /* #2D3748 */
-    --primary: 204 70% 66%;              /* #7CB9E8 - Sky Blue */
-    --primary-foreground: 0 0% 100%;     /* White */
-    --secondary: 343 100% 86%;           /* #FFB7CE - Cotton Candy Pink */
-    --secondary-foreground: 215 25% 27%; /* Dark Slate */
-    --muted: 214 32% 91%;                /* Light Blue-Gray */
-    --muted-foreground: 215 20% 55%;     /* #718096 */
-    --accent: 260 44% 72%;               /* #B19CD9 - Soft Purple */
-    --accent-foreground: 0 0% 100%;      /* White */
-    --destructive: 4 100% 69%;           /* #FF6961 */
-    --destructive-foreground: 0 0% 100%; /* White */
-    --border: 214 32% 91%;               /* #E2E8F0 */
-    --input: 214 32% 91%;                /* #E2E8F0 */
-    --ring: 204 70% 66%;                 /* #7CB9E8 */
-    --radius: 1rem;
+    --background: 260 100% 99%;         /* Very Light Lavender Background */
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 262 83% 58%;             /* Playwize Purple */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 35 92% 50%;            /* Playwize Orange */
+    --secondary-foreground: 210 40% 98%;
+    --muted: 260 30% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 14 100% 70%;              /* Playwize Peach/Coral */
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 260 30% 90%;
+    --input: 260 30% 90%;
+    --ring: 262 83% 58%;
+    --radius: 2rem;
   }
 
   .dark {
-    --background: 215 28% 17%;           /* Dark Slate */
-    --foreground: 0 0% 98%;              /* Light */
-    --card: 215 25% 20%;                 /* Slightly lighter */
-    --card-foreground: 0 0% 98%;         /* Light */
-    --popover: 215 25% 20%;              /* Slightly lighter */
-    --popover-foreground: 0 0% 98%;      /* Light */
-    --primary: 204 70% 66%;              /* #7CB9E8 */
-    --primary-foreground: 0 0% 100%;     /* White */
-    --secondary: 343 100% 86%;           /* #FFB7CE */
-    --secondary-foreground: 215 25% 27%; /* Dark text */
-    --muted: 215 25% 25%;                /* Muted dark */
-    --muted-foreground: 215 20% 65%;     /* Light muted */
-    --accent: 260 44% 72%;               /* #B19CD9 */
-    --accent-foreground: 0 0% 100%;      /* White */
-    --destructive: 4 100% 69%;           /* #FF6961 */
-    --destructive-foreground: 0 0% 100%; /* White */
-    --border: 215 25% 25%;               /* Dark border */
-    --input: 215 25% 25%;                /* Dark input */
-    --ring: 204 70% 66%;                 /* #7CB9E8 */
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 263 70% 50%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 224 76% 48%;
   }
 }
 
@@ -68,243 +61,100 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Comic Neue', 'Nunito', system-ui, -apple-system, sans-serif;
+    font-family: 'Nunito', 'Quicksand', system-ui, -apple-system, sans-serif;
   }
 }
 
 @layer utilities {
-  /* Palette-aware gradient utilities */
-  .bg-gradient-primary {
-    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+  .bg-playwize-purple { background-color: #7c3aed; }
+  .bg-playwize-orange { background-color: #f59e0b; }
+  .bg-playwize-peach { background-color: #fb923c; }
+  .text-playwize-purple { color: #7c3aed; }
+  .text-playwize-orange { color: #f59e0b; }
+
+  /* Playwize Background Pattern */
+  .playwize-bg {
+    background-color: #fdfbff;
+    background-image: radial-gradient(#e9e2ff 2px, transparent 2px);
+    background-size: 40px 40px;
   }
 
-  .bg-gradient-secondary {
-    background: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--accent)));
+  .circle-pattern {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid #e9e2ff;
+    pointer-events: none;
   }
 
-  .bg-gradient-accent {
-    background: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--primary)));
+  /* Soft Blob Backgrounds */
+  .blob-purple {
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
+  }
+  .blob-blue {
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
+  }
+  .blob-yellow {
+    background: radial-gradient(circle, rgba(252, 211, 77, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
   }
 
-  .bg-gradient-page {
-    background: linear-gradient(135deg, hsl(var(--background)), hsl(var(--muted)));
+  @keyframes float-gentle {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(1deg); }
   }
 
-  .bg-gradient-hero {
-    background: linear-gradient(to bottom right,
-      hsl(var(--primary) / 0.1),
-      hsl(var(--accent) / 0.1),
-      hsl(var(--secondary) / 0.1)
-    );
-  }
-
-  .text-gradient-primary {
-    background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--secondary)));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
-  .text-gradient-accent {
-    background: linear-gradient(to right, hsl(var(--accent)), hsl(var(--primary)));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
-  .border-gradient-primary {
-    border-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary))) 1;
-  }
-
-  /* Playful animations */
-  @keyframes float {
-
-    0%,
-    100% {
-      transform: translateY(0px);
-    }
-
-    50% {
-      transform: translateY(-20px);
-    }
+  @keyframes float-slow {
+    0%, 100% { transform: translate(0, 0); }
+    33% { transform: translate(5px, -5px); }
+    66% { transform: translate(-5px, 5px); }
   }
 
   @keyframes bounce-slow {
-
-    0%,
-    100% {
-      transform: translateY(0);
-    }
-
-    50% {
-      transform: translateY(-10px);
-    }
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
   }
 
-  @keyframes wiggle {
-
-    0%,
-    100% {
-      transform: rotate(0deg);
-    }
-
-    25% {
-      transform: rotate(-5deg);
-    }
-
-    75% {
-      transform: rotate(5deg);
-    }
+  .animate-float-gentle {
+    animation: float-gentle 4s ease-in-out infinite;
   }
 
-  @keyframes shimmer {
-    0% {
-      transform: translateX(-100%);
-    }
-
-    100% {
-      transform: translateX(100%);
-    }
-  }
-
-  @keyframes sparkle {
-
-    0%,
-    100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-
-    50% {
-      opacity: 0.5;
-      transform: scale(1.2);
-    }
-  }
-
-  @keyframes rainbow {
-    0% {
-      background-position: 0% 50%;
-    }
-
-    50% {
-      background-position: 100% 50%;
-    }
-
-    100% {
-      background-position: 0% 50%;
-    }
-  }
-
-  @keyframes shimmer {
-    0% {
-      background-position: -200% 0;
-    }
-
-    100% {
-      background-position: 200% 0;
-    }
-  }
-
-  .animate-float {
-    animation: float 3s ease-in-out infinite;
+  .animate-float-slow {
+    animation: float-slow 8s ease-in-out infinite;
   }
 
   .animate-bounce-slow {
-    animation: bounce-slow 2s ease-in-out infinite;
+    animation: bounce-slow 3s ease-in-out infinite;
+  }
+  
+  .soft-shadow {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
   }
 
-  .animate-wiggle {
-    animation: wiggle 0.5s ease-in-out infinite;
+  .perspective-1000 {
+    perspective: 1000px;
   }
 
-  .animate-sparkle {
-    animation: sparkle 1.5s ease-in-out infinite;
+  /* Gradient Utilities */
+  .bg-gradient-primary {
+    @apply bg-gradient-to-br from-primary via-primary to-secondary;
   }
 
-  .animate-shimmer {
-    animation: shimmer 2s linear infinite;
+  .bg-gradient-secondary {
+    @apply bg-gradient-to-br from-secondary to-accent;
   }
 
-  .bg-rainbow {
-    background: linear-gradient(-45deg, #ff6b6b, #4ecdc4, #45b7d1, #f9ca24, #f0932b, #eb4d4b);
-    background-size: 400% 400%;
-    animation: rainbow 3s ease infinite;
+  .bg-gradient-accent {
+    @apply bg-gradient-to-br from-accent to-secondary;
   }
 
-  /* Playful decorative elements */
-  .star {
-    position: relative;
-    display: inline-block;
+  .bg-gradient-hero {
+    @apply bg-gradient-to-br from-primary/20 via-background to-secondary/20;
   }
 
-  .star::before {
-    content: '⭐';
-    animation: sparkle 2s ease-in-out infinite;
+  .text-gradient-primary {
+    @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
   }
 
-  .cloud {
-    position: absolute;
-    opacity: 0.3;
-    animation: float 6s ease-in-out infinite;
+  .text-gradient-accent {
+    @apply bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent;
   }
-}
-
-
-/* Textures */
-.bg-grid-pattern {
-  background-image: linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
-  background-size: 20px 20px;
-}
-
-.bg-dots-pattern {
-  background-image: radial-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px);
-  background-size: 20px 20px;
-}
-
-.bg-paper-pattern {
-  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.1'/%3E%3C/svg%3E");
-}
-
-/* Interactive Classes */
-.cursor-magic {
-  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24'><text y='20' font-size='20'>🪄</text></svg>") 0 0, auto;
-}
-
-.cursor-space {
-  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24'><text y='20' font-size='20'>🚀</text></svg>") 0 0, auto;
-}
-
-.cursor-ocean {
-  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24'><text y='20' font-size='20'>🫧</text></svg>") 16 16, auto;
-}
-
-.cursor-nature {
-  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24'><text y='20' font-size='20'>🌿</text></svg>") 0 0, auto;
-}
-
-.hover-pop:hover {
-  transform: scale(1.5);
-  opacity: 0;
-  transition: all 0.3s ease-out;
-}
-
-.hover-spin:hover {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.hover-flee:hover {
-  transform: translate(20px, -20px) rotate(20deg);
-  opacity: 0.5;
-  transition: all 0.2s ease-in-out;
 }

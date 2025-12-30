@@ -130,177 +130,152 @@ export default function NotificationSettingsPage() {
   }
 
   return (
-    <div className="container max-w-4xl mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Email Notifications</h1>
-        <p className="text-gray-600">Choose which email notifications you'd like to receive</p>
-      </div>
+    <main className="min-h-screen playwize-bg relative selection:bg-playwize-purple selection:text-white py-12 px-4 overflow-hidden">
+      {/* Background Ornaments */}
+      <div className="absolute top-40 -left-20 w-80 h-80 circle-pattern opacity-30 pointer-events-none" />
+      <div className="absolute top-[60%] -right-20 w-96 h-96 circle-pattern opacity-30 pointer-events-none" />
 
-      {/* Notification Settings */}
-      <div className="space-y-4 mb-6">
-        {/* Weekly Summary */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-4 flex-1">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Mail className="w-6 h-6 text-white" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-lg mb-1">Weekly Summary</h3>
-                <p className="text-sm text-gray-600 mb-2">
-                  Get a weekly email with reading stats, achievements, and insights
-                </p>
-                <div className="text-xs text-gray-500">Sent every Sunday at 6:00 PM</div>
-              </div>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={preferences.weekly_summary}
-                onChange={(e) => updatePreference('weekly_summary', e.target.checked)}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-            </label>
+      <div className="max-w-4xl mx-auto space-y-12 relative z-10">
+        {/* Header */}
+        <div className="text-center space-y-4">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-100 text-playwize-purple text-sm font-bold border border-purple-200">
+            <Bell className="h-4 w-4" />
+            <span>Settings</span>
           </div>
+          <h1 className="text-4xl md:text-6xl font-black text-gray-900 tracking-tight">
+            Email <span className="text-playwize-purple">Notifications</span>
+          </h1>
+          <p className="text-gray-600 text-lg font-medium max-w-2xl mx-auto">
+            Stay updated on your child's progress and new magical features.
+          </p>
         </div>
 
-        {/* Bedtime Reminder */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-start gap-4 flex-1">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Clock className="w-6 h-6 text-white" />
+        {/* Notification Settings */}
+        <div className="grid gap-6">
+          {[
+            {
+              id: 'weekly_summary',
+              title: 'Weekly Summary',
+              desc: 'Get a weekly email with reading stats, achievements, and insights.',
+              info: 'Sent every Sunday at 6:00 PM',
+              icon: Mail,
+              color: 'bg-playwize-purple'
+            },
+            {
+              id: 'bedtime_reminder',
+              title: 'Bedtime Reminder',
+              desc: 'Daily reminder to read a bedtime story together.',
+              icon: Clock,
+              color: 'bg-playwize-orange'
+            },
+            {
+              id: 'achievement_notifications',
+              title: 'Achievement Unlocked',
+              desc: 'Get notified when you unlock new achievements and milestones.',
+              info: 'Sent immediately when earned',
+              icon: Trophy,
+              color: 'bg-playwize-purple'
+            },
+            {
+              id: 'new_features',
+              title: 'New Features & Updates',
+              desc: 'Stay informed about new features, improvements, and special offers.',
+              info: 'Sent occasionally (1-2 times per month)',
+              icon: Sparkles,
+              color: 'bg-playwize-orange'
+            }
+          ].map((item) => (
+            <div key={item.id} className="bg-white p-8 rounded-[3rem] border-4 border-gray-100 shadow-sm transition-all hover:border-gray-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                <div className="flex items-start gap-6">
+                  <div className={`h-14 w-14 rounded-2xl ${item.color} flex items-center justify-center shrink-0 shadow-lg`}>
+                    <item.icon className="h-7 w-7 text-white" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-xl font-black text-gray-900">{item.title}</h3>
+                    <p className="text-gray-500 font-bold text-sm leading-relaxed">{item.desc}</p>
+                    {item.info && <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest pt-1">{item.info}</p>}
+                  </div>
+                </div>
+                
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={preferences[item.id as keyof EmailPreferences] as boolean}
+                    onChange={(e) => updatePreference(item.id as keyof EmailPreferences, e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-14 h-8 bg-gray-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-200 after:border-2 after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-playwize-purple shadow-inner transition-colors"></div>
+                </label>
               </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-lg mb-1">Bedtime Reminder</h3>
-                <p className="text-sm text-gray-600 mb-2">
-                  Daily reminder to read a bedtime story together
-                </p>
-              </div>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={preferences.bedtime_reminder}
-                onChange={(e) => updatePreference('bedtime_reminder', e.target.checked)}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-            </label>
-          </div>
 
-          {preferences.bedtime_reminder && (
-            <div className="pl-16">
-              <label className="block text-sm font-medium mb-2">Reminder Time</label>
-              <input
-                type="time"
-                value={preferences.bedtime_reminder_time.substring(0, 5)}
-                onChange={(e) => updatePreference('bedtime_reminder_time', e.target.value + ':00')}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Emails will be sent daily at this time
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Achievement Notifications */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-4 flex-1">
-              <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Trophy className="w-6 h-6 text-white" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-lg mb-1">Achievement Unlocked</h3>
-                <p className="text-sm text-gray-600 mb-2">
-                  Get notified when you unlock new achievements and milestones
-                </p>
-                <div className="text-xs text-gray-500">Sent immediately when earned</div>
-              </div>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={preferences.achievement_notifications}
-                onChange={(e) => updatePreference('achievement_notifications', e.target.checked)}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-yellow-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-yellow-500 peer-checked:to-orange-500"></div>
-            </label>
-          </div>
-        </div>
-
-        {/* New Features */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-4 flex-1">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Sparkles className="w-6 h-6 text-white" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-lg mb-1">New Features & Updates</h3>
-                <p className="text-sm text-gray-600 mb-2">
-                  Stay informed about new features, improvements, and special offers
-                </p>
-                <div className="text-xs text-gray-500">Sent occasionally (1-2 times per month)</div>
-              </div>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={preferences.new_features}
-                onChange={(e) => updatePreference('new_features', e.target.checked)}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      {/* Save Button */}
-      {hasChanges && (
-        <div className="sticky bottom-4 bg-white border border-gray-200 rounded-lg p-4 shadow-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Bell className="w-4 h-4" />
-              You have unsaved changes
-            </div>
-            <Button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="gap-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
-            >
-              {isSaving ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  Save Preferences
-                </>
+              {item.id === 'bedtime_reminder' && preferences.bedtime_reminder && (
+                <div className="mt-8 pt-8 border-t-2 border-gray-50 sm:pl-20">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <label className="text-sm font-black text-gray-400 uppercase tracking-widest">Reminder Time:</label>
+                    <input
+                      type="time"
+                      value={preferences.bedtime_reminder_time.substring(0, 5)}
+                      onChange={(e) => updatePreference('bedtime_reminder_time', e.target.value + ':00')}
+                      className="px-6 py-3 bg-gray-50 border-2 border-white rounded-full font-black text-gray-700 shadow-inner focus:outline-none focus:ring-2 focus:ring-playwize-purple/20 transition-all"
+                    />
+                  </div>
+                </div>
               )}
-            </Button>
-          </div>
+            </div>
+          ))}
         </div>
-      )}
 
-      {/* Info Box */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
-        <h3 className="font-semibold text-blue-900 mb-2">About Email Notifications</h3>
-        <ul className="text-sm text-blue-800 space-y-1">
-          <li>• You can change these settings at any time</li>
-          <li>• All emails include an unsubscribe link</li>
-          <li>• We'll never share your email address</li>
-          <li>• Some critical account emails cannot be disabled</li>
-        </ul>
+        {/* Info Box */}
+        <div className="bg-white p-10 rounded-[3rem] border-4 border-gray-100 shadow-sm space-y-6">
+          <h3 className="text-xl font-black text-gray-900 flex items-center gap-3">
+            <span className="text-2xl">ℹ️</span>
+            About Notifications
+          </h3>
+          <ul className="grid sm:grid-cols-2 gap-4">
+            {[
+              'Change settings any time',
+              'One-click unsubscribe',
+              'We never share your email',
+              'Critical alerts always sent'
+            ].map((text, i) => (
+              <li key={i} className="flex items-center gap-3 text-gray-500 font-bold">
+                <div className="h-2 w-2 rounded-full bg-playwize-purple" />
+                {text}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Save Button */}
+        {hasChanges && (
+          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 w-full max-w-lg px-4 animate-in slide-in-from-bottom-8 duration-500">
+            <div className="bg-white p-6 rounded-[2.5rem] border-4 border-playwize-purple shadow-2xl flex items-center justify-between gap-6">
+              <div className="flex items-center gap-3 text-playwize-purple font-black uppercase tracking-widest text-xs">
+                <Bell className="h-5 w-5 animate-bounce" />
+                <span>Unsaved changes!</span>
+              </div>
+              <Button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="h-14 px-8 rounded-full bg-playwize-purple hover:bg-purple-700 text-white font-black text-lg shadow-xl shadow-purple-100 transition-all hover:scale-105 active:scale-95"
+              >
+                {isSaving ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin" />
+                    SAVING...
+                  </span>
+                ) : (
+                  <>
+                    <Save className="h-5 w-5 mr-2" />
+                    SAVE CHANGES
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+    </main>
   )
 }

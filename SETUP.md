@@ -120,8 +120,8 @@ Alternatively, you can copy and paste the SQL from those files into the SQL Edit
    - Pricing: Recurring, Monthly, $9.99
    - Copy the Price ID (starts with `price_`)
 
-   **Product 2: PRO MAX**
-   - Name: "PRO MAX"
+   **Product 2: Family Plan**
+   - Name: "Family Plan"
    - Description: "Unlimited stories with AI illustrations"
    - Pricing: Recurring, Monthly, $19.99
    - Copy the Price ID (starts with `price_`)

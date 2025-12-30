@@ -1,5 +1,5 @@
 /**
- * Child Profiles API - PRO MAX Feature
+ * Child Profiles API - Family Plan Feature
  * Allows parents to create and manage profiles for their children
  */
 

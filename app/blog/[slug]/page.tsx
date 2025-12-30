@@ -52,132 +52,144 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 }
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
-    const { slug } = await params
-    const post = await getPostBySlug(slug)
+  const { slug } = await params
+  const post = await getPostBySlug(slug)
 
-    if (!post) {
-        notFound()
-    }
+  if (!post) {
+    notFound()
+  }
 
-    const relatedPosts = await getRelatedPosts(slug, post.category)
+  const relatedPosts = await getRelatedPosts(slug, post.category)
 
-    return (
-        <main className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
-            <ArticleSchema
-                title={post.title}
-                description={post.description}
-                datePublished={post.date}
-                authorName={post.author}
-                imageUrl={post.image || 'https://safeaistories.com/og-image.png'}
-            />
+  return (
+    <main className="min-h-screen playwize-bg relative selection:bg-playwize-purple selection:text-white py-12 px-4 overflow-hidden">
+      {/* Background Ornaments */}
+      <div className="absolute top-40 -left-20 w-80 h-80 circle-pattern opacity-30 pointer-events-none" />
+      <div className="absolute top-[60%] -right-20 w-96 h-96 circle-pattern opacity-30 pointer-events-none" />
 
-            {/* Back Button */}
-            <div className="container mx-auto max-w-4xl px-4 pt-8">
-                <Link href="/blog">
-                    <Button variant="outline" className="mb-6">
-                        <ArrowLeft className="h-4 w-4 mr-2" />
-                        Back to Blog
-                    </Button>
-                </Link>
+      <ArticleSchema
+        title={post.title}
+        description={post.description}
+        datePublished={post.date}
+        authorName={post.author}
+        imageUrl={post.image || 'https://safeaistories.com/og-image.png'}
+      />
+
+      <div className="max-w-4xl mx-auto space-y-12 relative z-10">
+        {/* Back Button */}
+        <Link href="/blog">
+          <Button variant="ghost" className="h-12 px-6 rounded-full border-2 border-gray-100 hover:border-playwize-purple font-black text-gray-700 bg-white shadow-sm transition-all group">
+            <ArrowLeft className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+            BACK TO BLOG
+          </Button>
+        </Link>
+
+        {/* Article Header */}
+        <article className="space-y-12 pb-20">
+          <header className="space-y-8">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Badge className="bg-playwize-purple text-white border-0 rounded-full px-4 py-1.5 shadow-sm font-black uppercase tracking-widest text-xs">
+                  {post.category}
+                </Badge>
+                <div className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest">
+                  <Clock className="h-4 w-4" />
+                  <span>{post.readingTime} READ</span>
+                </div>
+              </div>
+
+              <h1 className="text-4xl md:text-6xl font-black text-gray-900 leading-[1.1] tracking-tight">
+                {post.title}
+              </h1>
             </div>
 
-            {/* Article Header */}
-            <article className="container mx-auto max-w-4xl px-4 pb-16">
-                <header className="mb-12">
-                    <div className="flex items-center gap-3 mb-4">
-                        <Badge className="bg-gradient-to-r from-pink-500 to-purple-500 text-white text-sm">
-                            {post.category}
-                        </Badge>
-                        <div className="flex items-center gap-2 text-gray-600">
-                            <Clock className="h-4 w-4" />
-                            <span className="text-sm">{post.readingTime}</span>
-                        </div>
-                    </div>
+            <p className="text-xl text-gray-600 font-medium leading-relaxed italic border-l-4 border-playwize-purple pl-6">
+              {post.description}
+            </p>
 
-                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent mb-6 leading-tight">
-                        {post.title}
-                    </h1>
-
-                    <p className="text-xl text-gray-700 mb-6 leading-relaxed">{post.description}</p>
-
-                    <div className="flex items-center justify-between border-t border-b border-gray-200 py-4">
-                        <div className="flex items-center gap-4">
-                            <div>
-                                <p className="font-semibold text-gray-800">{post.author}</p>
-                                <div className="flex items-center gap-2 text-sm text-gray-500">
-                                    <Calendar className="h-4 w-4" />
-                                    <span>{new Date(post.date).toLocaleDateString('en-US', {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric'
-                                    })}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <Button variant="outline" size="sm">
-                            <Share2 className="h-4 w-4 mr-2" />
-                            Share
-                        </Button>
-                    </div>
-                </header>
-
-                {/* Article Content */}
-                <div className="prose prose-lg prose-pink max-w-none mb-16">
-                    <div className="bg-white rounded-2xl shadow-lg p-8 md:p-12 border-2 border-pink-100">
-                        {post.content}
-                    </div>
+            <div className="flex items-center justify-between p-6 bg-white rounded-[2rem] border-4 border-gray-50 shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-2xl bg-purple-50 flex items-center justify-center font-black text-playwize-purple text-xl shadow-inner">
+                  {post.author[0]}
                 </div>
+                <div>
+                  <p className="font-black text-gray-900 leading-none mb-1">{post.author}</p>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    {new Date(post.date).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </p>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" className="h-10 px-4 rounded-full border-2 border-gray-100 hover:border-playwize-purple font-black text-xs transition-all">
+                <Share2 className="h-4 w-4 mr-2" />
+                SHARE
+              </Button>
+            </div>
+          </header>
 
-                {/* CTA Section */}
-                <div className="bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 rounded-2xl p-8 md:p-12 text-center mb-16">
-                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                        Ready to Create Your Own Bedtime Stories?
-                    </h2>
-                    <p className="text-xl text-white/90 mb-6">
-                        Try Safe AI Stories free and transform bedtime into magical moments!
-                    </p>
-                    <Link href="/signup">
-                        <Button
-                            size="lg"
-                            className="text-xl px-10 py-6 rounded-full bg-white text-pink-600 hover:bg-gray-100 shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all font-bold"
-                        >
-                            Start Free Trial 🎉
-                        </Button>
+          {/* Article Content */}
+          <div className="bg-white rounded-[3.5rem] border-4 border-gray-100 shadow-2xl p-8 md:p-16">
+            <div className="prose prose-lg prose-purple max-w-none prose-headings:font-black prose-headings:tracking-tight prose-p:font-medium prose-p:text-gray-600 prose-p:leading-relaxed prose-strong:font-black">
+              {post.content}
+            </div>
+          </div>
+
+          {/* CTA Section */}
+          <div className="bg-playwize-orange rounded-[4rem] p-12 md:p-20 text-center text-white relative overflow-hidden shadow-2xl">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -mr-48 -mt-48 blur-3xl" />
+            <div className="space-y-8 relative z-10">
+              <div className="text-7xl animate-bounce-slow inline-block">✨</div>
+              <h2 className="text-4xl md:text-5xl font-black">
+                Ready to Create Magic?
+              </h2>
+              <p className="text-white/80 text-xl font-bold max-w-2xl mx-auto">
+                Transform bedtime into a world of educational adventure with our personalized AI stories.
+              </p>
+              <Link href="/signup">
+                <Button
+                  size="lg"
+                  className="h-16 px-12 rounded-full bg-white text-playwize-orange hover:bg-gray-100 font-black text-xl shadow-xl transition-all hover:scale-105 active:scale-95"
+                >
+                  Start Your Story 🎉
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          {/* Related Posts */}
+          {relatedPosts.length > 0 && (
+            <section className="space-y-10 pt-12">
+              <h2 className="text-3xl font-black text-gray-900 text-center">Related Articles</h2>
+              <div className="grid md:grid-cols-3 gap-8">
+                {relatedPosts.map((relatedPost) => (
+                  <div
+                    key={relatedPost.slug}
+                    className="bg-white rounded-[2.5rem] border-4 border-gray-100 shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 group p-8 space-y-6 flex flex-col"
+                  >
+                    <Link href={`/blog/${relatedPost.slug}`} className="flex-1 flex flex-col">
+                      <h3 className="text-xl font-black text-gray-900 leading-tight group-hover:text-playwize-purple transition-colors line-clamp-2">
+                        {relatedPost.title}
+                      </h3>
+                      <p className="text-gray-500 font-medium text-sm line-clamp-2 mt-4 leading-relaxed flex-1">
+                        {relatedPost.description}
+                      </p>
+                      <div className="pt-6">
+                        <div className="inline-flex items-center gap-2 text-playwize-purple font-black uppercase tracking-widest text-xs group-hover:gap-3 transition-all">
+                          <span>Read More</span>
+                          <ArrowRight className="h-4 w-4" />
+                        </div>
+                      </div>
                     </Link>
-                </div>
-
-                {/* Related Posts */}
-                {relatedPosts.length > 0 && (
-                    <section>
-                        <h2 className="text-3xl font-bold text-gray-800 mb-8">Related Articles</h2>
-                        <div className="grid md:grid-cols-3 gap-6">
-                            {relatedPosts.map((relatedPost) => (
-                                <Card
-                                    key={relatedPost.slug}
-                                    className="border-2 border-pink-200 bg-white shadow-lg hover:shadow-xl transition-all hover:scale-105"
-                                >
-                                    <Link href={`/blog/${relatedPost.slug}`}>
-                                        <CardHeader>
-                                            <CardTitle className="text-lg font-bold text-gray-800 hover:text-pink-600 transition-colors line-clamp-2">
-                                                {relatedPost.title}
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <p className="text-gray-600 text-sm line-clamp-2 mb-3">
-                                                {relatedPost.description}
-                                            </p>
-                                            <div className="flex items-center gap-1 text-pink-600 font-semibold text-sm">
-                                                <span>Read More</span>
-                                                <ArrowRight className="h-4 w-4" />
-                                            </div>
-                                        </CardContent>
-                                    </Link>
-                                </Card>
-                            ))}
-                        </div>
-                    </section>
-                )}
-            </article>
-        </main>
-    )
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </article>
+      </div>
+    </main>
+  )
 }

@@ -176,158 +176,188 @@ export default function VoiceSettingsPage() {
   }
 
   return (
-    <div className="container max-w-4xl mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Voice Settings</h1>
-        <p className="text-gray-600">
-          Create custom voice clones to narrate stories in your own voice
-        </p>
-      </div>
+    <main className="min-h-screen playwize-bg relative selection:bg-playwize-purple selection:text-white py-12 px-4 overflow-hidden">
+      {/* Background Ornaments */}
+      <div className="absolute top-40 -left-20 w-80 h-80 circle-pattern opacity-30 pointer-events-none" />
+      <div className="absolute top-[60%] -right-20 w-96 h-96 circle-pattern opacity-30 pointer-events-none" />
 
-      {/* Default Voice Option */}
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-4">Default Voice</h2>
-        <div
-          onClick={() => handleSelectVoice(null)}
-          className={`bg-white border-2 rounded-lg p-6 cursor-pointer transition-all ${
-            selectedVoiceId === null
-              ? 'border-purple-600 bg-purple-50'
-              : 'border-gray-200 hover:border-gray-300'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center">
-                <Volume2 className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <div className="font-semibold">AI Narrator</div>
-                <div className="text-sm text-gray-600">Professional AI-generated voice</div>
-              </div>
-            </div>
-            {selectedVoiceId === null && (
-              <div className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center">
-                <Check className="w-4 h-4 text-white" />
-              </div>
-            )}
+      <div className="max-w-4xl mx-auto space-y-12 relative z-10">
+        {/* Header */}
+        <div className="text-center space-y-4">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-100 text-playwize-orange text-sm font-bold border border-orange-200">
+            <Mic className="h-4 w-4" />
+            <span>AI Voice Magic</span>
           </div>
+          <h1 className="text-4xl md:text-6xl font-black text-gray-900 tracking-tight">
+            Voice <span className="text-playwize-purple">Settings</span>
+          </h1>
+          <p className="text-gray-600 text-lg font-medium max-w-2xl mx-auto">
+            Create custom voice clones to narrate stories in your own voice.
+          </p>
         </div>
-      </div>
 
-      {/* Custom Voices */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Custom Voices</h2>
-          <Button
-            onClick={() => setIsCreateDialogOpen(true)}
-            className="gap-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
+        {/* Default Voice Option */}
+        <div className="space-y-6">
+          <h2 className="text-2xl font-black text-gray-900 px-4">AI Narrator</h2>
+          <div
+            onClick={() => handleSelectVoice(null)}
+            className={`bg-white border-4 rounded-[2.5rem] p-8 cursor-pointer transition-all hover:shadow-xl ${
+              selectedVoiceId === null
+                ? 'border-playwize-purple shadow-xl shadow-purple-100'
+                : 'border-gray-100 hover:border-playwize-purple/30'
+            }`}
           >
-            <Plus className="w-4 h-4" />
-            Create Voice Clone
-          </Button>
-        </div>
-
-        {voiceProfiles.length === 0 ? (
-          <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Mic className="w-8 h-8 text-purple-600" />
-            </div>
-            <h3 className="text-lg font-semibold mb-2">No Custom Voices Yet</h3>
-            <p className="text-gray-600 mb-6 max-w-md mx-auto">
-              Create your first voice clone to narrate stories in your own voice. Perfect for bedtime stories when you're away!
-            </p>
-            <Button
-              onClick={() => setIsCreateDialogOpen(true)}
-              className="gap-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
-            >
-              <Sparkles className="w-4 h-4" />
-              Get Started
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {voiceProfiles.map((profile) => (
-              <div
-                key={profile.id}
-                onClick={() => handleSelectVoice(profile.voice_id)}
-                className={`bg-white border-2 rounded-lg p-6 cursor-pointer transition-all ${
-                  selectedVoiceId === profile.voice_id
-                    ? 'border-purple-600 bg-purple-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4 flex-1">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center">
-                      <Mic className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-semibold">{profile.name}</div>
-                      {profile.description && (
-                        <div className="text-sm text-gray-600">{profile.description}</div>
-                      )}
-                      <div className="text-xs text-gray-500 mt-1">
-                        Created {new Date(profile.created_at).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleTestVoice(profile.voice_id)
-                      }}
-                      variant="outline"
-                      size="sm"
-                      className="gap-2"
-                    >
-                      <Volume2 className="w-4 h-4" />
-                      Test
-                    </Button>
-
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleDeleteVoice(profile)
-                      }}
-                      variant="ghost"
-                      size="sm"
-                      disabled={deletingId === profile.id}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      {deletingId === profile.id ? (
-                        <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <Trash2 className="w-4 h-4" />
-                      )}
-                    </Button>
-
-                    {selectedVoiceId === profile.voice_id && (
-                      <div className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center ml-2">
-                        <Check className="w-4 h-4 text-white" />
-                      </div>
-                    )}
-                  </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-6">
+                <div className="h-16 w-16 bg-playwize-purple rounded-3xl flex items-center justify-center shadow-lg">
+                  <Volume2 className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <div className="text-xl font-black text-gray-900">Standard AI Voice</div>
+                  <div className="text-gray-500 font-bold">Our friendly professional AI narrator</div>
                 </div>
               </div>
-            ))}
+              {selectedVoiceId === null && (
+                <div className="h-10 w-10 bg-playwize-purple rounded-full flex items-center justify-center shadow-lg animate-in zoom-in">
+                  <Check className="h-6 w-6 text-white" />
+                </div>
+              )}
+            </div>
           </div>
-        )}
+        </div>
+
+        {/* Custom Voices */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between px-4">
+            <h2 className="text-2xl font-black text-gray-900">Custom Voices</h2>
+            <Button
+              onClick={() => setIsCreateDialogOpen(true)}
+              className="h-12 px-6 rounded-full bg-playwize-purple hover:bg-purple-700 text-white font-black shadow-lg transition-all hover:scale-105 active:scale-95"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              CLONE VOICE
+            </Button>
+          </div>
+
+          {voiceProfiles.length === 0 ? (
+            <div className="bg-white border-4 border-dashed border-gray-100 rounded-[3rem] p-16 text-center space-y-8">
+              <div className="h-32 w-32 bg-purple-50 rounded-[2.5rem] flex items-center justify-center mx-auto shadow-inner animate-float-gentle">
+                <Mic className="h-16 w-16 text-playwize-purple opacity-40" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-2xl font-black text-gray-900">No Custom Voices Yet</h3>
+                <p className="text-gray-500 font-bold max-w-md mx-auto">
+                  Narrate stories in your own voice! Perfect for bedtime when you're away.
+                </p>
+              </div>
+              <Button
+                onClick={() => setIsCreateDialogOpen(true)}
+                className="h-14 px-10 rounded-full bg-playwize-purple hover:bg-purple-700 text-white font-black text-lg shadow-xl shadow-purple-100 transition-all hover:scale-105 active:scale-95"
+              >
+                <Sparkles className="h-5 w-5 mr-2" />
+                GET STARTED
+              </Button>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {voiceProfiles.map((profile) => (
+                <div
+                  key={profile.id}
+                  onClick={() => handleSelectVoice(profile.voice_id)}
+                  className={`bg-white border-4 rounded-[2.5rem] p-8 cursor-pointer transition-all hover:shadow-xl ${
+                    selectedVoiceId === profile.voice_id
+                      ? 'border-playwize-purple shadow-xl shadow-purple-100'
+                      : 'border-gray-100 hover:border-playwize-purple/30'
+                  }`}
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                    <div className="flex items-center gap-6 flex-1">
+                      <div className="h-16 w-16 bg-playwize-orange rounded-3xl flex items-center justify-center shadow-lg">
+                        <Mic className="h-8 w-8 text-white" />
+                      </div>
+                      <div>
+                        <div className="text-xl font-black text-gray-900">{profile.name}</div>
+                        {profile.description && (
+                          <div className="text-gray-500 font-bold">{profile.description}</div>
+                        )}
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">
+                          Created {new Date(profile.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleTestVoice(profile.voice_id)
+                        }}
+                        variant="outline"
+                        className="h-12 px-6 rounded-full border-2 border-gray-100 font-black text-gray-700 hover:border-playwize-purple transition-all shadow-sm"
+                      >
+                        <Volume2 className="h-5 w-5 mr-2" />
+                        TEST
+                      </Button>
+
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDeleteVoice(profile)
+                        }}
+                        variant="ghost"
+                        className="h-12 w-12 rounded-full text-red-400 hover:text-red-600 hover:bg-red-50 transition-all"
+                        disabled={deletingId === profile.id}
+                      >
+                        {deletingId === profile.id ? (
+                          <div className="w-5 h-5 border-3 border-red-400 border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Trash2 className="h-5 w-5" />
+                        )}
+                      </Button>
+
+                      {selectedVoiceId === profile.voice_id && (
+                        <div className="h-10 w-10 bg-playwize-purple rounded-full flex items-center justify-center shadow-lg animate-in zoom-in">
+                          <Check className="h-6 w-6 text-white" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Info Box */}
+        <div className="bg-white p-10 rounded-[3rem] border-4 border-gray-100 shadow-sm space-y-6">
+          <h3 className="text-xl font-black text-gray-900 flex items-center gap-3">
+            <span className="text-2xl">ℹ️</span>
+            About Voice Cloning
+          </h3>
+          <ul className="grid sm:grid-cols-2 gap-4">
+            {[
+              'Uses AI to digitalize your voice',
+              'Perfect for reading when away',
+              'Requires 30s audio sample',
+              'Higher samples = better quality',
+              'Only clone your own voice'
+            ].map((text, i) => (
+              <li key={i} className="flex items-center gap-3 text-gray-500 font-bold">
+                <div className="h-2 w-2 rounded-full bg-playwize-purple" />
+                {text}
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
 
-      {/* Info Box */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="font-semibold text-blue-900 mb-2">About Voice Cloning</h3>
-        <ul className="text-sm text-blue-800 space-y-1">
-          <li>• Voice cloning uses AI to create a digital version of your voice</li>
-          <li>• Perfect for narrating bedtime stories when you're away</li>
-          <li>• Requires at least 30 seconds of clear audio</li>
-          <li>• More audio samples = better voice quality</li>
-          <li>• Only clone voices you have permission to use</li>
-        </ul>
-      </div>
+      <CreateVoiceCloneDialog
+        isOpen={isCreateDialogOpen}
+        onClose={() => setIsCreateDialogOpen(false)}
+        onSuccess={loadVoiceProfiles}
+      />
+    </main>
+  )
 
       {/* Create Dialog */}
       <CreateVoiceCloneDialog

@@ -2,7 +2,7 @@
  * TESTING ONLY - Manual subscription tier update endpoint
  * This should be removed before production deployment
  * 
- * Allows developers to test PRO and PRO MAX features without Stripe checkout
+ * Allows developers to test PRO and Family Plan features without Stripe checkout
  */
 
 import { NextRequest, NextResponse } from 'next/server'

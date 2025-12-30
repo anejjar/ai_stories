@@ -73,11 +73,11 @@ export function QuickProfileForm({ onSuccess, onSkip, isLoading }: QuickProfileF
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-8">
+      <div className="space-y-6">
         {/* Name Input */}
-        <div className="space-y-2">
-          <Label htmlFor="child-name" className="text-base font-semibold">
+        <div className="space-y-3">
+          <Label htmlFor="child-name" className="text-sm font-black uppercase tracking-widest text-gray-400">
             Child's Name *
           </Label>
           <Input
@@ -87,20 +87,20 @@ export function QuickProfileForm({ onSuccess, onSkip, isLoading }: QuickProfileF
             value={name}
             onChange={(e) => setName(e.target.value)}
             disabled={submitting || isLoading}
-            className="text-lg"
+            className="h-14 rounded-2xl border-2 border-gray-100 focus:border-playwize-purple focus:ring-0 text-lg font-bold px-6"
             maxLength={50}
           />
-          <p className="text-xs text-gray-500">
+          <p className="text-xs font-bold text-gray-400 italic">
             This will be used throughout the stories
           </p>
         </div>
 
         {/* Age Range Selection (Optional) */}
-        <div className="space-y-2">
-          <Label htmlFor="age-range" className="text-base font-semibold">
+        <div className="space-y-3">
+          <Label htmlFor="age-range" className="text-sm font-black uppercase tracking-widest text-gray-400">
             Age Range (Optional)
           </Label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-3">
             {['3-5', '6-8', '9-12'].map((range) => (
               <button
                 key={range}
@@ -108,11 +108,11 @@ export function QuickProfileForm({ onSuccess, onSkip, isLoading }: QuickProfileF
                 onClick={() => setAgeRange(range)}
                 disabled={submitting || isLoading}
                 className={`
-                  px-4 py-3 rounded-lg border-2 font-medium transition-all
+                  h-14 rounded-2xl border-2 font-black transition-all transform active:scale-95
                   ${
                     ageRange === range
-                      ? 'border-purple-500 bg-purple-50 text-purple-700'
-                      : 'border-gray-200 bg-white text-gray-700 hover:border-purple-300'
+                      ? 'border-playwize-purple bg-purple-50 text-playwize-purple shadow-sm'
+                      : 'border-gray-100 bg-white text-gray-500 hover:border-gray-200'
                   }
                   disabled:opacity-50
                 `}
@@ -121,46 +121,43 @@ export function QuickProfileForm({ onSuccess, onSkip, isLoading }: QuickProfileF
               </button>
             ))}
           </div>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs font-bold text-gray-400 italic">
             Helps us tailor story complexity
           </p>
         </div>
       </div>
 
-      <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-3">
-        <p className="text-sm text-blue-700 text-center">
-          <strong>Don't worry!</strong> You can add more details (photos, appearance, etc.) later in your profile settings
+      <div className="bg-blue-50 border-2 border-white rounded-[2rem] p-6 shadow-sm">
+        <p className="text-sm text-blue-600 font-bold text-center leading-relaxed">
+          <span className="text-xl mr-1">💡</span>
+          You can add more details (photos, appearance, etc.) later in your profile!
         </p>
       </div>
 
       {/* Action Buttons */}
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3 pt-2">
         <Button
           type="submit"
           disabled={submitting || isLoading || !name.trim()}
-          className="w-full gradient-secondary text-white text-lg py-6"
+          className="h-16 rounded-full bg-playwize-orange hover:bg-orange-600 text-white font-black text-xl shadow-xl shadow-orange-100 transition-all hover:scale-[1.02] active:scale-[0.98]"
         >
           {submitting ? (
-            <>
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
-              Creating Profile...
-            </>
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
           ) : (
             <>
-              <Sparkles className="w-5 h-5 mr-2" />
-              Create Profile & Continue
+              <Sparkles className="w-6 h-6 mr-3" />
+              CREATE PROFILE
             </>
           )}
         </Button>
-        <Button
+        <button
           type="button"
           onClick={onSkip}
-          variant="ghost"
           disabled={submitting || isLoading}
-          className="w-full text-gray-500"
+          className="w-full text-gray-400 font-bold text-sm hover:text-gray-600 transition-colors py-2"
         >
           I'll add this later
-        </Button>
+        </button>
       </div>
     </form>
   )

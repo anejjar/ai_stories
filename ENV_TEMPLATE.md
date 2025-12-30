@@ -30,7 +30,7 @@ GEMINI_API_KEY=your-gemini-key
 # ANTHROPIC_API_KEY=your-anthropic-key
 
 # -----------------------------------------------------
-# AI PROVIDERS - Image Generation (Required for PRO MAX)
+# AI PROVIDERS - Image Generation (Required for Family Plan)
 # -----------------------------------------------------
 # Comma-separated list of providers in priority order
 # Options: dalle, stable-diffusion, midjourney
@@ -63,7 +63,7 @@ STRIPE_WEBHOOK_SECRET=whsec_your-webhook-secret
 # Price IDs for subscription products
 # Create these in Stripe Dashboard > Products
 STRIPE_PRO_PRICE_ID=price_your-pro-price-id
-STRIPE_PRO_MAX_PRICE_ID=price_your-pro-max-price-id
+STRIPE_FAMILY_PRICE_ID=price_your-family-price-id
 
 # -----------------------------------------------------
 # APPLICATION
@@ -77,8 +77,8 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 # Google Analytics
 # NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
 
-# Sentry Error Tracking
-# SENTRY_DSN=https://xxx@xxx.ingest.sentry.io/xxx
+# Sentry / GlitchTip Error Tracking
+NEXT_PUBLIC_GLITCHTIP_DSN=your-glitchtip-dsn-here
 
 # -----------------------------------------------------
 # PRODUCTION NOTES

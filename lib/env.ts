@@ -36,6 +36,7 @@ const envSchema = z.object({
 
   // App
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),
+  NEXT_PUBLIC_GLITCHTIP_DSN: z.string().url().optional(),
 })
 
 type Env = z.infer<typeof envSchema>

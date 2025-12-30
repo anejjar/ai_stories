@@ -70,6 +70,11 @@ function splitAtSentence(text: string, maxLength: number): [string, string] {
 }
 
 /**
+ * Simple cache for text height measurements
+ */
+const measurementCache: Record<string, number> = {}
+
+/**
  * Measure text height using a hidden div
  */
 function measureTextHeight(
@@ -77,6 +82,11 @@ function measureTextHeight(
   options: TextPaginationOptions,
   containerWidth: number
 ): number {
+  const cacheKey = `${text.length}-${options.fontSize}-${options.lineHeight}-${containerWidth}`
+  if (measurementCache[cacheKey] !== undefined) {
+    return measurementCache[cacheKey]
+  }
+
   // Create temporary measuring div
   const measuringDiv = document.createElement('div')
   measuringDiv.style.position = 'absolute'
@@ -96,6 +106,7 @@ function measureTextHeight(
   const height = measuringDiv.offsetHeight
   document.body.removeChild(measuringDiv)
 
+  measurementCache[cacheKey] = height
   return height
 }
 
@@ -110,7 +121,8 @@ function paginateText(
   const pages: string[] = []
   let remainingText = text.trim()
 
-  const availableHeight = options.maxHeight - options.containerPadding - options.decorationHeight
+  const safetyBuffer = 60 // Increased buffer to prevent cropping/overflow
+  const availableHeight = options.maxHeight - options.containerPadding - options.decorationHeight - safetyBuffer
 
   // Binary search approach to find optimal text length per page
   while (remainingText.length > 0) {

@@ -49,12 +49,12 @@ const faqData = [
     {
         question: 'How much do AI bedtime story services cost?',
         answer:
-            'Safe AI Stories offers a free trial with 1 free story so you can test before committing. Our PRO plan is $9.99/month for unlimited text stories, and PRO MAX is $19.99/month for unlimited illustrated stories—less than the cost of a few children\'s books, but with infinite variety.',
+            'Safe AI Stories offers a free trial with 1 free story so you can test before committing. Our PRO plan is $9.99/month for unlimited text stories, and Family Plan is $19.99/month for unlimited illustrated stories—less than the cost of a few children\'s books, but with infinite variety.',
     },
     {
         question: 'Can I print the stories or only read them on screen?',
         answer:
-            'We offer multiple options: read on-screen, download as PDF for printing, or save to create a personalized storybook collection. This flexibility means you can choose screen-free bedtime while still using AI technology. PRO MAX members can even get high-resolution illustrated PDFs perfect for printing.',
+            'We offer multiple options: read on-screen, download as PDF for printing, or save to create a personalized storybook collection. This flexibility means you can choose screen-free bedtime while still using AI technology. Family Plan members can even get high-resolution illustrated PDFs perfect for printing.',
     },
 ]
 

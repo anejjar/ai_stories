@@ -23,24 +23,24 @@ export default function ProfilePage() {
 
   const getTierBadge = (tier: string) => {
     switch (tier) {
-      case 'family':
+      case 'pro_max':
         return (
-          <Badge className="bg-gradient-accent text-white font-bold rounded-full px-4 py-2 border-2 border-accent">
+          <Badge className="bg-playwize-orange text-white font-black rounded-full px-6 py-2 border-0 shadow-lg">
             <Crown className="h-4 w-4 mr-2" />
             FAMILY PLAN 👑
           </Badge>
         )
       case 'pro':
         return (
-          <Badge className="bg-gradient-primary text-white font-bold rounded-full px-4 py-2 border-2 border-primary">
+          <Badge className="bg-playwize-purple text-white font-black rounded-full px-6 py-2 border-0 shadow-lg">
             <Sparkles className="h-4 w-4 mr-2" />
             PRO ✨
           </Badge>
         )
       default:
         return (
-          <Badge className="bg-muted text-white font-bold rounded-full px-4 py-2">
-            Trial 🎁
+          <Badge className="bg-gray-100 text-gray-500 font-black rounded-full px-6 py-2 border-0">
+            TRIAL 🎁
           </Badge>
         )
     }
@@ -48,9 +48,9 @@ export default function ProfilePage() {
 
   if (!userProfile) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-center items-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin text-playwize-purple">
+          <BookOpen className="h-12 w-12" />
         </div>
       </div>
     )
@@ -58,66 +58,76 @@ export default function ProfilePage() {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-hero relative overflow-hidden">
-        {/* Decorative elements */}
-        <div className="absolute top-20 right-10 text-5xl animate-float opacity-30">👤</div>
-        <div className="absolute bottom-20 left-10 text-5xl animate-float opacity-30" style={{ animationDelay: '1s' }}>⭐</div>
-        
-        <div className="container mx-auto px-4 py-8 max-w-4xl relative z-10">
-          <h1 className="text-5xl font-comic text-gradient-primary mb-8">
-            👤 Your Profile
+      <div className="py-12 px-4 max-w-5xl mx-auto space-y-12">
+        <div className="text-center space-y-4">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-100 text-playwize-purple text-sm font-bold border border-purple-200">
+            <User className="h-4 w-4" />
+            <span>Parent Profile</span>
+          </div>
+          <h1 className="text-4xl md:text-6xl font-black text-gray-900 tracking-tight">
+            Your <span className="text-playwize-purple">Profile</span>
           </h1>
+          <p className="text-gray-600 text-lg font-medium">
+            Manage your account and subscription details.
+          </p>
+        </div>
 
-          {/* Testing Subscription Toggle - Only visible in development */}
-          {process.env.NODE_ENV !== 'production' && (
-            <div className="mb-6">
-              <SubscriptionToggle />
+        {/* Testing Subscription Toggle - Only visible in development */}
+        {process.env.NODE_ENV !== 'production' && (
+          <div className="bg-white p-8 rounded-[3rem] border-4 border-dashed border-gray-200 shadow-inner">
+            <SubscriptionToggle />
+          </div>
+        )}
+
+        <div className="grid gap-8 md:grid-cols-2">
+          {/* Account Information */}
+          <div className="bg-white p-10 rounded-[3.5rem] border-4 border-gray-100 shadow-sm space-y-8">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-2xl bg-playwize-purple/10 flex items-center justify-center">
+                <User className="h-6 w-6 text-playwize-purple" />
+              </div>
+              <h3 className="text-2xl font-black text-gray-900">Account Info</h3>
             </div>
-          )}
-
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card className="border-4 border-primary/30 shadow-xl bg-white/95 backdrop-blur-sm rounded-3xl">
-            <CardHeader className="bg-gradient-primary rounded-t-2xl border-b-4 border-primary/30">
-              <CardTitle className="flex items-center gap-3 text-2xl font-comic">
-                <User className="h-6 w-6 text-purple-600" />
-                Account Information 👤
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-6">
-              <div className="bg-muted rounded-xl p-4 border-2 border-primary/30">
-                <p className="text-sm text-gray-600 mb-1 font-semibold">📧 Email</p>
-                <p className="font-bold text-gray-800">{userProfile.email}</p>
-              </div>
-              {userProfile.displayName && (
-                <div className="bg-muted rounded-xl p-4 border-2 border-primary/30">
-                  <p className="text-sm text-gray-600 mb-1 font-semibold">👋 Display Name</p>
-                  <p className="font-bold text-gray-800">{userProfile.displayName}</p>
+            
+            <div className="space-y-4">
+              {[
+                { label: 'Email', value: userProfile.email, icon: '📧' },
+                { label: 'Display Name', value: userProfile.displayName || 'Friend', icon: '👋' },
+                { label: 'Member Since', value: format(userProfile.createdAt, 'MMMM d, yyyy'), icon: '📅' },
+              ].map((info, i) => (
+                <div key={i} className="p-5 bg-gray-50 rounded-[2rem] border-2 border-white flex items-center gap-4">
+                  <span className="text-2xl">{info.icon}</span>
+                  <div>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">{info.label}</p>
+                    <p className="font-black text-gray-900">{info.value}</p>
+                  </div>
                 </div>
-              )}
-              <div className="bg-muted rounded-xl p-4 border-2 border-primary/30">
-                <p className="text-sm text-gray-600 mb-1 font-semibold">📅 Member Since</p>
-                <p className="font-bold text-gray-800">
-                  {format(userProfile.createdAt, 'MMMM d, yyyy')}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+              ))}
+            </div>
+          </div>
 
-          <Card className="border-4 border-accent shadow-xl bg-white/95 backdrop-blur-sm rounded-3xl">
-            <CardHeader className="bg-gradient-secondary rounded-t-2xl border-b-4 border-accent">
-              <CardTitle className="text-2xl font-comic">Subscription 💳</CardTitle>
-              <CardDescription className="text-gray-700 font-semibold">Your current plan and status</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-6">
-              <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-xl p-4 border-2 border-primary/30">
-                <p className="text-sm text-gray-600 mb-3 font-semibold">Current Tier</p>
+          {/* Subscription Information */}
+          <div className="bg-white p-10 rounded-[3.5rem] border-4 border-gray-100 shadow-sm space-y-8 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-playwize-orange/5 rounded-full -mr-10 -mt-10" />
+            
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-2xl bg-playwize-orange/10 flex items-center justify-center">
+                <Crown className="h-6 w-6 text-playwize-orange" />
+              </div>
+              <h3 className="text-2xl font-black text-gray-900">Subscription</h3>
+            </div>
+
+            <div className="space-y-6">
+              <div className="p-8 bg-gray-50 rounded-[2.5rem] border-2 border-white text-center space-y-4">
+                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Current Plan</p>
                 <div className="flex justify-center">{getTierBadge(userProfile.subscriptionTier)}</div>
               </div>
+
               {userProfile.subscriptionTier === 'trial' && (
-                <div className="bg-gradient-to-r from-accent/10 to-secondary/10 border-4 border-accent rounded-2xl p-4">
-                  <p className="text-sm text-gray-800 font-bold mb-3 text-center">
+                <div className="bg-playwize-orange rounded-[2.5rem] p-8 text-white text-center space-y-6 shadow-xl shadow-orange-100">
+                  <p className="font-black text-lg leading-tight">
                     {isTrialCompleted
-                      ? '🎉 Trial completed! Upgrade to unlock unlimited stories!'
+                      ? '🎉 Trial completed! Upgrade to unlock unlimited magic!'
                       : `✨ Free Trial: ${storiesGenerated}/1 stories created`}
                   </p>
                   <Button
@@ -125,89 +135,81 @@ export default function ProfilePage() {
                       setUpgradeTier('pro')
                       setShowUpgradeModal(true)
                     }}
-                    className="w-full rounded-full bg-gradient-primary hover:from-pink-600 hover:to-purple-600 font-bold"
+                    className="w-full h-14 rounded-full bg-white text-playwize-orange hover:bg-gray-100 font-black text-lg transition-all hover:scale-105 active:scale-95 shadow-lg"
                   >
                     Upgrade to PRO! 🚀
                   </Button>
                 </div>
               )}
+
               {userProfile.subscriptionTier === 'pro' && (
-                <div className="bg-gradient-to-r from-accent/10 to-secondary/10 border-4 border-accent rounded-2xl p-4">
-                  <p className="text-sm text-gray-800 font-bold mb-3 text-center">
-                    👑 Unlock Family Plan for AI-illustrated stories!
+                <div className="bg-playwize-orange rounded-[2.5rem] p-8 text-white text-center space-y-6 shadow-xl shadow-orange-100">
+                  <p className="font-black text-lg leading-tight">
+                    👑 Unlock FAMILY PLAN for magical AI-illustrations!
                   </p>
                   <Button
                     onClick={() => {
-                      setUpgradeTier('family')
+                      setUpgradeTier('family') // Note: tier name might need adjustment to pro_max if backend changed
                       setShowUpgradeModal(true)
                     }}
-                    className="w-full rounded-full bg-gradient-secondary hover:from-yellow-600 hover:to-orange-600 font-bold"
+                    className="w-full h-14 rounded-full bg-white text-playwize-orange hover:bg-gray-100 font-black text-lg transition-all hover:scale-105 active:scale-95 shadow-lg"
                   >
-                    Upgrade to Family Plan! 👑
+                    Upgrade to FAMILY PLAN! 👑
                   </Button>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card className="md:col-span-2 border-4 border-primary/30 shadow-xl bg-white/95 backdrop-blur-sm rounded-3xl">
-            <CardHeader className="bg-gradient-primary rounded-t-2xl border-b-4 border-primary/30">
-              <CardTitle className="text-2xl font-comic flex items-center gap-2">
-                <TrendingUp className="h-6 w-6 text-blue-600" />
-                Usage Statistics 📊
-              </CardTitle>
-              <CardDescription className="text-gray-700 font-semibold">Your story creation activity</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl p-6 border-4 border-primary/30 text-center shadow-lg">
-                  <BookOpen className="h-8 w-8 text-pink-600 mx-auto mb-2" />
-                  <p className="text-sm text-gray-600 mb-2 font-semibold">Stories Created</p>
-                  <p className="text-4xl font-comic font-bold text-gradient-primary">
-                    {stories?.length || 0}
-                  </p>
-                </div>
-                <div className="bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl p-6 border-4 border-primary/30 text-center shadow-lg">
-                  <Sparkles className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                  <p className="text-sm text-gray-600 mb-2 font-semibold">Account Type</p>
-                  <div className="flex justify-center">
-                    {getTierBadge(userProfile.subscriptionTier)}
+          {/* Usage Statistics */}
+          <div className="md:col-span-2 bg-white p-10 rounded-[4rem] border-4 border-gray-100 shadow-sm space-y-10">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-2xl bg-blue-50 flex items-center justify-center">
+                <TrendingUp className="h-6 w-6 text-blue-500" />
+              </div>
+              <h3 className="text-2xl font-black text-gray-900">Activity & Stats</h3>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              {[
+                { label: 'Stories Created', value: stories?.length || 0, icon: BookOpen, color: 'text-playwize-purple', bg: 'bg-purple-50' },
+                { label: 'Account Tier', value: userProfile.subscriptionTier, icon: Sparkles, color: 'text-playwize-orange', bg: 'bg-orange-50', capitalize: true },
+                { label: 'Last Updated', value: format(userProfile.updatedAt, 'MMM d, yyyy'), icon: TrendingUp, color: 'text-blue-500', bg: 'bg-blue-50' },
+              ].map((stat, i) => (
+                <div key={i} className={`${stat.bg} p-8 rounded-[3rem] border-2 border-white shadow-sm text-center space-y-4 hover:shadow-md transition-all`}>
+                  <div className={`${stat.color} p-4 rounded-[1.5rem] bg-white w-fit mx-auto shadow-sm`}>
+                    <stat.icon className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{stat.label}</p>
+                    <p className={`text-2xl font-black ${stat.color} ${stat.capitalize ? 'capitalize' : ''}`}>
+                      {stat.value}
+                    </p>
                   </div>
                 </div>
-                <div className="bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl p-6 border-4 border-border text-center shadow-lg">
-                  <TrendingUp className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                  <p className="text-sm text-gray-600 mb-2 font-semibold">Last Updated</p>
-                  <p className="text-lg font-bold text-gray-800">
-                    {format(userProfile.updatedAt, 'MMM d, yyyy')}
-                  </p>
+              ))}
+            </div>
+          </div>
+
+          {/* Usage Dashboard */}
+          {(userProfile.subscriptionTier === 'pro' || userProfile.subscriptionTier === 'family' || userProfile.subscriptionTier === 'pro_max') && (
+            <div className="md:col-span-2">
+              <div className="bg-white rounded-[4rem] border-4 border-gray-100 shadow-sm overflow-hidden">
+                <div className="bg-playwize-purple p-8 text-white">
+                  <h3 className="text-2xl font-black">Daily Usage & Limits 📊</h3>
+                </div>
+                <div className="p-10">
+                  <UsageDashboard />
                 </div>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Usage Dashboard - Show for Pro and Family tiers */}
-          {(userProfile.subscriptionTier === 'pro' || userProfile.subscriptionTier === 'family') && (
-            <div className="md:col-span-2">
-              <Card className="border-4 border-primary/30 shadow-xl bg-white/95 backdrop-blur-sm rounded-3xl">
-                <CardHeader className="bg-gradient-primary rounded-t-2xl border-b-4 border-primary/30">
-                  <CardTitle className="text-2xl font-comic">Usage & Limits 📊</CardTitle>
-                  <CardDescription className="text-gray-700 font-semibold">
-                    Track your daily story generation
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <UsageDashboard />
-                </CardContent>
-              </Card>
             </div>
           )}
 
-          {/* Child Profiles Section - Pro and Family Plans */}
+          {/* Child Profiles Section */}
           <div className="md:col-span-2">
             <ChildProfileManager />
           </div>
         </div>
-      </div>
       </div>
       <UpgradeModal
         open={showUpgradeModal}

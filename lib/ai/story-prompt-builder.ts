@@ -28,28 +28,28 @@ const AGE_GUIDELINES: Record<string, AgeGuidelines> = {
     targetWords: 300,
     complexity: 'Very simple cause-and-effect. Heavy use of repetition for memory and rhythm.',
     sentenceStructure: 'Short, simple sentences (5-8 words). Lots of repetition.',
-    vocabulary: 'Basic, concrete words. Sounds and onomatopoeia (splash, zoom, etc.).',
+    vocabulary: 'Basic, concrete words. Bold sounds and onomatopoeia (e.g., **SPLASH**, **ZOOM**, **BEEP**).',
     emotionalDepth: 'Simple emotions: happy, sad, excited. Clear and obvious.',
   },
   preschool: {
     targetWords: 450,
     complexity: 'Simple problem-solving. Clear sequence of events. Introduce friends/helpers.',
     sentenceStructure: 'Mix of short (5-8 words) and medium (10-12 words) sentences.',
-    vocabulary: 'Familiar words with some new descriptive terms. Action words.',
+    vocabulary: 'Familiar words with action words. Use bold onomatopoeia (e.g., **WHOOSH**, **CRUNCH**). Include 1-2 interaction cues in brackets like [Action: Tickle the child] or [Sound: Roar like a lion].',
     emotionalDepth: 'Basic emotions plus curiosity, surprise. Show feelings through actions.',
   },
   'early-elementary': {
     targetWords: 600,
     complexity: 'Problem-solving with choices. Multiple challenges. Character shows growth.',
     sentenceStructure: 'Varied sentence length. Some compound sentences. Natural dialogue.',
-    vocabulary: 'Rich descriptive language. Some challenging words in context.',
+    vocabulary: 'Rich descriptive language. Include 2 "Sparkle Words" (advanced vocabulary explained in context). Include 2-3 interaction cues in brackets like [Parent: Ask the child what happens next].',
     emotionalDepth: 'Complex emotions: determination, pride, worry, relief. Internal thoughts.',
   },
   elementary: {
     targetWords: 750,
     complexity: 'Multi-step problem solving. Moral choices. Clear character transformation.',
     sentenceStructure: 'Sophisticated variety. Compound and complex sentences. Rich dialogue.',
-    vocabulary: 'Advanced vocabulary. Metaphors and similes. Vivid descriptions.',
+    vocabulary: 'Advanced vocabulary. Metaphors and similes. Include 3 "Sparkle Words" (advanced vocabulary explained in context). Include 3 interaction cues in brackets for deep engagement.',
     emotionalDepth: 'Nuanced emotions: conflicted feelings, empathy, courage. Character introspection.',
   },
 }
@@ -134,10 +134,10 @@ ACT 2 - CONFLICT & RISING ACTION (${Math.round(guidelines.targetWords * 0.5)} wo
 • Show emotions and thoughts
 
 ACT 3 - CLIMAX & RESOLUTION (${Math.round(guidelines.targetWords * 0.25)} words):
-• CLIMAX: The biggest challenge! ${childName} must make a choice or take brave action
-• ${childName} succeeds by using what they learned
+• CLIMAX: The biggest challenge! ${childName} must make a choice or take brave action.
+• SUCCESS: ${childName} succeeds SPECIFICALLY by using their ${adjectivesList} traits. This is the key to the solution!
 • RESOLUTION: Show the positive outcome
-• End with a warm, comforting feeling perfect for bedtime
+• BEDTIME BRIDGE: End with 2-3 sentences of rhythmic, calming language that transitions the child to sleep (e.g., "And as the stars twinkled, ${childName} snuggled deep into their cozy bed...").
 • Show how ${childName} has grown
 
 CHARACTER ARC:
@@ -156,6 +156,11 @@ Bring the ${theme} theme to life with vivid details:
 ${sensoryDetails}
 
 Include at least 3 sensory details per scene (what ${childName} sees, hears, feels, smells, or tastes).
+
+MAGICAL READING FEATURES:
+• BOLD SOUNDS: Use **BOLD ALL CAPS** for onomatopoeia (e.g., **CRASH**, **GIGGLE**, **WHOOSH**) to help parents emphasize sounds.
+• SPARKLE WORDS: Include 2-3 slightly advanced words (e.g., "luminous," "courageous") and explain them naturally through context.
+• INTERACTION CUES: Include 2-3 cues in [brackets] for parents (e.g., [Action: Point to the blue star], [Sound: Make a soft snoring sound]).
 
 WRITING STYLE & REQUIREMENTS:
 ${guidelines.complexity}
@@ -233,9 +238,9 @@ ACT 2 - CONFLICT & RISING ACTION (${Math.round(guidelines.targetWords * 0.5)} wo
 
 ACT 3 - CLIMAX & RESOLUTION (${Math.round(guidelines.targetWords * 0.25)} words):
 • CLIMAX: The biggest challenge requires ALL children working together
-• Each child plays a crucial role in solving the problem
+• Each child plays a crucial role, using their unique ${childrenNames} strengths
 • RESOLUTION: Celebrate their teamwork and friendship
-• Warm, comforting ending perfect for bedtime
+• BEDTIME BRIDGE: End with 2-3 sentences of rhythmic, calming language that transitions the children to sleep.
 
 CHARACTER DYNAMICS:
 • Give each child (${childrenNames}) distinct moments to shine

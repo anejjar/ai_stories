@@ -26,6 +26,7 @@ export async function signInWithEmail(email: string, password: string) {
  */
 export async function signUpWithEmail(email: string, password: string) {
   try {
+    console.log('🚀 Attempting sign up for:', email)
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -33,13 +34,18 @@ export async function signUpWithEmail(email: string, password: string) {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     })
+    
     if (error) {
+      console.error('❌ Supabase sign up error:', error)
       return { user: null, error: getAuthErrorMessage(error) }
     }
+    
+    console.log('✅ Supabase sign up successful:', data.user?.id)
     // Note: data.user might be null if email confirmation is required
     // In that case, data.session will also be null
     return { user: data.user, error: null }
   } catch (error: any) {
+    console.error('💥 Unexpected sign up error:', error)
     return { user: null, error: getAuthErrorMessage(error) }
   }
 }
@@ -103,8 +109,8 @@ function getAuthErrorMessage(error: any): string {
   if (message.includes('Email rate limit exceeded')) {
     return 'Too many requests. Please try again later'
   }
-  if (message.includes('Network request failed') || status === '0') {
-    return 'Network error. Please check your connection'
+  if (message.includes('Network request failed') || message.includes('NetworkError') || status === '0') {
+    return 'Network error. Please check your internet connection and ensure your Supabase project URL is correct and reachable.'
   }
   if (message.includes('popup_closed_by_user')) {
     return 'Sign-in popup was closed'
