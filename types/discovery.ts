@@ -53,7 +53,7 @@ export interface StoryRating {
   updatedAt: Date
 }
 
-export type ReportReason = 'inappropriate' | 'spam' | 'copyright' | 'other'
+export type ReportReason = 'inappropriate' | 'spam' | 'copyright' | 'unwanted_words' | 'unwanted_images' | 'image_issues' | 'other'
 export type ReportStatus = 'pending' | 'reviewed' | 'resolved' | 'dismissed'
 
 export interface StoryReport {

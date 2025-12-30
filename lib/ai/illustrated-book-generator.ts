@@ -196,7 +196,7 @@ The story should:
 - Have a clear beginning, middle, and end
 - Be wholesome and educational
 
-Remember: Each scene will have its own illustration, so make each scene visually distinct and exciting!`
+CRITICAL: Write ONLY the story text. Do NOT include any notes, instructions, or metadata like "Visual:", "Scene:", "Image focus:", "Illustration:", "Prompt:", or "Key visual moment:". Just write the pure story narrative. Each scene will have its own illustration, so make each scene visually distinct and exciting!`
 }
 
 /**

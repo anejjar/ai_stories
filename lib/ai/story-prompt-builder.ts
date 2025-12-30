@@ -183,6 +183,7 @@ Additional Requirements:
 ✓ Wholesome, kid-safe, positive role model behavior
 ✓ NO scary elements, NO violence, NO sad endings
 ✓ Perfect for bedtime - calming and comforting conclusion
+✓ IMPORTANT: Write ONLY the story text. Do NOT include any notes, instructions, or metadata like "Visual:", "Scene:", "Image focus:", "Illustration:", "Prompt:", or "Key visual moment:". Just write the pure story narrative.
 
 NARRATIVE TECHNIQUES:
 • Start with action or interesting moment (no "Once upon a time")
@@ -269,6 +270,7 @@ REQUIREMENTS:
 ✓ Vivid sensory details
 ✓ Wholesome, positive, perfect for bedtime
 ✓ Celebrate diversity of personalities
+✓ IMPORTANT: Write ONLY the story text. Do NOT include any notes, instructions, or metadata like "Visual:", "Scene:", "Image focus:", "Illustration:", "Prompt:", or "Key visual moment:". Just write the pure story narrative.
 
 Focus on making this a story about friendship, teamwork, and how working together makes adventures more fun!`
 }

@@ -60,7 +60,7 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   // Define public routes
-  const isPublicRoute = 
+  const isPublicRoute =
     request.nextUrl.pathname === '/' ||
     request.nextUrl.pathname.startsWith('/login') ||
     request.nextUrl.pathname.startsWith('/signup') ||
@@ -71,6 +71,9 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith('/pricing') ||
     request.nextUrl.pathname.startsWith('/auth/callback') ||
     request.nextUrl.pathname.startsWith('/api/')
+
+  // Check if accessing admin routes
+  const isAdminRoute = request.nextUrl.pathname.startsWith('/admin')
 
   // If the user is not logged in and trying to access a protected route,
   // redirect them to the login page
@@ -88,6 +91,22 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
+  }
+
+  // Check admin access for admin routes
+  if (isAdminRoute && user) {
+    const { data: userData } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (!userData || userData.role !== 'superadmin') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/dashboard'
+      url.searchParams.set('error', 'admin_access_required')
+      return NextResponse.redirect(url)
+    }
   }
 
   return response

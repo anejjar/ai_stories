@@ -56,7 +56,7 @@ export function SeedButton() {
       onClick={handleSeed}
       disabled={loading}
       variant="outline"
-      className="rounded-full border-2 border-purple-400 hover:bg-purple-100 font-bold"
+      className="rounded-full border-2 border-gray-300 hover:bg-gray-50 font-bold"
     >
       {loading ? (
         <>

@@ -11,6 +11,7 @@ import { PrintStoryButton } from '@/components/stories/print-story-button'
 import { EnhancedAudioPlayer } from '@/components/stories/enhanced-audio-player'
 import { BookViewer } from '@/components/stories/book-viewer'
 import { BookViewerV2 } from '@/components/stories/book-viewer-v2'
+import { BookViewerV3 } from '@/components/stories/book-viewer-v3'
 import { AchievementUnlockModal } from '@/components/achievements/achievement-unlock-modal'
 import { Share2, ArrowLeft, BookOpen, Image as ImageIcon, Loader2, Crown, Sparkles } from 'lucide-react'
 import Link from 'next/link'
@@ -27,15 +28,16 @@ import type { Achievement } from '@/lib/achievements/types'
 
 import { LikeButton } from '@/components/stories/like-button'
 import { CommentsSection } from '@/components/stories/comments-section'
-import { Plus } from 'lucide-react'
+import { ReportModal } from '@/components/stories/report-modal'
+import { Plus, Flag } from 'lucide-react'
 
 interface StoryDisplayProps {
   story: Story
   onBack?: () => void
-  viewerVersion?: 'v1' | 'v2' // Choose book viewer version (default: v2)
+  viewerVersion?: 'v1' | 'v2' | 'v3' // Choose book viewer version (default: v3)
 }
 
-export function StoryDisplay({ story, onBack, viewerVersion = 'v2' }: StoryDisplayProps) {
+export function StoryDisplay({ story, onBack, viewerVersion = 'v3' }: StoryDisplayProps) {
   const { user, userProfile, getAccessToken } = useAuth()
   const [readingProgress, setReadingProgress] = useState(0)
   const [copied, setCopied] = useState(false)
@@ -372,26 +374,57 @@ export function StoryDisplay({ story, onBack, viewerVersion = 'v2' }: StoryDispl
                   size="md"
                 />
               )}
+              {/* Report button - available for all stories (public and private) */}
+              <ReportModal
+                storyId={story.id}
+                trigger={
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-12 px-4 gap-2 rounded-full text-gray-500 hover:text-red-600 hover:bg-red-50 font-medium text-sm transition-all"
+                  >
+                    <Flag className="h-4 w-4" />
+                    <span className="hidden sm:inline">Report</span>
+                  </Button>
+                }
+              />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Story Content - Using BookViewerV2 for both illustrated and text stories */}
-      <div className="container mx-auto px-4 py-8 max-w-6xl relative z-10">
-        <BookViewerV2
-          bookPages={story.isIllustratedBook && story.bookPages ? story.bookPages : [{
-            pageNumber: 1,
-            text: story.content,
-            illustration_url: story.imageUrls?.[0] || ''
-          }]}
-          storyId={story.id}
-          completedPages={completedPages}
-          onPageComplete={handlePageComplete}
-          title={story.title}
-          theme={story.theme}
-        />
-      </div>
+      {/* Story Content - Using BookViewerV2/V3 for both illustrated and text stories */}
+      {viewerVersion === 'v3' ? (
+        <div className="relative z-10">
+          <BookViewerV3
+            bookPages={story.isIllustratedBook && story.bookPages ? story.bookPages : [{
+              pageNumber: 1,
+              text: story.content,
+              illustration_url: story.imageUrls?.[0] || ''
+            }]}
+            storyId={story.id}
+            completedPages={completedPages}
+            onPageComplete={handlePageComplete}
+            title={story.title}
+            theme={story.theme}
+          />
+        </div>
+      ) : (
+        <div className="container mx-auto px-4 py-8 max-w-6xl relative z-10">
+          <BookViewerV2
+            bookPages={story.isIllustratedBook && story.bookPages ? story.bookPages : [{
+              pageNumber: 1,
+              text: story.content,
+              illustration_url: story.imageUrls?.[0] || ''
+            }]}
+            storyId={story.id}
+            completedPages={completedPages}
+            onPageComplete={handlePageComplete}
+            title={story.title}
+            theme={story.theme}
+          />
+        </div>
+      )}
 
       {/* Social Section & Actions */}
       <div className="container mx-auto px-4 pb-20 max-w-3xl relative z-10 space-y-8">

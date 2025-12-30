@@ -64,3 +64,4 @@ GRANT EXECUTE ON FUNCTION public.increment_story_view_count(UUID) TO authenticat
 
 
 
+
