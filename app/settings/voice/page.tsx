@@ -358,13 +358,4 @@ export default function VoiceSettingsPage() {
       />
     </main>
   )
-
-      {/* Create Dialog */}
-      <CreateVoiceCloneDialog
-        isOpen={isCreateDialogOpen}
-        onClose={() => setIsCreateDialogOpen(false)}
-        onSuccess={loadVoiceProfiles}
-      />
-    </div>
-  )
 }
