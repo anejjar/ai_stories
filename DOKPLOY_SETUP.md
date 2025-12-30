@@ -22,20 +22,23 @@ This guide explains how to deploy the AI Stories application to your Contabo VPS
 ### Step 3: Configure Environment Variables
 Go to the **Environment** tab of your application and add the following variables:
 
-| Variable | Description |
-|----------|-------------|
-| `NODE_ENV` | `production` |
-| `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anon key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Your Supabase service role key (for server-side ops) |
-| `RESEND_API_KEY` | Your Resend API key for emails |
-| `OPENAI_API_KEY` | Your OpenAI API key |
-| `ANTHROPIC_API_KEY` | Your Anthropic API key |
-| `GOOGLE_GENERATIVE_AI_API_KEY` | Your Gemini API key |
-| `CRON_SECRET` | A long random string to secure your cron endpoints |
-| `NEXT_PUBLIC_APP_URL` | Your application URL (e.g., `https://stories.yourdomain.com`) |
-| `STRIPE_SECRET_KEY` | Your Stripe secret key |
-| `STRIPE_WEBHOOK_SECRET` | Your Stripe webhook secret |
+> **Important for Next.js**: Variables starting with `NEXT_PUBLIC_` must also be added to the **Build Arguments** tab in Dokploy so they can be baked into the client-side bundle during the build process.
+
+| Variable | Description | Build Arg? |
+|----------|-------------|------------|
+| `NODE_ENV` | `production` | No |
+| `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL | **Yes** |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anon key | **Yes** |
+| `SUPABASE_SERVICE_ROLE_KEY` | Your Supabase service role key | No |
+| `RESEND_API_KEY` | Your Resend API key for emails | No |
+| `OPENAI_API_KEY` | Your OpenAI API key | No |
+| `ANTHROPIC_API_KEY` | Your Anthropic API key | No |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Your Gemini API key | No |
+| `CRON_SECRET` | A long random string to secure your cron endpoints | No |
+| `NEXT_PUBLIC_APP_URL` | Your application URL | **Yes** |
+| `STRIPE_SECRET_KEY` | Your Stripe secret key | No |
+| `STRIPE_WEBHOOK_SECRET` | Your Stripe webhook secret | No |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Your Stripe publishable key | **Yes** |
 
 ### Step 4: Deploy
 1. Go to the **Deployments** tab.
