@@ -21,7 +21,10 @@ import {
   Sparkles,
   Type,
   ChevronDown,
-  Flag
+  Flag,
+  BookOpen,
+  ZoomIn,
+  Maximize2
 } from 'lucide-react'
 import { useTextPagination, type VirtualPage, type TextPaginationOptions } from '@/hooks/use-text-pagination'
 import type { BookPage } from '@/lib/ai/illustrated-book-generator'
@@ -55,17 +58,32 @@ export function BookViewerV3({
   const [fontType, setFontType] = useState<FontType>('serif')
   const [showSettings, setShowSettings] = useState(false)
   const [showCompletion, setShowCompletion] = useState(false)
+  const [showTOC, setShowTOC] = useState(false)
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null)
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+  
+  // Track if completion modal has been dismissed to prevent showing again
+  const completionDismissedRef = useRef(false)
 
   // Read-aloud state
   const [isReading, setIsReading] = useState(false)
   const [currentWordIndex, setCurrentWordIndex] = useState(-1)
   const [readingSupported, setReadingSupported] = useState(false)
   const [readingPageIndex, setReadingPageIndex] = useState(0)
+  const [readingSpeed, setReadingSpeed] = useState(0.9) // 0.5 to 2.0
 
   // Refs
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([])
   const speechRef = useRef<SpeechSynthesisUtterance | null>(null)
+
+  // Scroll to section - defined early to avoid temporal dead zone
+  const scrollToSection = useCallback((index: number) => {
+    const section = sectionRefs.current[index]
+    if (section && scrollContainerRef.current) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [])
 
   // Measure container width for pagination
   const [containerWidth, setContainerWidth] = useState(0)
@@ -150,7 +168,26 @@ export function BookViewerV3({
     if (savedFontType && ['serif', 'sans'].includes(savedFontType)) {
       setFontType(savedFontType as FontType)
     }
-  }, [])
+
+    const savedReadingSpeed = localStorage.getItem('bookReadingSpeed')
+    if (savedReadingSpeed) {
+      const speed = parseFloat(savedReadingSpeed)
+      if (speed >= 0.5 && speed <= 2.0) {
+        setReadingSpeed(speed)
+      }
+    }
+
+    // Load saved reading position
+    const savedPosition = localStorage.getItem(`bookReadingPosition_${storyId}`)
+    if (savedPosition && totalVirtualPages > 0) {
+      const position = parseInt(savedPosition, 10)
+      if (position >= 0 && position < totalVirtualPages) {
+        setTimeout(() => {
+          scrollToSection(position)
+        }, 500)
+      }
+    }
+  }, [storyId, totalVirtualPages, scrollToSection])
 
   // Save preferences to localStorage when they change
   useEffect(() => {
@@ -165,6 +202,17 @@ export function BookViewerV3({
     localStorage.setItem('bookFontType', fontType)
   }, [fontType])
 
+  useEffect(() => {
+    localStorage.setItem('bookReadingSpeed', readingSpeed.toString())
+  }, [readingSpeed])
+
+  // Save reading position
+  useEffect(() => {
+    if (currentVisibleIndex >= 0 && totalVirtualPages > 0) {
+      localStorage.setItem(`bookReadingPosition_${storyId}`, currentVisibleIndex.toString())
+    }
+  }, [currentVisibleIndex, storyId, totalVirtualPages])
+
   // Initialize image loading states
   useEffect(() => {
     const loadingStates: Record<number, boolean> = {}
@@ -175,6 +223,24 @@ export function BookViewerV3({
     })
     setImageLoadingStates(loadingStates)
   }, [virtualPages])
+
+  // Image preloading for next 2-3 sections
+  useEffect(() => {
+    if (virtualPages.length === 0) return
+
+    const preloadImages = () => {
+      const preloadRange = 2
+      for (let i = Math.max(0, currentVisibleIndex - 1); i <= Math.min(totalVirtualPages - 1, currentVisibleIndex + preloadRange); i++) {
+        const page = virtualPages[i]
+        if (page?.illustration_url && !imageLoadingStates[i]) {
+          const img = new window.Image()
+          img.src = page.illustration_url
+        }
+      }
+    }
+
+    preloadImages()
+  }, [currentVisibleIndex, virtualPages, totalVirtualPages, imageLoadingStates])
 
   // Intersection Observer for tracking visible sections
   useEffect(() => {
@@ -227,36 +293,48 @@ export function BookViewerV3({
     return () => clearTimeout(timer)
   }, [currentVisibleIndex, virtualPages, completedPages, onPageComplete, isCalculating, totalVirtualPages])
 
-  // Scroll to section
-  const scrollToSection = useCallback((index: number) => {
-    const section = sectionRefs.current[index]
-    if (section && scrollContainerRef.current) {
-      section.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
-  }, [])
-
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+      // Don't interfere if user is typing in an input
+      if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'TEXTAREA') {
+        return
+      }
+
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'j' || e.key === 'J') {
         e.preventDefault()
         if (currentVisibleIndex < totalVirtualPages - 1) {
           scrollToSection(currentVisibleIndex + 1)
         }
-      } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'k' || e.key === 'K') {
         e.preventDefault()
         if (currentVisibleIndex > 0) {
           scrollToSection(currentVisibleIndex - 1)
         }
+      } else if (e.key === 'Home') {
+        e.preventDefault()
+        scrollToSection(0)
+      } else if (e.key === 'End') {
+        e.preventDefault()
+        scrollToSection(totalVirtualPages - 1)
       } else if (e.key === ' ') {
         e.preventDefault()
         toggleReading()
+      } else if (e.key === 'Escape') {
+        if (lightboxImage) {
+          setLightboxImage(null)
+          setLightboxIndex(null)
+        } else if (showSettings) {
+          setShowSettings(false)
+        } else if (showTOC) {
+          setShowTOC(false)
+        }
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [currentVisibleIndex, totalVirtualPages, scrollToSection])
+  }, [currentVisibleIndex, totalVirtualPages, scrollToSection, lightboxImage, showSettings, showTOC])
 
   // Read-aloud functionality
   const stopReading = useCallback(() => {
@@ -275,7 +353,7 @@ export function BookViewerV3({
     stopReading()
 
     const utterance = new SpeechSynthesisUtterance(currentPage.text)
-    utterance.rate = 0.9
+    utterance.rate = readingSpeed
     utterance.pitch = 1.0
     utterance.volume = 1.0
 
@@ -313,7 +391,7 @@ export function BookViewerV3({
     setIsReading(true)
     setReadingPageIndex(currentVisibleIndex)
     window.speechSynthesis.speak(utterance)
-  }, [virtualPages, currentVisibleIndex, totalVirtualPages, scrollToSection, stopReading, readingSupported])
+  }, [virtualPages, currentVisibleIndex, totalVirtualPages, scrollToSection, stopReading, readingSupported, readingSpeed])
 
   const toggleReading = () => {
     if (isReading) {
@@ -479,10 +557,78 @@ export function BookViewerV3({
     }
   }, [readingTheme])
 
+  // Helper function to determine image position based on aspect ratio
+  const getImagePosition = (aspectRatio: 'square' | 'portrait' | 'landscape' | undefined, index: number): 'left' | 'right' => {
+    // Default to portrait for backward compatibility
+    const ratio = aspectRatio || 'portrait'
+    
+    // Portrait images prefer left side, landscape prefer right, square alternates
+    switch (ratio) {
+      case 'portrait':
+        return 'left'
+      case 'landscape':
+        return 'right'
+      case 'square':
+        return index % 2 === 0 ? 'left' : 'right'
+      default:
+        return index % 2 === 0 ? 'left' : 'right'
+    }
+  }
+
+  // Helper function to get aspect ratio class
+  const getAspectRatioClass = (aspectRatio: 'square' | 'portrait' | 'landscape' | undefined): string => {
+    // Default to portrait for backward compatibility
+    const ratio = aspectRatio || 'portrait'
+    
+    switch (ratio) {
+      case 'square':
+        return 'aspect-square'
+      case 'portrait':
+        return 'aspect-[9/16]'
+      case 'landscape':
+        return 'aspect-[16/9]'
+      default:
+        return 'aspect-[4/5]' // Fallback to original
+    }
+  }
+
+  // Helper function to get grid columns based on aspect ratio
+  const getGridColumns = (aspectRatio: 'square' | 'portrait' | 'landscape' | undefined, imagePosition: 'left' | 'right'): string => {
+    // Default to portrait for backward compatibility
+    const ratio = aspectRatio || 'portrait'
+    
+    if (imagePosition === 'left') {
+      switch (ratio) {
+        case 'portrait':
+          return 'grid-cols-1 md:grid-cols-[35%_65%]'
+        case 'landscape':
+          return 'grid-cols-1 md:grid-cols-[50%_50%]'
+        case 'square':
+          return 'grid-cols-1 md:grid-cols-[40%_60%]'
+        default:
+          return 'grid-cols-1 md:grid-cols-[35%_65%]'
+      }
+    } else {
+      switch (ratio) {
+        case 'portrait':
+          return 'grid-cols-1 md:grid-cols-[65%_35%]'
+        case 'landscape':
+          return 'grid-cols-1 md:grid-cols-[50%_50%]'
+        case 'square':
+          return 'grid-cols-1 md:grid-cols-[60%_40%]'
+        default:
+          return 'grid-cols-1 md:grid-cols-[65%_35%]'
+      }
+    }
+  }
+
   // Render a single section
   const renderSection = (virtualPage: VirtualPage, index: number) => {
     const hasIllustration = virtualPage.illustration_url && virtualPage.illustration_url.trim() !== ''
-    const imagePosition = index % 2 === 0 ? 'left' : 'right'
+    const aspectRatio = virtualPage.aspectRatio
+    const imagePosition = getImagePosition(aspectRatio, index)
+    const aspectRatioClass = getAspectRatioClass(aspectRatio)
+    const gridColumns = hasIllustration ? getGridColumns(aspectRatio, imagePosition) : 'grid-cols-1'
     const isLoading = imageLoadingStates[index] ?? false
 
     return (
@@ -493,6 +639,8 @@ export function BookViewerV3({
         }}
         data-section-index={index}
         className={`min-h-screen scroll-snap-align-start scroll-snap-stop-always flex items-center justify-center relative ${themeStyles.page}`}
+        role="article"
+        aria-label={`Section ${index + 1} of ${totalVirtualPages}`}
         style={{
           backgroundImage: readingTheme !== 'night' ? `
             linear-gradient(to bottom, rgba(255,255,255,0.3) 0%, transparent 100%),
@@ -503,24 +651,32 @@ export function BookViewerV3({
       >
         {/* Container with 80% width */}
         <div className="w-[80%] max-w-7xl mx-auto px-4">
-          <div className={`grid gap-8 items-center ${hasIllustration ? (imagePosition === 'left' ? 'grid-cols-1 md:grid-cols-[35%_65%]' : 'grid-cols-1 md:grid-cols-[65%_35%]') : 'grid-cols-1'}`}>
-            {/* Image on left (even indices) */}
+          <div className={`grid gap-8 items-center ${gridColumns}`}>
+            {/* Image on left */}
             {hasIllustration && imagePosition === 'left' && (
-              <div className="relative w-full aspect-[4/5] overflow-hidden rounded-lg shadow-lg">
+              <div className={`relative w-full ${aspectRatioClass} overflow-hidden rounded-lg shadow-lg group cursor-pointer`} onClick={() => {
+                setLightboxImage(virtualPage.illustration_url)
+                setLightboxIndex(index)
+              }}>
                 {isLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center z-10 bg-gray-100">
-                    <div className={`w-12 h-12 border-4 ${readingTheme === 'night' ? 'border-[#bb86fc]' : 'border-amber-500'} border-t-transparent rounded-full animate-spin`} />
+                  <div className="absolute inset-0 z-10 bg-gradient-to-br from-gray-100 to-gray-200 animate-pulse">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-full h-full bg-gray-300 rounded" />
+                    </div>
                   </div>
                 )}
                 <Image
                   src={virtualPage.illustration_url}
                   alt={`Illustration for section ${index + 1}`}
                   fill
-                  className="object-cover"
+                  className="object-cover transition-transform group-hover:scale-105"
                   priority={index === 0}
                   onLoad={() => setImageLoadingStates(prev => ({ ...prev, [index]: false }))}
                   sizes="(max-width: 768px) 100vw, 35vw"
                 />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                  <ZoomIn className={`w-8 h-8 ${readingTheme === 'night' ? 'text-[#bb86fc]' : 'text-amber-500'} drop-shadow-lg`} />
+                </div>
               </div>
             )}
 
@@ -561,23 +717,31 @@ export function BookViewerV3({
               </div>
             </div>
 
-            {/* Image on right (odd indices) */}
+            {/* Image on right */}
             {hasIllustration && imagePosition === 'right' && (
-              <div className="relative w-full aspect-[4/5] overflow-hidden rounded-lg shadow-lg">
+              <div className={`relative w-full ${aspectRatioClass} overflow-hidden rounded-lg shadow-lg group cursor-pointer`} onClick={() => {
+                setLightboxImage(virtualPage.illustration_url)
+                setLightboxIndex(index)
+              }}>
                 {isLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center z-10 bg-gray-100">
-                    <div className={`w-12 h-12 border-4 ${readingTheme === 'night' ? 'border-[#bb86fc]' : 'border-amber-500'} border-t-transparent rounded-full animate-spin`} />
+                  <div className="absolute inset-0 z-10 bg-gradient-to-br from-gray-100 to-gray-200 animate-pulse">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-full h-full bg-gray-300 rounded" />
+                    </div>
                   </div>
                 )}
                 <Image
                   src={virtualPage.illustration_url}
                   alt={`Illustration for section ${index + 1}`}
                   fill
-                  className="object-cover"
+                  className="object-cover transition-transform group-hover:scale-105"
                   priority={index < 2}
                   onLoad={() => setImageLoadingStates(prev => ({ ...prev, [index]: false }))}
                   sizes="(max-width: 768px) 100vw, 35vw"
                 />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                  <ZoomIn className={`w-8 h-8 ${readingTheme === 'night' ? 'text-[#bb86fc]' : 'text-amber-500'} drop-shadow-lg`} />
+                </div>
               </div>
             )}
           </div>
@@ -610,7 +774,7 @@ export function BookViewerV3({
       )}
 
       {/* Fixed header with controls */}
-      <div className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b-2 border-gray-200 shadow-sm">
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b-2 border-gray-200 shadow-sm" role="banner">
         <div className="container mx-auto px-4 py-3 max-w-7xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -620,6 +784,34 @@ export function BookViewerV3({
               <div className={`text-sm ${themeStyles.text} opacity-70`}>
                 Section {currentVisibleIndex + 1} of {totalVirtualPages || '...'}
               </div>
+              {/* Reading Progress Bar */}
+              {totalVirtualPages > 0 && (
+                <div className="hidden md:flex items-center gap-2 min-w-[120px]">
+                  <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-300 ${
+                        readingTheme === 'night' ? 'bg-[#bb86fc]' : 'bg-amber-600'
+                      }`}
+                      style={{ width: `${((currentVisibleIndex + 1) / totalVirtualPages) * 100}%` }}
+                      aria-label={`Reading progress: ${Math.round(((currentVisibleIndex + 1) / totalVirtualPages) * 100)}%`}
+                    />
+                  </div>
+                  <span className={`text-xs ${themeStyles.text} opacity-60`}>
+                    {Math.round(((currentVisibleIndex + 1) / totalVirtualPages) * 100)}%
+                  </span>
+                </div>
+              )}
+              {/* Table of Contents Button */}
+              <Button
+                onClick={() => setShowTOC(!showTOC)}
+                variant="outline"
+                size="sm"
+                className={`gap-2 border-2 ${themeStyles.border} ${themeStyles.text}`}
+                aria-label="Open table of contents"
+              >
+                <BookOpen className="w-4 h-4" />
+                <span className="hidden sm:inline">TOC</span>
+              </Button>
             </div>
 
             {/* Control buttons */}
@@ -630,6 +822,8 @@ export function BookViewerV3({
                   variant="outline"
                   size="sm"
                   className={`gap-2 border-2 ${themeStyles.border} ${themeStyles.text}`}
+                  aria-label={isReading ? 'Stop reading aloud' : 'Start reading aloud'}
+                  aria-pressed={isReading}
                 >
                   {isReading ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                   <span className="hidden sm:inline">
@@ -643,6 +837,8 @@ export function BookViewerV3({
                 variant="outline"
                 size="sm"
                 className={`gap-2 border-2 ${themeStyles.border} ${themeStyles.text}`}
+                aria-label="Open reading settings"
+                aria-expanded={showSettings}
               >
                 <Settings className="w-4 h-4" />
                 <span className="hidden sm:inline">Settings</span>
@@ -665,7 +861,7 @@ export function BookViewerV3({
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Settings Menu */}
       <AnimatePresence>
@@ -760,7 +956,163 @@ export function BookViewerV3({
                   </Button>
                 </div>
               </div>
+
+              {/* Reading Speed Control */}
+              {readingSupported && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className={`text-xs font-bold uppercase tracking-wider opacity-60 ${themeStyles.text}`}>Reading Speed</p>
+                    <span className={`text-sm font-medium ${themeStyles.text}`}>{readingSpeed.toFixed(1)}x</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="2.0"
+                    step="0.1"
+                    value={readingSpeed}
+                    onChange={(e) => setReadingSpeed(parseFloat(e.target.value))}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-amber-600"
+                    aria-label={`Reading speed: ${readingSpeed.toFixed(1)}x`}
+                  />
+                  <div className="flex justify-between text-xs opacity-60">
+                    <span className={themeStyles.text}>0.5x</span>
+                    <span className={themeStyles.text}>1.0x</span>
+                    <span className={themeStyles.text}>2.0x</span>
+                  </div>
+                </div>
+              )}
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Table of Contents Dropdown */}
+      <AnimatePresence>
+        {showTOC && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className={`fixed top-20 left-4 z-[60] w-80 max-h-[70vh] overflow-y-auto p-6 rounded-2xl shadow-2xl border-2 ${themeStyles.border} ${themeStyles.page}`}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h4 className={`font-bold ${themeStyles.text}`}>Table of Contents</h4>
+              <Button variant="ghost" size="icon" onClick={() => setShowTOC(false)} className={themeStyles.text}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {virtualPages.map((page, index) => {
+                const previewText = cleanStoryText(page.text).substring(0, 60) + '...'
+                return (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      scrollToSection(index)
+                      setShowTOC(false)
+                    }}
+                    className={`w-full text-left p-3 rounded-lg transition-all ${
+                      index === currentVisibleIndex
+                        ? readingTheme === 'night' ? 'bg-[#bb86fc]/20 border-2 border-[#bb86fc]' : 'bg-amber-100 border-2 border-amber-500'
+                        : `${themeStyles.border} border hover:bg-gray-100 dark:hover:bg-gray-800`
+                    }`}
+                    aria-label={`Go to section ${index + 1}`}
+                    aria-current={index === currentVisibleIndex ? 'page' : undefined}
+                  >
+                    <div className={`font-bold ${themeStyles.text} mb-1`}>
+                      Section {index + 1}
+                    </div>
+                    <div className={`text-xs ${themeStyles.text} opacity-70 line-clamp-2`}>
+                      {previewText}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Image Lightbox */}
+      <AnimatePresence>
+        {lightboxImage && lightboxIndex !== null && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4"
+            onClick={() => {
+              setLightboxImage(null)
+              setLightboxIndex(null)
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.8 }}
+              className="relative max-w-7xl max-h-[90vh] w-full h-full flex items-center justify-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Image
+                src={lightboxImage}
+                alt={`Full-size illustration for section ${lightboxIndex + 1}`}
+                width={1200}
+                height={1500}
+                className="object-contain max-w-full max-h-full rounded-lg shadow-2xl"
+                priority
+              />
+              <Button
+                onClick={() => {
+                  setLightboxImage(null)
+                  setLightboxIndex(null)
+                }}
+                variant="ghost"
+                size="icon"
+                className="absolute top-4 right-4 bg-white/90 hover:bg-white text-gray-900"
+                aria-label="Close image lightbox"
+              >
+                <X className="w-6 h-6" />
+              </Button>
+              {/* Navigation arrows */}
+              {lightboxIndex > 0 && (
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    const prevIndex = lightboxIndex - 1
+                    const prevPage = virtualPages[prevIndex]
+                    if (prevPage?.illustration_url) {
+                      setLightboxImage(prevPage.illustration_url)
+                      setLightboxIndex(prevIndex)
+                    }
+                  }}
+                  variant="ghost"
+                  size="icon"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-900"
+                  aria-label="Previous image"
+                >
+                  <ChevronDown className="w-6 h-6 rotate-90" />
+                </Button>
+              )}
+              {lightboxIndex < totalVirtualPages - 1 && (
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    const nextIndex = lightboxIndex + 1
+                    const nextPage = virtualPages[nextIndex]
+                    if (nextPage?.illustration_url) {
+                      setLightboxImage(nextPage.illustration_url)
+                      setLightboxIndex(nextIndex)
+                    }
+                  }}
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-900"
+                  aria-label="Next image"
+                >
+                  <ChevronDown className="w-6 h-6 -rotate-90" />
+                </Button>
+              )}
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -774,33 +1126,39 @@ export function BookViewerV3({
           overflowY: 'scroll',
           height: 'calc(100vh - 73px)' // Account for header height
         }}
+        role="main"
+        aria-label="Story content"
       >
         {virtualPages.map((virtualPage, index) => renderSection(virtualPage, index))}
       </div>
 
       {/* Progress indicator */}
-      <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-30">
+      <nav className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-30" aria-label="Section navigation">
         <div className={`bg-white/90 backdrop-blur-xl rounded-full px-6 py-3 shadow-lg border-2 ${themeStyles.border}`}>
-          <div className="flex gap-2 items-center">
-            {virtualPages.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => scrollToSection(index)}
-                className={`h-2 rounded-full transition-all ${
-                  index === currentVisibleIndex
-                    ? (readingTheme === 'night' ? 'bg-[#bb86fc] w-8' : 'bg-amber-600 w-8')
-                    : (readingTheme === 'night' ? 'bg-[#404040] w-2 hover:bg-[#505050]' : 'bg-amber-200 w-2 hover:bg-amber-300')
-                }`}
-                aria-label={`Go to section ${index + 1}`}
-              />
-            ))}
+          <div className="flex gap-2 items-center" role="list">
+            {virtualPages.map((_, index) => {
+              const previewText = cleanStoryText(virtualPages[index]?.text || '').substring(0, 40)
+              return (
+                <button
+                  key={index}
+                  onClick={() => scrollToSection(index)}
+                  className={`h-2 rounded-full transition-all min-w-[8px] ${
+                    index === currentVisibleIndex
+                      ? (readingTheme === 'night' ? 'bg-[#bb86fc] w-8' : 'bg-amber-600 w-8')
+                      : (readingTheme === 'night' ? 'bg-[#404040] w-2 hover:bg-[#505050]' : 'bg-amber-200 w-2 hover:bg-amber-300')
+                  }`}
+                  aria-label={`Go to section ${index + 1}${previewText ? `: ${previewText}` : ''}`}
+                  title={`Section ${index + 1}${previewText ? `: ${previewText}` : ''}`}
+                />
+              )
+            })}
           </div>
         </div>
-      </div>
+      </nav>
 
       {/* Completion Celebration */}
       <AnimatePresence>
-        {showCompletion && (
+        {showCompletion && !completionDismissedRef.current && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4 backdrop-blur-sm">
             <motion.div
               initial={{ scale: 0.5, opacity: 0 }}
@@ -819,7 +1177,10 @@ export function BookViewerV3({
               </p>
 
               <Button
-                onClick={() => setShowCompletion(false)}
+                onClick={() => {
+                  setShowCompletion(false)
+                  completionDismissedRef.current = true // Mark as dismissed to prevent showing again
+                }}
                 className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black py-8 rounded-2xl text-xl shadow-xl hover:scale-[1.02] transition-transform"
               >
                 Close & Keep Exploring
@@ -857,6 +1218,20 @@ export function BookViewerV3({
           font-family: 'Georgia', serif;
           margin-right: 0.5rem;
           color: inherit;
+        }
+
+        /* Skeleton loader animation */
+        @keyframes skeleton-pulse {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.5;
+          }
+        }
+
+        .skeleton-loader {
+          animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
       `}</style>
     </div>

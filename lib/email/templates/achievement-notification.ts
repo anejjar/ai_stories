@@ -46,14 +46,14 @@ export function generateAchievementNotificationEmail(data: AchievementNotificati
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       line-height: 1.6;
       color: #333;
-      max-width: 600px;
+      max-width: 700px;
       margin: 0 auto;
       padding: 20px;
       background-color: #f5f5f5;
     }
     .container {
       background: white;
-      border-radius: 16px;
+      border-radius: 24px;
       overflow: hidden;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }

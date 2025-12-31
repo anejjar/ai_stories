@@ -26,12 +26,47 @@ export interface BookPage {
   pageNumber: number
   text: string
   illustration_url: string
+  // Aspect ratio metadata (optional for backward compatibility)
+  width?: number
+  height?: number
+  aspectRatio?: 'square' | 'portrait' | 'landscape'
 }
 
 export interface IllustratedBookResult {
   content: string // Full story text
   bookPages: BookPage[]
   scenes: BookScene[]
+}
+
+/**
+ * Randomly select an aspect ratio for image generation
+ * Returns: 'square' | 'portrait' | 'landscape'
+ */
+function selectRandomAspectRatio(): 'square' | 'portrait' | 'landscape' {
+  const ratios: Array<'square' | 'portrait' | 'landscape'> = ['square', 'portrait', 'landscape']
+  return ratios[Math.floor(Math.random() * ratios.length)]
+}
+
+/**
+ * Map aspect ratio to image generation size
+ */
+function getSizeForAspectRatio(aspectRatio: 'square' | 'portrait' | 'landscape'): '1024x1024' | '1024x1792' | '1792x1024' {
+  switch (aspectRatio) {
+    case 'square':
+      return '1024x1024'
+    case 'portrait':
+      return '1024x1792'
+    case 'landscape':
+      return '1792x1024'
+  }
+}
+
+/**
+ * Get dimensions from size string
+ */
+function getDimensionsFromSize(size: string): { width: number; height: number } {
+  const [width, height] = size.split('x').map(Number)
+  return { width, height }
 }
 
 /**
@@ -117,10 +152,17 @@ export async function generateIllustratedBook(params: {
       console.log(`Generating illustration ${i + 1}/${scenes.length} for illustrated book...`)
       console.log(`Scene ${i + 1} prompt length: ${scene.illustrationPrompt.length} chars`)
 
+      // Randomly select aspect ratio for visual variety
+      const aspectRatio = selectRandomAspectRatio()
+      const size = getSizeForAspectRatio(aspectRatio)
+      const dimensions = getDimensionsFromSize(size)
+
+      console.log(`Selected aspect ratio: ${aspectRatio} (${size})`)
+
       const imageRequest: ImageGenerationRequest = {
         prompt: scene.illustrationPrompt,
         count: 1,
-        size: '1024x1792', // Portrait mode for better book layout
+        size: size,
         style: 'vivid', // Use vivid style for more engaging illustrations
       }
 
@@ -136,9 +178,12 @@ export async function generateIllustratedBook(params: {
         pageNumber: i + 1,
         text: scene.text,
         illustration_url: urls[0],
+        width: dimensions.width,
+        height: dimensions.height,
+        aspectRatio: aspectRatio,
       })
 
-      console.log(`✅ Successfully generated illustration ${i + 1}/${scenes.length}`)
+      console.log(`✅ Successfully generated illustration ${i + 1}/${scenes.length} with ${aspectRatio} aspect ratio`)
     } catch (error) {
       console.error(`❌ Error generating illustration for scene ${i + 1}:`, error)
       console.error('Error details:', {

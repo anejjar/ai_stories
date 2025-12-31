@@ -40,7 +40,7 @@ export function generateBaseEmail(options: BaseEmailOptions): { html: string } {
     <tr>
       <td align="center">
         <!-- Main container -->
-        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); max-width: 600px; width: 100%;">
+        <table role="presentation" width="700" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); max-width: 700px; width: 100%;">
           
           <!-- Header with gradient -->
           <tr>
@@ -54,7 +54,7 @@ export function generateBaseEmail(options: BaseEmailOptions): { html: string } {
 
           <!-- Content -->
           <tr>
-            <td style="padding: 40px 32px;">
+            <td style="padding: 40px 40px;">
               ${content}
               
               ${cta ? `
@@ -74,7 +74,7 @@ export function generateBaseEmail(options: BaseEmailOptions): { html: string } {
 
           <!-- Footer -->
           <tr>
-            <td style="padding: 24px 32px 32px; background-color: #f9fafb; border-top: 1px solid #e5e7eb;">
+            <td style="padding: 32px 40px; background-color: #f9fafb; border-top: 1px solid #e5e7eb;">
               ${footerNote ? `
               <p style="margin: 0 0 16px; font-size: 14px; line-height: 1.6; color: #6b7280; text-align: center;">
                 ${footerNote}
@@ -89,7 +89,7 @@ export function generateBaseEmail(options: BaseEmailOptions): { html: string } {
         </table>
 
         <!-- Unsubscribe note -->
-        <p style="margin: 16px 0 0; font-size: 11px; color: #9ca3af; text-align: center; max-width: 600px; padding: 0 32px;">
+        <p style="margin: 16px 0 0; font-size: 11px; color: #9ca3af; text-align: center; max-width: 700px; padding: 0 32px;">
           If you didn't request this email, you can safely ignore it.
         </p>
       </td>

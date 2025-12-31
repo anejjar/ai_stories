@@ -69,13 +69,15 @@ function validateImageUrls(imageUrls: string[] | null | undefined): string | nul
       return `Image URL at index ${i} must be a string`
     }
     
-    if (url.length > 2000) {
-      return `Image URL at index ${i} is too long (${url.length} characters, maximum: 2000)`
-    }
-    
     // Basic URL validation
     if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('data:image/')) {
       return `Image URL at index ${i} has invalid format`
+    }
+    
+    // Allow data:image URLs (base64) since they will be uploaded to storage and replaced with proper URLs
+    // Only validate length for non-data URLs
+    if (!url.startsWith('data:image/') && url.length > 2000) {
+      return `Image URL at index ${i} is too long (${url.length} characters, maximum: 2000)`
     }
   }
   
@@ -113,7 +115,11 @@ function validateBookPages(bookPages: any[] | null | undefined): string | null {
       return `Book page at index ${i} illustration_url must be a string`
     }
     
-    if (page.illustration_url && page.illustration_url.length > 2000) {
+    // Allow data:image URLs (base64) since they will be uploaded to storage and replaced with proper URLs
+    // Only validate length for non-data URLs
+    if (page.illustration_url && 
+        !page.illustration_url.startsWith('data:image/') && 
+        page.illustration_url.length > 2000) {
       return `Book page at index ${i} illustration_url is too long (${page.illustration_url.length} characters, maximum: 2000)`
     }
   }

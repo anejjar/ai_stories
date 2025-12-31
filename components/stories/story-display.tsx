@@ -50,6 +50,8 @@ export function StoryDisplay({ story, onBack, viewerVersion = 'v3' }: StoryDispl
   const [unlockedAchievements, setUnlockedAchievements] = useState<Achievement[]>([])
   const [currentAchievementIndex, setCurrentAchievementIndex] = useState(0)
   const [completedPages, setCompletedPages] = useState<number[]>([])
+  // Track if achievement modals have been dismissed to prevent showing again
+  const achievementsDismissedRef = useRef(false)
   const isFamily = userProfile?.subscriptionTier === 'family'
   const isPro = userProfile?.subscriptionTier === 'pro' || isFamily
   const isIllustratedBook = story.isIllustratedBook && story.bookPages && story.bookPages.length > 0
@@ -178,9 +180,10 @@ export function StoryDisplay({ story, onBack, viewerVersion = 'v3' }: StoryDispl
       // Show next achievement
       setCurrentAchievementIndex(currentAchievementIndex + 1)
     } else {
-      // All achievements shown, clear state
+      // All achievements shown, clear state and mark as dismissed
       setUnlockedAchievements([])
       setCurrentAchievementIndex(0)
+      achievementsDismissedRef.current = true // Mark as dismissed to prevent showing again
     }
   }
 
@@ -453,7 +456,7 @@ export function StoryDisplay({ story, onBack, viewerVersion = 'v3' }: StoryDispl
           </div>
         )}
 
-        {/* Footer Navigation */}
+        {/* Footer Navigation
         <div className="bg-white p-8 md:p-10 rounded-[3rem] border-4 border-gray-100 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 rounded-2xl bg-purple-50 flex items-center justify-center text-3xl">👶</div>
@@ -465,12 +468,12 @@ export function StoryDisplay({ story, onBack, viewerVersion = 'v3' }: StoryDispl
               {isOwner ? "LIBRARY 📚" : "BACK TO DISCOVER 🧭"}
             </Button>
           </Link>
-        </div>
+        </div> */}
       </div>
 
       <AchievementUnlockModal
         achievement={currentAchievement}
-        isOpen={!!currentAchievement}
+        isOpen={!!currentAchievement && !achievementsDismissedRef.current}
         onClose={handleCloseAchievement}
       />
     </div>

@@ -51,6 +51,10 @@ export interface BookPage {
   pageNumber: number
   text: string
   illustration_url: string
+  // Aspect ratio metadata (optional for backward compatibility)
+  width?: number
+  height?: number
+  aspectRatio?: 'square' | 'portrait' | 'landscape'
 }
 
 export interface Story {

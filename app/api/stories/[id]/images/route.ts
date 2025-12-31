@@ -120,16 +120,38 @@ export async function POST(
         appearance
       )
 
+    // Helper function to randomly select aspect ratio
+    const selectRandomAspectRatio = (): 'square' | 'portrait' | 'landscape' => {
+      const ratios: Array<'square' | 'portrait' | 'landscape'> = ['square', 'portrait', 'landscape']
+      return ratios[Math.floor(Math.random() * ratios.length)]
+    }
+
+    // Helper function to map aspect ratio to size
+    const getSizeForAspectRatio = (aspectRatio: 'square' | 'portrait' | 'landscape'): '1024x1024' | '1024x1792' | '1792x1024' => {
+      switch (aspectRatio) {
+        case 'square':
+          return '1024x1024'
+        case 'portrait':
+          return '1024x1792'
+        case 'landscape':
+          return '1792x1024'
+      }
+    }
+
     // Generate images using configured image provider
     const providerManager = getProviderManager()
     const imageUrls: string[] = []
 
     for (const prompt of imagePrompts) {
       try {
+        // Randomly select aspect ratio for visual variety
+        const aspectRatio = selectRandomAspectRatio()
+        const size = getSizeForAspectRatio(aspectRatio)
+
         const imageRequest: ImageGenerationRequest = {
           prompt,
           count: 1,
-          size: '1024x1024',
+          size: size,
           style: style || 'natural',
         }
 
@@ -159,14 +181,6 @@ export async function POST(
 
     console.log(`📊 Upload complete: ${successfulResults.length}/${imageUrls.length} successful`)
 
-    // Determine upload status
-    let uploadStatus: 'complete' | 'partial' | 'failed' = 'complete'
-    if (failedResults.length === uploadResults.length) {
-      uploadStatus = 'failed'
-    } else if (failedResults.length > 0) {
-      uploadStatus = 'partial'
-    }
-
     // Get successful upload URLs
     const storageUrls = getSuccessfulUploadUrls(successfulResults)
     
@@ -177,7 +191,6 @@ export async function POST(
     const updatePayload: Record<string, any> = {
       has_images: storageUrls.length > 0,
       image_urls: finalImageUrls,
-      image_upload_status: uploadStatus,
     }
 
     try {

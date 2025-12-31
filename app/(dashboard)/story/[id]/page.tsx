@@ -15,7 +15,7 @@ import type { Story } from '@/types'
 export default function StoryPage() {
   const params = useParams()
   const router = useRouter()
-  const { user, userProfile, getAccessToken } = useAuth()
+  const { user, userProfile, getAccessToken, loading: authLoading } = useAuth()
   const { isTrialCompleted, storiesGenerated, isFirstStory } = useTrial()
   const [story, setStory] = useState<Story | null>(null)
   const [loading, setLoading] = useState(true)
@@ -36,6 +36,12 @@ export default function StoryPage() {
       if (!storyId) {
         setLoading(false)
         return
+      }
+
+      // Wait for auth to be ready before fetching
+      // This prevents the race condition where we fetch without a token
+      if (authLoading) {
+        return // Don't fetch yet, wait for auth to finish loading
       }
 
       // Skip if we already have this story loaded (prevents duplicate fetches)
@@ -117,7 +123,7 @@ export default function StoryPage() {
 
     fetchStory()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, storyId]) // Only re-fetch when user ID or story ID changes
+  }, [authLoading, user?.id, storyId]) // Wait for auth, then re-fetch when user ID or story ID changes
 
   if (loading) {
     return (

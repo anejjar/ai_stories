@@ -442,11 +442,6 @@ export async function POST(request: NextRequest) {
       bookPages: undefined, // Will add after upload
     })
 
-    // Add image_upload_status if we have images to upload
-    if (bookPages.length > 0) {
-      (storyData as any).image_upload_status = 'pending'
-    }
-
     const createdStory = await retryDatabaseOperation(async () => {
       const { data, error } = await supabaseAdmin
         .from('stories')
@@ -517,7 +512,6 @@ export async function POST(request: NextRequest) {
               .update({
                 image_urls: storageUrls,
                 book_pages: uploadedPages,
-                image_upload_status: uploadStatus
               })
               .eq('id', storyId)
 
@@ -529,15 +523,6 @@ export async function POST(request: NextRequest) {
           console.log(`✅ Story updated with ${uploadedPages.length}/${bookPages.length} images (status: ${uploadStatus})`)
         } catch (updateError) {
           console.error('⚠️ Failed to update story with images:', updateError)
-          // Mark as incomplete for cleanup
-          try {
-            await supabaseAdmin
-              .from('stories')
-              .update({ image_upload_status: 'partial' })
-              .eq('id', storyId)
-          } catch (markError) {
-            console.error('Failed to mark story as incomplete:', markError)
-          }
           
           // Cleanup uploaded images since update failed
           console.log('Cleaning up uploaded images due to update failure...')
@@ -548,14 +533,6 @@ export async function POST(request: NextRequest) {
       } else {
         // All uploads failed
         console.error('❌ All image uploads failed - story saved without images')
-        try {
-          await supabaseAdmin
-            .from('stories')
-            .update({ image_upload_status: 'failed' })
-            .eq('id', storyId)
-        } catch (markError) {
-          console.error('Failed to mark story as failed:', markError)
-        }
       }
     }
 
