@@ -93,3 +93,23 @@ export function canGenerateImages(userTier: SubscriptionTier): boolean {
   return userTier === 'family'
 }
 
+/**
+ * Check if a user's email is verified
+ */
+export async function checkEmailVerification(userId: string): Promise<boolean> {
+  try {
+    const { data: { user }, error } = await supabaseAdmin.auth.admin.getUserById(userId)
+
+    if (error || !user) {
+      console.error('Failed to check email verification:', error)
+      return false
+    }
+
+    // email_confirmed_at is set when user clicks verification link
+    return !!user.email_confirmed_at
+  } catch (error) {
+    console.error('Error checking email verification:', error)
+    return false
+  }
+}
+

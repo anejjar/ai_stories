@@ -2,6 +2,7 @@
 
 import { supabase } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
+import { FEATURES } from '@/lib/config/features'
 
 /**
  * Sign in with email and password
@@ -54,6 +55,14 @@ export async function signUpWithEmail(email: string, password: string) {
  * Sign in with Google
  */
 export async function signInWithGoogle() {
+  // Block if Google auth is disabled
+  if (!FEATURES.GOOGLE_AUTH_ENABLED) {
+    return {
+      user: null,
+      error: 'Google sign-in is currently disabled. Please use email/password to sign in.'
+    }
+  }
+
   try {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -78,6 +87,40 @@ export async function signInWithGoogle() {
 export async function signOutUser() {
   try {
     const { error } = await supabase.auth.signOut()
+    if (error) {
+      return { error: getAuthErrorMessage(error) }
+    }
+    return { error: null }
+  } catch (error: any) {
+    return { error: getAuthErrorMessage(error) }
+  }
+}
+
+/**
+ * Send password reset email
+ */
+export async function sendPasswordResetEmail(email: string) {
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/reset-password`,
+    })
+    if (error) {
+      return { error: getAuthErrorMessage(error) }
+    }
+    return { error: null }
+  } catch (error: any) {
+    return { error: getAuthErrorMessage(error) }
+  }
+}
+
+/**
+ * Update user password
+ */
+export async function updatePassword(newPassword: string) {
+  try {
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    })
     if (error) {
       return { error: getAuthErrorMessage(error) }
     }

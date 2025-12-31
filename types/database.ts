@@ -38,6 +38,7 @@ export interface DatabaseStory {
   is_selected_draft: boolean | null // True if this draft was selected as final
   is_illustrated_book: boolean | null // True if this is an illustrated book format (Family Plan feature)
   book_pages: BookPage[] | null // JSONB array of structured pages with illustrations (Family Plan feature)
+  image_upload_status: 'pending' | 'complete' | 'failed' | 'partial' | null // Status of image uploads
   visibility: 'public' | 'private' | null
   published_at: string | null // ISO timestamp
   view_count: number | null

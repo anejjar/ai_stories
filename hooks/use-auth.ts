@@ -161,6 +161,7 @@ export function useAuth() {
     userProfile: storeUser,
     getAccessToken,
     refreshProfile,
+    isEmailVerified: supabaseUser?.email_confirmed_at ? true : false,
   }
 }
 

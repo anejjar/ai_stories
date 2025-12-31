@@ -315,9 +315,16 @@ export function buildEnhancedIllustrationPrompt(request: IllustrationRequest): s
   const includeCharacter = request.includeCharacter !== false
   const signatureAccessory = SIGNATURE_ACCESSORIES[request.theme] || SIGNATURE_ACCESSORIES['Adventure']
 
-  const sceneContext = request.sceneNumber && request.totalScenes
-    ? `\n\nStory Continuity: This is scene ${request.sceneNumber} of ${request.totalScenes}. Use EXACTLY the same art style, line weight, color palette, and rendering technique as all other scenes in this story. The visual style must be indistinguishable between illustrations - same brushwork, same level of detail, same artistic choices throughout.`
-    : ''
+  // Build stronger consistency context with reference to previous scenes
+  let sceneContext = ''
+  if (request.sceneNumber && request.totalScenes) {
+    if (request.sceneNumber === 1) {
+      sceneContext = `\n\nStory Continuity: This is scene 1 of ${request.totalScenes}. Establish the visual style that will be maintained EXACTLY throughout all ${request.totalScenes} scenes. Use consistent art style, line weight, color palette, rendering technique, brushwork quality, and level of detail. This style signature must be identical in all subsequent scenes.`
+    } else {
+      const previousScenes = request.sceneNumber > 1 ? `scenes 1-${request.sceneNumber - 1}` : 'scene 1'
+      sceneContext = `\n\nStory Continuity: This is scene ${request.sceneNumber} of ${request.totalScenes}. CRITICAL: Use EXACTLY the same art style, line weight, color palette, rendering technique, brushwork quality, and level of detail as ${previousScenes}. The visual style must be visually indistinguishable - same artistic choices, same color treatment, same lighting approach, same texture quality. Match the style signature established in scene 1 precisely.`
+    }
+  }
 
   // Build prompt based on whether character is included
   let prompt: string
@@ -334,7 +341,7 @@ Character: ${request.childName}, ${request.childDescription}, wearing a ${signat
 
 ${request.profileImageUrl ? `Reference: Character appearance based on provided profile image for visual consistency.` : ''}
 
-Style: ${styleGuide.description}. ${styleGuide.techniques}. ${styleGuide.characteristics.slice(0, 3).join(', ')}. Inspired by ${styleGuide.referenceArtists[0]} style.
+Style: ${styleGuide.description}. ${styleGuide.techniques}. ${styleGuide.characteristics.slice(0, 3).join(', ')}. Inspired by ${styleGuide.referenceArtists[0]} style. MAINTAIN CONSISTENT STYLE SIGNATURE: Use identical rendering technique, line quality, color saturation, and detail level across all scenes in this story.
 
 Colors (${request.theme}): ${colorPalette.primary}, ${colorPalette.secondary}. ${colorPalette.lighting}. ${colorPalette.mood}.
 
@@ -351,7 +358,7 @@ NO: text, words, letters, speech bubbles, multiple scenes, cluttered backgrounds
 
 Character: ${request.childName}, friendly child, wearing a ${signatureAccessory} (IMPORTANT: always show this accessory for character consistency). Make ${request.childName} the clear focal point with expressive ${mood} emotion.
 
-Style: ${styleGuide.description}. ${styleGuide.techniques}. ${styleGuide.characteristics.slice(0, 3).join(', ')}. Inspired by ${styleGuide.referenceArtists[0]} style.
+Style: ${styleGuide.description}. ${styleGuide.techniques}. ${styleGuide.characteristics.slice(0, 3).join(', ')}. Inspired by ${styleGuide.referenceArtists[0]} style. MAINTAIN CONSISTENT STYLE SIGNATURE: Use identical rendering technique, line quality, color saturation, and detail level across all scenes in this story.
 
 Colors (${request.theme}): ${colorPalette.primary}, ${colorPalette.secondary}. ${colorPalette.lighting}. ${colorPalette.mood}.
 
@@ -370,15 +377,22 @@ NO: text, words, letters, speech bubbles, multiple scenes, cluttered backgrounds
       .replace(/\b(he|she|they|him|her|them)\b/gi, 'it')
       .replace(/character|person|child/gi, 'element')
 
-    const sceneContext = request.sceneNumber && request.totalScenes
-      ? `\n\nStory Continuity: This is scene ${request.sceneNumber} of ${request.totalScenes}. Maintain EXACTLY the same art style, color treatment, lighting approach, and atmospheric rendering as all other scenes. The environment/landscape style must be visually cohesive with the entire story - same artistic technique, same brushwork quality, same level of detail throughout.`
-      : ''
+    // Build stronger consistency context for environment-only scenes
+    let sceneContext = ''
+    if (request.sceneNumber && request.totalScenes) {
+      if (request.sceneNumber === 1) {
+        sceneContext = `\n\nStory Continuity: This is scene 1 of ${request.totalScenes}. Establish the environment visual style that will be maintained EXACTLY throughout all ${request.totalScenes} scenes. Use consistent art style, color treatment, lighting approach, atmospheric rendering, brushwork quality, and detail level. This style signature must be identical in all subsequent scenes.`
+      } else {
+        const previousScenes = request.sceneNumber > 1 ? `scenes 1-${request.sceneNumber - 1}` : 'scene 1'
+        sceneContext = `\n\nStory Continuity: This is scene ${request.sceneNumber} of ${request.totalScenes}. CRITICAL: Maintain EXACTLY the same art style, color treatment, lighting approach, atmospheric rendering, brushwork quality, and detail level as ${previousScenes}. The environment/landscape style must be visually indistinguishable - same artistic technique, same color saturation, same texture quality. Match the style signature established in scene 1 precisely.`
+      }
+    }
 
     prompt = `Children's book illustration: ${environmentScene}
 
 Focus: Beautiful ${request.theme.toLowerCase()} environment and setting. NO characters or people. Focus entirely on the landscape, scenery, and atmosphere.
 
-Style: ${styleGuide.description}. ${styleGuide.techniques}. ${styleGuide.characteristics.slice(0, 3).join(', ')}. Inspired by ${styleGuide.referenceArtists[0]} style.
+Style: ${styleGuide.description}. ${styleGuide.techniques}. ${styleGuide.characteristics.slice(0, 3).join(', ')}. Inspired by ${styleGuide.referenceArtists[0]} style. MAINTAIN CONSISTENT STYLE SIGNATURE: Use identical rendering technique, color treatment, lighting approach, and detail level across all scenes in this story.
 
 Colors (${request.theme}): ${colorPalette.primary}, ${colorPalette.secondary}. ${colorPalette.lighting}. ${colorPalette.mood}.
 

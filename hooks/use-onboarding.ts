@@ -41,8 +41,15 @@ export function useOnboarding(): UseOnboardingReturn {
   // Extract onboarding state from profile
   const onboardingCompleted = profile?.onboardingCompleted ?? false
   const onboardingStep = profile?.onboardingStep ?? 'welcome'
-  const onboardingDismissedAt = profile?.onboardingDismissedAt ?? null
+  const onboardingDismissedAtRaw = profile?.onboardingDismissedAt ?? null
   const onboardingChecklist = profile?.onboardingChecklist ?? null
+
+  // Convert onboardingDismissedAt to Date if it's a string (from database)
+  const onboardingDismissedAt: Date | null = onboardingDismissedAtRaw
+    ? onboardingDismissedAtRaw instanceof Date
+      ? onboardingDismissedAtRaw
+      : new Date(onboardingDismissedAtRaw)
+    : null
 
   // Computed values
   const now = new Date()

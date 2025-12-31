@@ -14,11 +14,13 @@ import type { StoryInput, Story } from '@/types'
 import { CreatePageTour } from '@/components/onboarding/create-page-tour'
 import { SuccessModal } from '@/components/onboarding/success-modal'
 import { useOnboarding } from '@/hooks/use-onboarding'
+import { EmailVerificationRequired } from '@/components/auth/email-verification-required'
+import { supabase } from '@/lib/supabase/client'
 
 function CreateContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { user, userProfile, getAccessToken } = useAuth()
+  const { user, userProfile, getAccessToken, isEmailVerified } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
@@ -142,6 +144,22 @@ function CreateContent() {
     setGenerateDrafts(false)
   }
 
+  const handleResendVerification = async () => {
+    if (!user?.email) return
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: user.email,
+      })
+
+      if (error) throw error
+      toast.success('Email sent!', 'Check your inbox for the verification link.')
+    } catch (error) {
+      toast.error('Failed to resend', 'Please try again later.')
+    }
+  }
+
   // Show upgrade modal if coming from story completion
   useEffect(() => {
     if (searchParams.get('upgrade') === 'true') {
@@ -157,6 +175,18 @@ function CreateContent() {
       // For now, we'll show modal when they try to create
     }
   }, [userProfile])
+
+  // Check email verification
+  if (user && !isEmailVerified) {
+    return (
+      <div className="py-12 px-4 max-w-3xl mx-auto space-y-12">
+        <EmailVerificationRequired
+          email={user.email}
+          onResend={handleResendVerification}
+        />
+      </div>
+    )
+  }
 
   return (
     <>

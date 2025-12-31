@@ -27,7 +27,24 @@ export async function GET(request: Request) {
         },
       }
     )
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+
+    // Check if this is a Google OAuth login
+    if (!error && data?.user) {
+      const isGoogleUser = data.user.app_metadata?.provider === 'google'
+
+      if (isGoogleUser) {
+        // Sign out the user immediately
+        await supabase.auth.signOut()
+
+        // Redirect to login with error message
+        return NextResponse.redirect(
+          `${origin}/login?error=${encodeURIComponent('Google sign-in is currently disabled. Please use email/password to sign in.')}`
+        )
+      }
+    }
+
     if (!error) {
       return NextResponse.redirect(`${origin}${next}`)
     }

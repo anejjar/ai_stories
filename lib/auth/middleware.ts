@@ -1,7 +1,7 @@
 // Authentication middleware for API routes
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getUserIdFromRequest } from './helpers'
+import { getUserIdFromRequest, checkEmailVerification } from './helpers'
 
 export interface AuthenticatedRequest extends NextRequest {
   userId: string
@@ -21,6 +21,22 @@ export async function requireAuth(
       response: NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
+      ),
+    }
+  }
+
+  // Check email verification
+  const isEmailVerified = await checkEmailVerification(userId)
+  if (!isEmailVerified) {
+    return {
+      userId: '',
+      response: NextResponse.json(
+        {
+          success: false,
+          error: 'Please verify your email before creating stories. Check your inbox for the verification link.',
+          data: { requiresEmailVerification: true }
+        },
+        { status: 403 }
       ),
     }
   }

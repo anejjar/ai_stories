@@ -13,6 +13,7 @@ import { useState } from 'react'
 import { SubscriptionToggle } from '@/components/test/subscription-toggle'
 import { ChildProfileManager } from '@/components/child-profiles/child-profile-manager'
 import { UsageDashboard } from '@/components/usage/usage-dashboard'
+import { ChangePassword } from '@/components/profile/change-password'
 
 export default function ProfilePage() {
   const { userProfile } = useAuth()
@@ -159,6 +160,11 @@ export default function ProfilePage() {
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Change Password */}
+          <div className="md:col-span-2">
+            <ChangePassword />
           </div>
 
           {/* Usage Statistics */}

@@ -10,9 +10,11 @@ import type { ApiResponse, StoryInput, Story } from '@/types'
 import { storyToDatabaseStory, databaseStoryToStory, firestoreStoryToStory, type DatabaseStory } from '@/types/database'
 import { ProviderError } from '@/lib/ai/types'
 import { generateIllustratedBook, type BookPage } from '@/lib/ai/illustrated-book-generator'
-import { uploadImageToStorage } from '@/lib/supabase/storage'
+import { uploadImageToStorage, uploadImagesToStorage, getSuccessfulUploadUrls, deleteStoryImages } from '@/lib/supabase/storage'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { getMemoizedUserProfile } from '@/lib/api/user'
+import { retryDatabaseOperation } from '@/lib/database/retry'
+import { validateStoryData, sanitizeStoryContent } from '@/lib/validation/story-validator'
 
 // Helper to get user profile from Supabase (server-side) - Now using memoized version
 async function getUserProfile(userId: string) {
@@ -395,14 +397,35 @@ export async function POST(request: NextRequest) {
       storyInput.theme
     )
 
-    // STEP 1: Save story to database WITHOUT images first (to get story ID)
+    // STEP 1: Validate story data before saving
+    const sanitizedContent = sanitizeStoryContent(storyContent)
+    const storyValidation = validateStoryData({
+      userId,
+      title: storyTitle,
+      content: sanitizedContent,
+      theme: storyInput.theme,
+      imageUrls: undefined, // Will validate after upload
+      bookPages: bookPages.length > 0 ? bookPages : undefined
+    })
+
+    if (!storyValidation.isValid) {
+      return NextResponse.json<ApiResponse>(
+        {
+          success: false,
+          error: `Validation failed: ${storyValidation.errors.join(', ')}`,
+        },
+        { status: 400 }
+      )
+    }
+
+    // STEP 2: Save story to database WITHOUT images first (to get story ID)
     // Base64 images are too large (~13MB) and cause database timeout
     console.log('💾 Saving story metadata to database (without images)...')
 
     const storyData = storyToDatabaseStory({
       userId,
       title: storyTitle,
-      content: storyContent,
+      content: sanitizedContent,
       // Backward compatibility fields
       childName: isMultiChild ? storyInput.children![0].name : storyInput.childName!,
       adjectives: isMultiChild ? storyInput.children![0].adjectives : storyInput.adjectives!,
@@ -419,93 +442,120 @@ export async function POST(request: NextRequest) {
       bookPages: undefined, // Will add after upload
     })
 
-    const { data: createdStory, error: insertError } = await supabaseAdmin
-      .from('stories')
-      .insert(storyData as any)
-      .select()
-      .single<DatabaseStory>()
-
-    if (insertError || !createdStory) {
-      console.error('❌ Supabase insert error:', {
-        message: insertError?.message,
-        details: insertError?.details,
-        hint: insertError?.hint,
-        code: insertError?.code
-      })
-      throw new Error(`Failed to save story to database: ${insertError?.message || 'Unknown error'}`)
+    // Add image_upload_status if we have images to upload
+    if (bookPages.length > 0) {
+      (storyData as any).image_upload_status = 'pending'
     }
+
+    const createdStory = await retryDatabaseOperation(async () => {
+      const { data, error } = await supabaseAdmin
+        .from('stories')
+        .insert(storyData as any)
+        .select()
+        .single<DatabaseStory>()
+
+      if (error || !data) {
+        console.error('❌ Supabase insert error:', {
+          message: error?.message,
+          details: error?.details,
+          hint: error?.hint,
+          code: error?.code
+        })
+        throw new Error(`Failed to save story to database: ${error?.message || 'Unknown error'}`)
+      }
+
+      return data
+    })
 
     console.log(`✅ Story saved to database with ID: ${createdStory.id}`)
 
-    // STEP 2: Upload images to storage in parallel batches
-    // Parallel processing: compress and upload images simultaneously
+    // STEP 3: Upload images to storage with retry and track for cleanup
+    const storyId = createdStory.id
+    
     if (isIllustratedBook && bookPages.length > 0) {
-      console.log(`📤 Uploading ${bookPages.length} images to storage in parallel...`)
+      console.log(`📤 Uploading ${bookPages.length} images to storage...`)
 
-      const storyId = createdStory.id
-
-      // Create upload promises - no timeout, trust Supabase's built-in timeout
-      const uploadPromises = bookPages.map(async (page, index) => {
-        try {
-          console.log(`Starting upload ${index + 1}/${bookPages.length}...`)
-
-          // Upload without artificial timeout (Supabase has built-in timeouts)
-          // Compression + upload typically takes 10-30s per image
-          const storageUrl = await uploadImageToStorage(page.illustration_url, storyId, index)
-
-          console.log(`✅ Image ${index + 1} uploaded successfully`)
-
-          return {
-            success: true,
-            index,
-            page: {
-              ...page,
-              illustration_url: storageUrl
-            },
-            storageUrl
-          }
-        } catch (uploadError) {
-          console.error(`⚠️ Failed to upload image ${index + 1}:`, uploadError)
-          return {
-            success: false,
-            index,
-            page,
-            error: uploadError
-          }
-        }
-      })
-
-      // Wait for all uploads to complete (in parallel)
       const uploadStartTime = Date.now()
-      const results = await Promise.all(uploadPromises)
+      
+      // Upload images sequentially with detailed results
+      const uploadResults = await uploadImagesToStorage(
+        bookPages.map(page => page.illustration_url),
+        storyId
+      )
+      
       const uploadDuration = ((Date.now() - uploadStartTime) / 1000).toFixed(1)
-
-      // Extract successful uploads
-      const successfulResults = results.filter(r => r.success)
-      const uploadedPages = successfulResults.map(r => r.page)
-      const storageUrls = successfulResults.map(r => r.storageUrl)
+      const successfulResults = uploadResults.filter(r => r.success)
+      const failedResults = uploadResults.filter(r => !r.success)
 
       console.log(`📊 Upload complete: ${successfulResults.length}/${bookPages.length} successful in ${uploadDuration}s`)
 
+      // Determine upload status
+      let uploadStatus: 'complete' | 'partial' | 'failed' = 'complete'
+      if (failedResults.length === uploadResults.length) {
+        uploadStatus = 'failed'
+      } else if (failedResults.length > 0) {
+        uploadStatus = 'partial'
+      }
+
       // Update story with successfully uploaded images
-      if (uploadedPages.length > 0) {
+      if (successfulResults.length > 0) {
+        const storageUrls = getSuccessfulUploadUrls(successfulResults)
+        const uploadedPages = bookPages.map((page, index) => {
+          const result = uploadResults.find(r => r.index === index && r.success)
+          return {
+            ...page,
+            illustration_url: result?.url || page.illustration_url
+          }
+        }).filter((page, index) => uploadResults[index]?.success) // Only include successful uploads
+
         console.log(`Updating story with ${uploadedPages.length} uploaded images...`)
 
-        const { error: updateError } = await (supabaseAdmin
-          .from('stories') as any)
-          .update({
-            image_urls: storageUrls,
-            book_pages: uploadedPages
-          })
-          .eq('id', storyId)
+        try {
+          await retryDatabaseOperation(async () => {
+            const { error: updateError } = await (supabaseAdmin
+              .from('stories') as any)
+              .update({
+                image_urls: storageUrls,
+                book_pages: uploadedPages,
+                image_upload_status: uploadStatus
+              })
+              .eq('id', storyId)
 
-        if (updateError) {
+            if (updateError) {
+              throw new Error(`Failed to update story with images: ${updateError.message}`)
+            }
+          })
+
+          console.log(`✅ Story updated with ${uploadedPages.length}/${bookPages.length} images (status: ${uploadStatus})`)
+        } catch (updateError) {
           console.error('⚠️ Failed to update story with images:', updateError)
-        } else {
-          console.log(`✅ Story updated with ${uploadedPages.length}/${bookPages.length} images`)
+          // Mark as incomplete for cleanup
+          try {
+            await supabaseAdmin
+              .from('stories')
+              .update({ image_upload_status: 'partial' })
+              .eq('id', storyId)
+          } catch (markError) {
+            console.error('Failed to mark story as incomplete:', markError)
+          }
+          
+          // Cleanup uploaded images since update failed
+          console.log('Cleaning up uploaded images due to update failure...')
+          await deleteStoryImages(storyId)
+          
+          throw new Error(`Story saved but image update failed. Images have been cleaned up.`)
         }
       } else {
+        // All uploads failed
         console.error('❌ All image uploads failed - story saved without images')
+        try {
+          await supabaseAdmin
+            .from('stories')
+            .update({ image_upload_status: 'failed' })
+            .eq('id', storyId)
+        } catch (markError) {
+          console.error('Failed to mark story as failed:', markError)
+        }
       }
     }
 
@@ -518,14 +568,29 @@ export async function POST(request: NextRequest) {
       console.log(`[Family Plan] Usage incremented for user ${userId}, illustrated: ${isIllustratedBook}`)
     }
 
-    const story: Story = databaseStoryToStory(createdStory)
+    // Reload story to get latest data including image URLs
+    const { data: reloadedStory } = await supabaseAdmin
+      .from('stories')
+      .select('*')
+      .eq('id', createdStory.id)
+      .single<DatabaseStory>()
+
+    const responseStory: Story = reloadedStory ? databaseStoryToStory(reloadedStory) : databaseStoryToStory(createdStory)
 
     return NextResponse.json<ApiResponse<Story>>({
       success: true,
-      data: story,
+      data: responseStory,
     })
   } catch (error) {
     console.error('Error creating story:', error)
+
+    // Cleanup uploaded images if story creation failed
+    if (error instanceof Error && error.message.includes('story saved')) {
+      // Images already cleaned up
+    } else {
+      // Try to cleanup any uploaded images if we have a story ID
+      // (This would require tracking the storyId in the catch block, which we can't easily do)
+    }
 
     // Handle specific error types
     if (error instanceof Error) {
@@ -540,6 +605,16 @@ export async function POST(request: NextRequest) {
         )
       }
 
+      if (error.message.includes('Validation failed')) {
+        return NextResponse.json<ApiResponse>(
+          {
+            success: false,
+            error: error.message,
+          },
+          { status: 400 }
+        )
+      }
+
       if (error instanceof ProviderError || error.message.includes('API') || error.message.includes('provider')) {
         return NextResponse.json<ApiResponse>(
           {
@@ -549,6 +624,15 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         )
       }
+
+      // Return detailed error message for debugging
+      return NextResponse.json<ApiResponse>(
+        {
+          success: false,
+          error: error.message || 'Failed to create story',
+        },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json<ApiResponse>(
