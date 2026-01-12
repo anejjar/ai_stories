@@ -208,7 +208,30 @@ export function getVariantIdForTier(tier: SubscriptionTier): string | null {
     pro: process.env.LEMONSQUEEZY_PRO_VARIANT_ID || null,
     family: process.env.LEMONSQUEEZY_FAMILY_VARIANT_ID || null,
   }
-  return variantIds[tier]
+  const variantId = variantIds[tier]
+  
+  // Log warning if variant ID is missing
+  if (tier !== 'trial' && !variantId) {
+    console.warn(`⚠️ LEMONSQUEEZY_${tier.toUpperCase()}_VARIANT_ID is not configured`)
+  }
+  
+  return variantId
+}
+
+/**
+ * Validate that a variant ID exists in Lemon Squeezy
+ * This can be used to verify configuration before creating checkouts
+ */
+export async function validateVariantId(variantId: string): Promise<boolean> {
+  try {
+    const response = await lemonsqueezyRequest(`/variants/${variantId}`, {
+      method: 'GET',
+    })
+    return response.ok
+  } catch (error) {
+    console.error('Failed to validate variant ID:', variantId, error)
+    return false
+  }
 }
 
 /**

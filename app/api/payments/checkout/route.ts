@@ -40,6 +40,9 @@ export async function POST(request: NextRequest) {
   //   )
   // }
 
+  let tier: SubscriptionTier | undefined
+  let variantId: string | null = null
+
   try {
     if (!process.env.LEMONSQUEEZY_API_KEY) {
       return NextResponse.json<ApiResponse>(
@@ -52,7 +55,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { tier } = body
+    tier = body.tier
 
     if (!tier || (tier !== 'pro' && tier !== 'family')) {
       return NextResponse.json<ApiResponse>(
@@ -77,12 +80,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Get variant ID for tier
-    const variantId = getVariantIdForTier(tier as SubscriptionTier)
+    variantId = getVariantIdForTier(tier as SubscriptionTier)
     if (!variantId) {
+      logger.error(
+        'Variant ID not configured',
+        new Error(`Variant ID not configured for tier: ${tier}`),
+        {
+          endpoint: '/api/payments/checkout',
+          userId,
+          tier,
+          envVar: tier === 'pro' ? 'LEMONSQUEEZY_PRO_VARIANT_ID' : 'LEMONSQUEEZY_FAMILY_VARIANT_ID',
+        }
+      )
       return NextResponse.json<ApiResponse>(
         {
           success: false,
-          error: `Variant ID not configured for tier: ${tier}`,
+          error: `Variant ID not configured for tier: ${tier}. Please check your environment variables.`,
         },
         { status: 500 }
       )
@@ -140,7 +153,8 @@ export async function POST(request: NextRequest) {
       {
         endpoint: '/api/payments/checkout',
         userId,
-        tier: (error as any)?.tier || 'unknown',
+        tier: tier || 'unknown',
+        variantId: variantId || 'not-found',
         errorName,
         errorMessage,
         ...errorDetails,
@@ -167,7 +181,11 @@ export async function POST(request: NextRequest) {
           if (statusCode === 401) {
             userErrorMessage = 'Payment service authentication failed'
           } else if (statusCode === 404) {
-            userErrorMessage = 'Product or variant not found'
+            // 404 usually means variant doesn't exist
+            userErrorMessage = `Product variant not found. Please verify that the ${tier || 'subscription'} tier variant ID is correct in your Lemon Squeezy dashboard.`
+            if (isDevelopment) {
+              userErrorMessage += ` (Variant ID: ${variantId || 'not configured'})`
+            }
           } else if (statusCode === 422) {
             userErrorMessage = 'Invalid checkout configuration'
           } else if (statusCode >= 500) {
