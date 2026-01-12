@@ -37,9 +37,11 @@ const envSchema = z.object({
   // Cron Security
   CRON_SECRET: z.string().min(1).optional(),
 
-  // Redis (Rate Limiting)
-  UPSTASH_REDIS_REST_URL: z.string().url().optional(),
-  UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
+  // Redis (Rate Limiting) - Self-hosted Redis (e.g., Dokploy)
+  REDIS_HOST: z.string().optional(),
+  REDIS_PORT: z.string().optional(),
+  REDIS_PASSWORD: z.string().optional(),
+  REDIS_DB: z.string().optional(),
 
   // App
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),

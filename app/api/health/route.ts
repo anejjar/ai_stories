@@ -113,13 +113,25 @@ export async function GET(request: NextRequest) {
   try {
     const { isRedisConfigured } = await import('@/lib/rate-limit-redis')
     if (isRedisConfigured()) {
-      // Try a simple Redis operation
-      const { Redis } = await import('@upstash/redis')
+      // Try a simple Redis operation using the rate limiter's client
+      const Redis = (await import('ioredis')).default
+      const host = process.env.REDIS_HOST || 'localhost'
+      const port = parseInt(process.env.REDIS_PORT || '6379', 10)
+      const password = process.env.REDIS_PASSWORD
+      const db = parseInt(process.env.REDIS_DB || '0', 10)
+      
       const redis = new Redis({
-        url: process.env.UPSTASH_REDIS_REST_URL!,
-        token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+        host,
+        port,
+        password,
+        db,
+        enableReadyCheck: true,
+        maxRetriesPerRequest: 1,
+        lazyConnect: true,
       })
-      await withTimeout(redis.ping(), 3000)
+      
+      const pingPromise = redis.connect().then(() => redis.ping()).then(() => redis.quit())
+      await withTimeout(pingPromise, 3000)
       health.services.redis = 'up'
     } else {
       health.services.redis = 'unknown' // Not configured, not an error

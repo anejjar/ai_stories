@@ -1,9 +1,10 @@
 /**
- * Redis-based Rate Limiter using Upstash Redis
+ * Redis-based Rate Limiter using standard Redis (ioredis)
  * Production-ready rate limiting with persistence across server restarts
+ * Compatible with self-hosted Redis instances (e.g., Dokploy)
  */
 
-import { Redis } from '@upstash/redis'
+import Redis from 'ioredis'
 
 // Initialize Redis client (lazy initialization)
 let redis: Redis | null = null
@@ -13,18 +14,37 @@ function getRedisClient(): Redis {
     return redis
   }
 
-  const url = process.env.UPSTASH_REDIS_REST_URL
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN
+  const host = process.env.REDIS_HOST || 'localhost'
+  const port = parseInt(process.env.REDIS_PORT || '6379', 10)
+  const password = process.env.REDIS_PASSWORD
+  const db = parseInt(process.env.REDIS_DB || '0', 10)
 
-  if (!url || !token) {
-    throw new Error(
-      'Redis not configured. Please set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN environment variables.'
-    )
+  const config: any = {
+    host,
+    port,
+    db,
+    retryStrategy: (times: number) => {
+      const delay = Math.min(times * 50, 2000)
+      return delay
+    },
+    maxRetriesPerRequest: 3,
+    enableReadyCheck: true,
+    lazyConnect: false,
   }
 
-  redis = new Redis({
-    url,
-    token,
+  if (password) {
+    config.password = password
+  }
+
+  redis = new Redis(config)
+
+  // Handle connection errors
+  redis.on('error', (error) => {
+    console.error('Redis connection error:', error)
+  })
+
+  redis.on('connect', () => {
+    console.log('✅ Redis connected successfully')
   })
 
   return redis
@@ -75,7 +95,7 @@ export async function checkRateLimit(
     pipeline.zcard(storeKey)
 
     // Add current request timestamp
-    pipeline.zadd(storeKey, { score: now, member: `${now}-${Math.random()}` })
+    pipeline.zadd(storeKey, now, `${now}-${Math.random()}`)
 
     // Set expiry on the key
     pipeline.expire(storeKey, windowSeconds * 2) // 2x window for cleanup
@@ -83,7 +103,19 @@ export async function checkRateLimit(
     const results = await pipeline.exec()
 
     // Extract count (index 1 in results)
-    const count = (results[1] as number) || 0
+    // ioredis pipeline.exec() returns an array of [error, result] tuples
+    // results[1] is the zcard result: [error, count]
+    if (!results || results.length < 2) {
+      throw new Error('Redis pipeline execution failed')
+    }
+
+    const zcardResult = results[1]
+    if (!zcardResult || zcardResult[0]) {
+      // Error occurred in zcard command
+      throw zcardResult?.[0] || new Error('Redis zcard command failed')
+    }
+
+    const count = (zcardResult[1] as number) || 0
 
     // Check if over limit (count includes current request)
     if (count >= limit) {
@@ -179,5 +211,8 @@ export function getRateLimitHeaders(result: RateLimitResult): Record<string, str
  * Check if Redis is configured
  */
 export function isRedisConfigured(): boolean {
-  return !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)
+  // Redis is considered configured (defaults to localhost:6379 if not set)
+  // This allows Redis to work out of the box for local development
+  // For production, set REDIS_HOST explicitly
+  return true // Always available (defaults to localhost)
 }
