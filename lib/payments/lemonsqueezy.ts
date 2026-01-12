@@ -221,16 +221,43 @@ export function getVariantIdForTier(tier: SubscriptionTier): string | null {
 /**
  * Validate that a variant ID exists in Lemon Squeezy
  * This can be used to verify configuration before creating checkouts
+ * Returns the variant data if valid, null if not found
  */
-export async function validateVariantId(variantId: string): Promise<boolean> {
+export async function validateVariantId(variantId: string): Promise<{ valid: boolean; data?: any; error?: string }> {
   try {
     const response = await lemonsqueezyRequest(`/variants/${variantId}`, {
       method: 'GET',
     })
-    return response.ok
+    
+    if (response.ok) {
+      const data = await response.json()
+      return { valid: true, data }
+    } else {
+      return { valid: false, error: `Variant not found (${response.status})` }
+    }
   } catch (error) {
-    console.error('Failed to validate variant ID:', variantId, error)
-    return false
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    return { valid: false, error: errorMessage }
+  }
+}
+
+/**
+ * Get variant details for debugging
+ */
+export async function getVariantDetails(variantId: string): Promise<any> {
+  try {
+    const response = await lemonsqueezyRequest(`/variants/${variantId}`, {
+      method: 'GET',
+    })
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch variant: ${response.status} ${response.statusText}`)
+    }
+    
+    return await response.json()
+  } catch (error) {
+    console.error('Error fetching variant details:', error)
+    throw error
   }
 }
 

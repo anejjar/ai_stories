@@ -101,6 +101,31 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Validate variant ID exists before creating checkout (optional but helpful)
+    // This is a quick check - if it fails, we'll get a better error message
+    const { validateVariantId } = await import('@/lib/payments/lemonsqueezy')
+    const validation = await validateVariantId(variantId)
+    if (!validation.valid) {
+      logger.error(
+        'Invalid variant ID',
+        new Error(`Variant ID ${variantId} does not exist or is not accessible`),
+        {
+          endpoint: '/api/payments/checkout',
+          userId,
+          tier,
+          variantId,
+          validationError: validation.error,
+        }
+      )
+      return NextResponse.json<ApiResponse>(
+        {
+          success: false,
+          error: `The ${tier} subscription variant (ID: ${variantId}) was not found in your Lemon Squeezy account. Please verify the variant ID in your environment variables matches a variant in your Lemon Squeezy dashboard.`,
+        },
+        { status: 400 }
+      )
+    }
+
     // Create checkout session
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const checkout = await createCheckoutSession(

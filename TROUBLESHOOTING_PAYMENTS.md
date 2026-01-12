@@ -95,6 +95,21 @@ Check your logs for entries like:
 
 ### Testing Variant IDs
 
+#### Option 1: Use the Validation Script
+
+We've created a script to validate your variant IDs:
+
+```bash
+npx tsx scripts/validate-lemonsqueezy-variants.ts
+```
+
+This script will:
+- Check if your variant IDs exist
+- Show variant details (name, price, interval)
+- Provide helpful error messages
+
+#### Option 2: Manual API Test
+
 You can test if a variant ID is valid by making a GET request to:
 ```
 GET https://api.lemonsqueezy.com/v1/variants/{variant-id}
@@ -102,6 +117,14 @@ Authorization: Bearer {your-api-key}
 ```
 
 If you get a 404, the variant doesn't exist or you don't have access to it.
+
+#### Option 3: Check in Lemon Squeezy Dashboard
+
+1. Go to https://app.lemonsqueezy.com
+2. Navigate to **Products** > Your Product > **Variants**
+3. Click on a variant
+4. The variant ID is in the URL: `/variants/{variant-id}`
+5. Compare this with your environment variable
 
 ### Prevention
 
