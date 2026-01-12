@@ -312,7 +312,7 @@ If you run into issues:
 
 1. Check the console for errors
 2. Check Supabase logs (Dashboard → Logs)
-3. Verify environment variables are loaded: http://localhost:3000/debug/env
+3. Check server logs and console for any configuration errors
 4. Check the database tables were created correctly
 
 ---

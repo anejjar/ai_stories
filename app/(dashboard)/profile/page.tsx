@@ -10,7 +10,6 @@ import { useStories } from '@/hooks/use-stories'
 import { format } from 'date-fns'
 import { Crown, Sparkles, User, BookOpen, TrendingUp } from 'lucide-react'
 import { useState } from 'react'
-import { SubscriptionToggle } from '@/components/test/subscription-toggle'
 import { ChildProfileManager } from '@/components/child-profiles/child-profile-manager'
 import { UsageDashboard } from '@/components/usage/usage-dashboard'
 import { ChangePassword } from '@/components/profile/change-password'
@@ -72,13 +71,6 @@ export default function ProfilePage() {
             Manage your account and subscription details.
           </p>
         </div>
-
-        {/* Testing Subscription Toggle - Only visible in development */}
-        {process.env.NODE_ENV !== 'production' && (
-          <div className="bg-white p-8 rounded-[3rem] border-4 border-dashed border-gray-200 shadow-inner">
-            <SubscriptionToggle />
-          </div>
-        )}
 
         <div className="grid gap-8 md:grid-cols-2">
           {/* Account Information */}
