@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
 import { UpgradeModal } from '@/components/modals/upgrade-modal'
-import { SeedButton } from '@/components/admin/seed-button'
 import { useStories } from '@/hooks/use-stories'
 import { useAuth } from '@/hooks/use-auth'
 import { useTrial } from '@/hooks/use-trial'
@@ -53,7 +52,6 @@ export default function LibraryPage() {
             )}
           </div>
           <div className="flex items-center gap-4">
-            <SeedButton />
             <Link href="/create">
               <Button className="h-14 px-8 rounded-full bg-playwize-purple hover:bg-purple-700 text-white font-black text-lg shadow-lg shadow-purple-200 transition-all hover:scale-105 active:scale-95">
                 <Plus className="h-6 w-6 mr-2" />
