@@ -118,10 +118,10 @@ export function MainNav() {
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   className="flex items-center gap-2 p-1.5 rounded-2xl hover:bg-gray-50 transition-colors border border-gray-100"
                 >
-                  {user.photoURL ? (
+                  {(user as any).photoURL ? (
                     <img
-                      src={user.photoURL}
-                      alt={user.displayName || 'User'}
+                      src={(user as any).photoURL}
+                      alt={(user as any).displayName || 'User'}
                       className="h-9 w-9 rounded-xl object-cover"
                     />
                   ) : (
@@ -136,7 +136,7 @@ export function MainNav() {
                     <div className="p-3">
                       <div className="px-4 py-3 mb-2 bg-gray-50 rounded-2xl">
                         <p className="text-sm font-bold text-gray-900 truncate">
-                          {user.displayName || 'User'}
+                          {(user as any).displayName || 'User'}
                         </p>
                         <p className="text-xs text-gray-500 truncate font-medium">{user.email}</p>
                       </div>

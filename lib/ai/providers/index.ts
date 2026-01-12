@@ -8,9 +8,9 @@ import type { AIProvider, AIProviderType } from '../types'
 /**
  * Registry of all available text generation providers
  */
-const providers: Map<AIProviderType, () => AIProvider | null> = new Map([
-  ['gemini', () => new GeminiProvider()],
-  ['openai', () => new OpenAIProvider()],
+const providers: Map<AIProviderType, () => AIProvider | null> = new Map<AIProviderType, () => AIProvider | null>([
+  ['gemini', () => new GeminiProvider() as AIProvider],
+  ['openai', () => new OpenAIProvider() as AIProvider],
   ['anthropic', () => createAnthropicProvider()],
 ])
 

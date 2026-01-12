@@ -49,7 +49,7 @@ export default function NotificationSettingsPage() {
       if (error) {
         // If no preferences exist, create default ones
         if (error.code === 'PGRST116') {
-          const { error: insertError } = await supabase.from('email_preferences').insert({
+          const { error: insertError } = await (supabase.from('email_preferences') as any).insert({
             user_id: user.id,
           })
 
@@ -60,12 +60,13 @@ export default function NotificationSettingsPage() {
           console.error('Error loading preferences:', error)
         }
       } else if (data) {
+        const dataAny = data as any
         setPreferences({
-          weekly_summary: data.weekly_summary,
-          bedtime_reminder: data.bedtime_reminder,
-          bedtime_reminder_time: data.bedtime_reminder_time || '19:00:00',
-          achievement_notifications: data.achievement_notifications,
-          new_features: data.new_features,
+          weekly_summary: dataAny.weekly_summary,
+          bedtime_reminder: dataAny.bedtime_reminder,
+          bedtime_reminder_time: dataAny.bedtime_reminder_time || '19:00:00',
+          achievement_notifications: dataAny.achievement_notifications,
+          new_features: dataAny.new_features,
         })
       }
     } catch (error) {
@@ -88,8 +89,8 @@ export default function NotificationSettingsPage() {
         return
       }
 
-      const { error } = await supabase
-        .from('email_preferences')
+      const { error } = await (supabase
+        .from('email_preferences') as any)
         .update({
           weekly_summary: preferences.weekly_summary,
           bedtime_reminder: preferences.bedtime_reminder,

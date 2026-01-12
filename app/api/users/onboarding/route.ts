@@ -61,7 +61,8 @@ export async function PATCH(request: NextRequest) {
 
     // Update checklist item
     if (body.checklistUpdate) {
-      const checklist = currentUser.onboarding_checklist || {
+      const userData = currentUser as any
+      const checklist = userData.onboarding_checklist || {
         items: [
           { id: 'first_story', label: 'Create your first story', completed: false },
           { id: 'create_profile', label: 'Add a child profile', completed: false },
@@ -94,8 +95,8 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Update user record
-    const { data: updatedUser, error: updateError } = await supabaseAdmin
-      .from('users')
+    const { data: updatedUser, error: updateError } = await (supabaseAdmin
+      .from('users') as any)
       .update(updates)
       .eq('id', userId)
       .select('onboarding_completed, onboarding_step, onboarding_dismissed_at, onboarding_checklist')
@@ -105,13 +106,14 @@ export async function PATCH(request: NextRequest) {
       throw updateError
     }
 
+    const updatedUserData = updatedUser as any
     const onboardingState: OnboardingState = {
-      onboardingCompleted: updatedUser.onboarding_completed,
-      onboardingStep: updatedUser.onboarding_step,
-      onboardingDismissedAt: updatedUser.onboarding_dismissed_at
-        ? new Date(updatedUser.onboarding_dismissed_at)
+      onboardingCompleted: updatedUserData.onboarding_completed,
+      onboardingStep: updatedUserData.onboarding_step,
+      onboardingDismissedAt: updatedUserData.onboarding_dismissed_at
+        ? new Date(updatedUserData.onboarding_dismissed_at)
         : undefined,
-      onboardingChecklist: updatedUser.onboarding_checklist,
+      onboardingChecklist: updatedUserData.onboarding_checklist,
     }
 
     return NextResponse.json<ApiResponse<OnboardingState>>({
@@ -153,13 +155,14 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    const userData = user as any
     const onboardingState: OnboardingState = {
-      onboardingCompleted: user.onboarding_completed,
-      onboardingStep: user.onboarding_step,
-      onboardingDismissedAt: user.onboarding_dismissed_at
-        ? new Date(user.onboarding_dismissed_at)
+      onboardingCompleted: userData.onboarding_completed,
+      onboardingStep: userData.onboarding_step,
+      onboardingDismissedAt: userData.onboarding_dismissed_at
+        ? new Date(userData.onboarding_dismissed_at)
         : undefined,
-      onboardingChecklist: user.onboarding_checklist,
+      onboardingChecklist: userData.onboarding_checklist,
     }
 
     return NextResponse.json<ApiResponse<OnboardingState>>({

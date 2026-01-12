@@ -72,6 +72,11 @@ export function validateEnv(): Env {
  * In production, this will throw and prevent the app from starting
  */
 export function validateEnvAtStartup(): void {
+  // Skip in Edge Runtime (middleware, edge routes) - process.exit is not available
+  if (typeof process === 'undefined' || !process.exit) {
+    return
+  }
+
   if (process.env.NODE_ENV === 'production') {
     // In production, strict validation - fail fast
     try {
@@ -80,7 +85,12 @@ export function validateEnvAtStartup(): void {
     } catch (error) {
       console.error('❌ CRITICAL: Environment validation failed in production')
       console.error(error)
-      process.exit(1)
+      // Only use process.exit if available (Node.js runtime)
+      if (typeof process !== 'undefined' && process.exit) {
+        process.exit(1)
+      } else {
+        throw error
+      }
     }
   } else {
     // In development, warn but don't fail
@@ -96,8 +106,10 @@ export function validateEnvAtStartup(): void {
 
 // Auto-validate on module load (runs once when module is imported)
 if (typeof window === 'undefined') {
-  // Only run on server-side
-  validateEnvAtStartup()
+  // Only run on server-side, and only in Node.js runtime (not Edge Runtime)
+  if (typeof process !== 'undefined' && process.exit) {
+    validateEnvAtStartup()
+  }
 }
 
 /**

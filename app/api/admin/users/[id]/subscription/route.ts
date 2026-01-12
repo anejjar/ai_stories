@@ -45,15 +45,18 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       )
     }
 
-    const oldTier = currentUser.subscription_tier
+    const userData = currentUser as any
+    const oldTier = userData.subscription_tier
 
     // Update subscription tier
-    const { data: updatedUser, error } = await supabaseAdmin
-      .from('users')
+    const query = (supabaseAdmin
+      .from('users') as any)
       .update({ subscription_tier: subscriptionTier })
       .eq('id', userId)
       .select()
       .single()
+    
+    const { data: updatedUser, error } = await query
 
     if (error) {
       console.error('Failed to update subscription:', error)
@@ -68,7 +71,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       targetId: userId,
       targetType: 'user',
       details: {
-        email: currentUser.email,
+        email: userData.email,
         oldTier,
         newTier: subscriptionTier,
       },
@@ -76,12 +79,13 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       userAgent,
     })
 
+    const updatedUserData = updatedUser as any
     return NextResponse.json<ApiResponse>({
       success: true,
       data: {
-        userId: updatedUser.id,
-        email: updatedUser.email,
-        subscriptionTier: updatedUser.subscription_tier,
+        userId: updatedUserData.id,
+        email: updatedUserData.email,
+        subscriptionTier: updatedUserData.subscription_tier,
         oldTier,
         newTier: subscriptionTier,
       },

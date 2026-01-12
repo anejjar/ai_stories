@@ -40,15 +40,19 @@ export async function GET(request: NextRequest) {
 
   // Check database connection with timeout
   try {
-    const { error } = await withTimeout(
+    const queryPromise = Promise.resolve(
       supabaseAdmin
         .from('users')
         .select('id')
-        .limit(1),
+        .limit(1)
+    )
+    
+    const result = await withTimeout(
+      queryPromise,
       5000 // 5 second timeout
     )
     
-    health.services.database = error ? 'down' : 'up'
+    health.services.database = result.error ? 'down' : 'up'
   } catch {
     health.services.database = 'down'
   }
@@ -73,12 +77,13 @@ export async function GET(request: NextRequest) {
 
   // Check storage (Supabase Storage) with timeout
   try {
-    const { error } = await withTimeout(
-      supabaseAdmin.storage.listBuckets(),
+    const storageQueryPromise = Promise.resolve(supabaseAdmin.storage.listBuckets())
+    const result = await withTimeout(
+      storageQueryPromise,
       5000 // 5 second timeout
     )
     
-    health.services.storage = error ? 'down' : 'up'
+    health.services.storage = result.error ? 'down' : 'up'
   } catch {
     health.services.storage = 'unknown'
   }

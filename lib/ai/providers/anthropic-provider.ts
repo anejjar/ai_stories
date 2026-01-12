@@ -28,7 +28,7 @@ function loadAnthropic() {
 
 export class AnthropicProvider implements AIProvider {
   name: 'anthropic' = 'anthropic'
-  private client: Anthropic | null = null
+  private client: any = null
 
   constructor() {
     const AnthropicSDK = loadAnthropic()

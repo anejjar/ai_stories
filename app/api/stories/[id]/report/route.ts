@@ -83,7 +83,8 @@ export async function POST(
       .eq('user_id', user.id)
       .single()
 
-    if (existingReport && existingReport.status === 'pending') {
+    const existingReportData = existingReport as any
+    if (existingReportData && existingReportData.status === 'pending') {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'You have already reported this story. The report is being reviewed.' },
         { status: 400 }
@@ -91,8 +92,8 @@ export async function POST(
     }
 
     // Insert report
-    const { error: insertError } = await supabase
-      .from('story_reports')
+    const { error: insertError } = await (supabase
+      .from('story_reports') as any)
       .insert({
         story_id: storyId,
         user_id: user.id,

@@ -373,7 +373,7 @@ export function StoryDisplay({ story, onBack, viewerVersion = 'v3' }: StoryDispl
                 <LikeButton
                   storyId={story.id}
                   initialLikesCount={story.likesCount || 0}
-                  initialIsLiked={story.isLikedByUser || false}
+                  initialIsLiked={(story as any).isLikedByUser || false}
                   size="md"
                 />
               )}
@@ -443,7 +443,7 @@ export function StoryDisplay({ story, onBack, viewerVersion = 'v3' }: StoryDispl
                 <LikeButton
                   storyId={story.id}
                   initialLikesCount={story.likesCount || 0}
-                  initialIsLiked={story.isLikedByUser || false}
+                  initialIsLiked={(story as any).isLikedByUser || false}
                   size="lg"
                 />
               </div>

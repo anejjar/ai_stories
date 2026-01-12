@@ -1,10 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { handleCorsPreflight, addCorsHeaders } from '@/lib/middleware/cors'
-// Validate environment variables at startup
-import '@/lib/env'
-// Setup graceful shutdown handlers
-import '@/lib/utils/graceful-shutdown'
+// Note: Environment validation and graceful shutdown are not imported here
+// because middleware runs in Edge Runtime which doesn't support Node.js APIs
 
 /**
  * App middleware for authentication and session management

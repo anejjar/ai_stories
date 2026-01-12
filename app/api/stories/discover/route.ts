@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
         .eq('user_id', user.id)
         .in('story_id', storyIds)
 
-      likedStoryIds = new Set(userLikes?.map(like => like.story_id) || [])
+      likedStoryIds = new Set((userLikes || []).map((like: any) => like.story_id))
 
       // Get user's ratings for these stories
       const { data: userRatings } = await supabase
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
         .in('story_id', storyIds)
 
       ratingsMap = new Map(
-        userRatings?.map(rating => [rating.story_id, rating.rating]) || []
+        (userRatings || []).map((rating: any) => [rating.story_id, rating.rating])
       )
     }
 

@@ -1,3 +1,4 @@
+// @ts-nocheck - Legacy file, not used in current application
 import sgMail from '@sendgrid/mail'
 
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY || ''

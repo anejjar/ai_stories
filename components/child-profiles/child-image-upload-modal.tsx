@@ -350,10 +350,10 @@ export function ChildImageUploadModal({
                 </Button>
                 <Button 
                   onClick={handleSaveSelection} 
-                  disabled={selectedImageIndex === null || state === 'saving'}
+                  disabled={selectedImageIndex === null || (state as UploadState) === 'saving'}
                   className="flex-1 sm:flex-none bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {state === 'saving' ? (
+                  {(state as UploadState) === 'saving' ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       Saving...

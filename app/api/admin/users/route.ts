@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireSuperadmin, getRequestMetadata } from '@/lib/auth/admin-middleware'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { logAdminActivity } from '@/lib/admin/activity-logger'
+import { sanitizeSearchQuery, escapeLikePattern } from '@/lib/validation/input-sanitizer'
 import type { ApiResponse } from '@/types'
 import type { PaginationInfo, AdminUserListItem } from '@/types/admin'
 
@@ -53,18 +54,18 @@ export async function GET(request: NextRequest) {
     }
 
     // Get stories count for each user
-    const userIds = usersData?.map(u => u.id) || []
+    const userIds = (usersData || []).map((u: any) => u.id)
     const { data: storiesCounts } = await supabaseAdmin
       .from('stories')
       .select('user_id')
       .in('user_id', userIds)
 
-    const storiesCountMap = (storiesCounts || []).reduce((acc, story) => {
+    const storiesCountMap = (storiesCounts || []).reduce((acc, story: any) => {
       acc[story.user_id] = (acc[story.user_id] || 0) + 1
       return acc
     }, {} as Record<string, number>)
 
-    const users: AdminUserListItem[] = (usersData || []).map(user => ({
+    const users: AdminUserListItem[] = (usersData || []).map((user: any) => ({
       id: user.id,
       email: user.email,
       displayName: user.display_name || undefined,

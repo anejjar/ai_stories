@@ -95,9 +95,10 @@ export function hasSuperadminAccess(role: string): boolean {
  * @returns Object with IP address and user agent
  */
 export function getRequestMetadata(request: NextRequest) {
-  const ipAddress = request.ip ||
+  const ipAddress =
     request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
     request.headers.get('x-real-ip') ||
+    (request as any).ip || // Fallback for older Next.js versions
     'unknown'
 
   const userAgent = request.headers.get('user-agent') || 'unknown'

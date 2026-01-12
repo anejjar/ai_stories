@@ -87,21 +87,22 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (existingEvent) {
+      const eventData = existingEvent as any
       logger.info('Webhook event already processed', {
         eventId,
-        status: existingEvent.status,
+        status: eventData.status,
         eventType: eventName,
       })
       return NextResponse.json({
         received: true,
         note: 'Event already processed',
-        status: existingEvent.status
+        status: eventData.status
       })
     }
 
     // Record webhook event as processing
-    const { error: insertError } = await supabaseAdmin
-      .from('webhook_events')
+    const { error: insertError } = await (supabaseAdmin
+      .from('webhook_events') as any)
       .insert({
         event_id: eventId,
         event_type: eventName,
@@ -383,8 +384,8 @@ export async function POST(request: NextRequest) {
 
     // Only mark as completed if processing succeeded
     // If we reach here, processing was successful
-    await supabaseAdmin
-      .from('webhook_events')
+    await (supabaseAdmin
+      .from('webhook_events') as any)
       .update({ status: 'completed' })
       .eq('event_id', eventId)
 
@@ -399,8 +400,8 @@ export async function POST(request: NextRequest) {
     try {
       const eventId = event?.data?.id
       if (eventId) {
-        await supabaseAdmin
-          .from('webhook_events')
+        await (supabaseAdmin
+          .from('webhook_events') as any)
           .update({
             status: 'failed',
             error_message: error instanceof Error ? error.message : 'Unknown error'

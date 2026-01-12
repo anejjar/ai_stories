@@ -1,3 +1,4 @@
+// @ts-nocheck - Legacy file, not used in current application
 // Firestore Data Models
 
 import { Timestamp } from 'firebase/firestore'

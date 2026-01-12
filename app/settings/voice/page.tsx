@@ -62,7 +62,7 @@ export default function VoiceSettingsPage() {
 
       if (error) throw error
 
-      setSelectedVoiceId(data?.custom_voice_id || null)
+      setSelectedVoiceId((data as any)?.custom_voice_id || null)
     } catch (error) {
       console.error('Error loading user settings:', error)
     }
@@ -76,8 +76,8 @@ export default function VoiceSettingsPage() {
         return
       }
 
-      const { error } = await supabase
-        .from('users')
+      const { error } = await (supabase
+        .from('users') as any)
         .update({ custom_voice_id: voiceId })
         .eq('id', user.id)
 
@@ -112,8 +112,8 @@ export default function VoiceSettingsPage() {
       }
 
       // Update database
-      const { error: dbError } = await supabase
-        .from('voice_profiles')
+      const { error: dbError } = await (supabase
+        .from('voice_profiles') as any)
         .update({ is_active: false })
         .eq('id', profile.id)
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireSuperadmin, getRequestMetadata } from '@/lib/auth/admin-middleware'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { logAdminActivity } from '@/lib/admin/activity-logger'
+import { sanitizeSearchQuery, escapeLikePattern } from '@/lib/validation/input-sanitizer'
 import type { ApiResponse } from '@/types'
 import type { PaginationInfo, AdminStoryListItem } from '@/types/admin'
 
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
       throw error
     }
 
-    const stories: AdminStoryListItem[] = (storiesData || []).map(story => ({
+    const stories: AdminStoryListItem[] = (storiesData || []).map((story: any) => ({
       id: story.id,
       userId: story.user_id,
       title: story.title,
@@ -85,7 +86,7 @@ export async function GET(request: NextRequest) {
       commentsCount: story.comments_count || 0,
       authorEmail: story.author?.email,
       authorName: story.author?.display_name,
-    } as any))
+    }))
 
     const pagination: PaginationInfo = {
       page,

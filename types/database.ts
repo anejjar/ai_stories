@@ -1,6 +1,6 @@
 // Supabase Database Types and Helper Functions
 
-import type { User, Story, TrialUsage, Payment, SubscriptionTier, ChildAppearance, Child, ChildProfile, BookPage } from './index'
+import type { User, Story, TrialUsage, Payment, SubscriptionTier, ChildAppearance, Child, ChildProfile, BookPage, OnboardingChecklist } from './index'
 
 // Database User Row (matches PostgreSQL users table)
 export interface DatabaseUser {
@@ -88,6 +88,57 @@ export interface DatabaseChildProfile {
   updated_at: string // ISO timestamp
 }
 
+// Database Webhook Event Row
+export interface DatabaseWebhookEvent {
+  id: string
+  event_id: string
+  event_type: string
+  provider: 'lemonsqueezy' | 'stripe'
+  status: 'processing' | 'completed' | 'failed'
+  payload: Record<string, any> // JSONB
+  error_message: string | null
+  processed_at: string | null // ISO timestamp
+  created_at: string // ISO timestamp
+  updated_at: string // ISO timestamp
+}
+
+// Database Reading Session Row
+export interface DatabaseReadingSession {
+  id: string
+  user_id: string
+  story_id: string
+  read_at: string // ISO timestamp
+  duration_seconds: number
+  completed: boolean
+  audio_used: boolean
+  created_at: string // ISO timestamp
+}
+
+// Database Admin Activity Log Row
+export interface DatabaseAdminActivityLog {
+  id: string
+  admin_id: string
+  action_type: string
+  target_id: string
+  target_type: string
+  details: Record<string, any> // JSONB
+  ip_address: string
+  user_agent: string
+  created_at: string // ISO timestamp
+}
+
+// Database User Achievement Row
+export interface DatabaseUserAchievement {
+  id: string
+  user_id: string
+  achievement_id: string
+  progress: number
+  unlocked_at: string | null // ISO timestamp
+  is_viewed: boolean
+  created_at: string // ISO timestamp
+  updated_at: string // ISO timestamp
+}
+
 // Supabase Database Schema Type
 export interface Database {
   public: {
@@ -114,6 +165,36 @@ export interface Database {
         Row: DatabasePayment
         Insert: Omit<DatabasePayment, 'id' | 'created_at'>
         Update: Partial<Omit<DatabasePayment, 'id' | 'created_at'>>
+        Relationships: []
+      }
+      child_profiles: {
+        Row: DatabaseChildProfile
+        Insert: Omit<DatabaseChildProfile, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<DatabaseChildProfile, 'id' | 'created_at'>>
+        Relationships: []
+      }
+      webhook_events: {
+        Row: DatabaseWebhookEvent
+        Insert: Omit<DatabaseWebhookEvent, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<DatabaseWebhookEvent, 'id' | 'created_at'>>
+        Relationships: []
+      }
+      reading_sessions: {
+        Row: DatabaseReadingSession
+        Insert: Omit<DatabaseReadingSession, 'id' | 'created_at'>
+        Update: Partial<Omit<DatabaseReadingSession, 'id' | 'created_at'>>
+        Relationships: []
+      }
+      admin_activity_log: {
+        Row: DatabaseAdminActivityLog
+        Insert: Omit<DatabaseAdminActivityLog, 'id' | 'created_at'>
+        Update: Partial<Omit<DatabaseAdminActivityLog, 'id' | 'created_at'>>
+        Relationships: []
+      }
+      user_achievements: {
+        Row: DatabaseUserAchievement
+        Insert: Omit<DatabaseUserAchievement, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<DatabaseUserAchievement, 'id' | 'created_at'>>
         Relationships: []
       }
     }

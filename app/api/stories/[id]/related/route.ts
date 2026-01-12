@@ -52,13 +52,14 @@ export async function GET(
       )
     }
 
+    const sourceStoryData = sourceStory as any
     // Find related stories with the same theme
     // Prioritize by: same theme, high ratings, popular (likes)
     const { data, error } = await supabase
       .from('stories')
       .select('*, users!inner(email, display_name)')
       .eq('visibility', 'public')
-      .eq('theme', sourceStory.theme)
+      .eq('theme', sourceStoryData.theme)
       .neq('id', storyId) // Exclude the current story
       .or('is_illustrated_book.is.null,is_illustrated_book.eq.false') // Only text stories
       .order('average_rating', { ascending: false })
@@ -74,14 +75,14 @@ export async function GET(
     }
 
     // Get user's likes for these stories
-    const storyIds = data.map(story => story.id)
+    const storyIds = (data || []).map((story: any) => story.id)
     const { data: userLikes } = await supabase
       .from('story_likes')
       .select('story_id')
       .eq('user_id', user.id)
       .in('story_id', storyIds)
 
-    const likedStoryIds = new Set(userLikes?.map(like => like.story_id) || [])
+    const likedStoryIds = new Set((userLikes || []).map((like: any) => like.story_id))
 
     // Get user's ratings for these stories
     const { data: userRatings } = await supabase
@@ -91,7 +92,7 @@ export async function GET(
       .in('story_id', storyIds)
 
     const ratingsMap = new Map(
-      userRatings?.map(rating => [rating.story_id, rating.rating]) || []
+      (userRatings || []).map((rating: any) => [rating.story_id, rating.rating])
     )
 
     // Transform to PublicStory objects

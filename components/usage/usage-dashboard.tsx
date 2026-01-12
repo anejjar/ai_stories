@@ -128,9 +128,9 @@ export function UsageDashboard() {
   }
 
   const { today, thisWeek, thisMonth, allTime } = stats
-  const isFamily = user?.subscriptionTier === 'family'
-  const isPro = user?.subscriptionTier === 'pro'
-  const isTrial = user?.subscriptionTier === 'trial'
+  const isFamily = (user as any)?.subscriptionTier === 'family'
+  const isPro = (user as any)?.subscriptionTier === 'pro'
+  const isTrial = (user as any)?.subscriptionTier === 'trial'
 
   // Calculate if user should see upgrade prompt
   const showUpgradePrompt =

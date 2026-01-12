@@ -1,6 +1,7 @@
 import { unstable_cache } from 'next/cache'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { databaseStoryToStory } from '@/types/database'
+import { sanitizeSearchQuery, escapeLikePattern } from '@/lib/validation/input-sanitizer'
 import type { PublicStory } from '@/types/discovery'
 
 interface DiscoveryFilters {

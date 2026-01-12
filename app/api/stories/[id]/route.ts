@@ -44,7 +44,7 @@ export async function GET(
 
     // Increment view count using RPC function (safe from race conditions)
     // We do this after verifying access
-    await supabaseAdmin.rpc('increment_story_view_count', { story_id: storyId })
+    await (supabaseAdmin.rpc as any)('increment_story_view_count', { story_id: storyId })
 
     // Add social stats if public
     if (story.visibility === 'public') {
@@ -73,9 +73,10 @@ export async function GET(
         isLikedByUser = !!likeData
       }
 
-      story.likesCount = likesCount || 0
-      story.commentsCount = commentsCount || 0
-      story.isLikedByUser = isLikedByUser
+      const storyWithStats = story as any
+      storyWithStats.likesCount = likesCount || 0
+      storyWithStats.commentsCount = commentsCount || 0
+      storyWithStats.isLikedByUser = isLikedByUser
     }
 
     return NextResponse.json<ApiResponse<Story>>({

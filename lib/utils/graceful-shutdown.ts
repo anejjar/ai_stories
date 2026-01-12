@@ -46,25 +46,36 @@ async function executeCleanupTasks(): Promise<void> {
  * Setup graceful shutdown handlers
  */
 export function setupGracefulShutdown(): void {
+  // Skip in Edge Runtime - process.on and process.exit are not available
+  if (typeof process === 'undefined' || !process.on || !process.exit) {
+    return
+  }
+
   // Handle SIGTERM (Docker, Kubernetes, etc.)
   process.on('SIGTERM', async () => {
     console.log('📨 SIGTERM received, starting graceful shutdown...')
     await executeCleanupTasks()
-    process.exit(0)
+    if (typeof process !== 'undefined' && process.exit) {
+      process.exit(0)
+    }
   })
 
   // Handle SIGINT (Ctrl+C)
   process.on('SIGINT', async () => {
     console.log('📨 SIGINT received, starting graceful shutdown...')
     await executeCleanupTasks()
-    process.exit(0)
+    if (typeof process !== 'undefined' && process.exit) {
+      process.exit(0)
+    }
   })
 
   // Handle uncaught exceptions
   process.on('uncaughtException', async (error) => {
     console.error('❌ Uncaught exception:', error)
     await executeCleanupTasks()
-    process.exit(1)
+    if (typeof process !== 'undefined' && process.exit) {
+      process.exit(1)
+    }
   })
 
   // Handle unhandled promise rejections
@@ -77,7 +88,10 @@ export function setupGracefulShutdown(): void {
   console.log('✅ Graceful shutdown handlers registered')
 }
 
-// Auto-setup on module load (server-side only)
+// Auto-setup on module load (server-side only, Node.js runtime only)
 if (typeof window === 'undefined') {
-  setupGracefulShutdown()
+  // Only setup in Node.js runtime (not Edge Runtime)
+  if (typeof process !== 'undefined' && process.on && process.exit) {
+    setupGracefulShutdown()
+  }
 }

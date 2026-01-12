@@ -1,6 +1,6 @@
 // Content moderation utilities for kid-safe content
 
-import Filter from 'bad-words'
+import { Filter } from 'bad-words'
 
 // Initialize profanity filter with strict settings for kids
 const profanityFilter = new Filter()

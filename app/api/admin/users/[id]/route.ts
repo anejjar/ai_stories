@@ -55,28 +55,29 @@ export async function GET(request: NextRequest, context: RouteContext) {
       .limit(10)
 
     // Construct detailed user object
+    const userData = user as any
     const userDetail: AdminUserDetail = {
-      id: user.id,
-      email: user.email,
-      displayName: user.display_name || undefined,
-      photoURL: user.photo_url || user.avatar_url || undefined,
-      subscriptionTier: user.subscription_tier,
-      role: user.role,
-      createdAt: new Date(user.created_at),
-      updatedAt: new Date(user.updated_at),
-      stripeCustomerId: user.stripe_customer_id || undefined,
-      stripeSubscriptionId: user.stripe_subscription_id || undefined,
-      adminNotes: user.admin_notes || undefined,
-      lastAdminActionAt: user.last_admin_action_at ? new Date(user.last_admin_action_at) : undefined,
+      id: userData.id,
+      email: userData.email,
+      displayName: userData.display_name || undefined,
+      photoURL: userData.photo_url || userData.avatar_url || undefined,
+      subscriptionTier: userData.subscription_tier,
+      role: userData.role,
+      createdAt: new Date(userData.created_at),
+      updatedAt: new Date(userData.updated_at),
+      lemonsqueezyCustomerId: userData.lemonsqueezy_customer_id || undefined,
+      lemonsqueezySubscriptionId: userData.lemonsqueezy_subscription_id || undefined,
+      adminNotes: userData.admin_notes || undefined,
+      lastAdminActionAt: userData.last_admin_action_at ? new Date(userData.last_admin_action_at) : undefined,
       totalStories: storiesCount || 0,
       readingStreak: {
-        current: user.reading_streak_current || 0,
-        longest: user.reading_streak_longest || 0,
+        current: userData.reading_streak_current || 0,
+        longest: userData.reading_streak_longest || 0,
       },
-      totalPoints: user.total_points || 0,
-      readerLevel: user.reader_level || 'bronze',
+      totalPoints: userData.total_points || 0,
+      readerLevel: userData.reader_level || 'bronze',
       childProfilesCount: childProfilesCount || 0,
-      recentStories: (recentStories || []).map(story => ({
+      recentStories: (recentStories || []).map((story: any) => ({
         id: story.id,
         title: story.title,
         createdAt: new Date(story.created_at),
@@ -92,7 +93,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       actionType: 'user_view',
       targetId: userId,
       targetType: 'user',
-      details: { email: user.email },
+      details: { email: userData.email },
       ipAddress,
       userAgent,
     })
@@ -124,16 +125,18 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const { displayName, adminNotes } = body
 
-    const updates: any = {}
+    const updates: Record<string, any> = {}
     if (displayName !== undefined) updates.display_name = displayName
     if (adminNotes !== undefined) updates.admin_notes = adminNotes
 
-    const { data: updatedUser, error } = await supabaseAdmin
-      .from('users')
+    const query = (supabaseAdmin
+      .from('users') as any)
       .update(updates)
       .eq('id', userId)
       .select()
       .single()
+    
+    const { data: updatedUser, error } = await query
 
     if (error) {
       console.error('Failed to update user:', error)
@@ -183,6 +186,8 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       .eq('id', userId)
       .single()
 
+    const userEmail = (user as any)?.email || 'unknown'
+
     // Delete user (CASCADE will delete related data)
     const { error } = await supabaseAdmin
       .from('users')
@@ -201,7 +206,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       actionType: 'user_edit',
       targetId: userId,
       targetType: 'user',
-      details: { action: 'delete', email: user?.email },
+      details: { action: 'delete', email: userEmail },
       ipAddress,
       userAgent,
     })
