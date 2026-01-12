@@ -6,6 +6,7 @@ import {
   getVariantIdForTier,
   SUBSCRIPTION_PRICES,
 } from '@/lib/payments/lemonsqueezy'
+import { logger } from '@/lib/logger'
 import type { ApiResponse, SubscriptionTier } from '@/types'
 
 // Helper to get user profile from Supabase (server-side)
@@ -117,11 +118,84 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Error creating checkout session:', error)
+    // Log full error details for debugging
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
+    const errorName = error instanceof Error ? error.name : 'UnknownError'
+    
+    // Extract additional error details if available
+    const errorDetails: any = {}
+    if (error instanceof Error) {
+      const enhancedError = error as any
+      if (enhancedError.status) errorDetails.status = enhancedError.status
+      if (enhancedError.endpoint) errorDetails.endpoint = enhancedError.endpoint
+      if (enhancedError.errorBody) errorDetails.errorBody = enhancedError.errorBody
+      if (enhancedError.originalError) errorDetails.originalError = enhancedError.originalError
+    }
+
+    // Log with structured logger
+    logger.error(
+      'Error creating checkout session',
+      error instanceof Error ? error : new Error(errorMessage),
+      {
+        endpoint: '/api/payments/checkout',
+        userId,
+        tier: (error as any)?.tier || 'unknown',
+        errorName,
+        errorMessage,
+        ...errorDetails,
+      }
+    )
+
+    // Determine user-friendly error message
+    let userErrorMessage = 'Failed to create checkout session'
+    const isDevelopment = process.env.NODE_ENV === 'development'
+
+    if (error instanceof Error) {
+      // Check for specific error types
+      if (error.message.includes('LEMONSQUEEZY_STORE_ID')) {
+        userErrorMessage = 'Payment service configuration error'
+      } else if (error.message.includes('LEMONSQUEEZY_API_KEY')) {
+        userErrorMessage = 'Payment service authentication error'
+      } else if (error.message.includes('timeout')) {
+        userErrorMessage = 'Payment service request timed out. Please try again.'
+      } else if (error.message.includes('status')) {
+        // Lemon Squeezy API error with status code
+        const statusMatch = error.message.match(/\((\d+)\s+\w+\)/)
+        if (statusMatch) {
+          const statusCode = parseInt(statusMatch[1])
+          if (statusCode === 401) {
+            userErrorMessage = 'Payment service authentication failed'
+          } else if (statusCode === 404) {
+            userErrorMessage = 'Product or variant not found'
+          } else if (statusCode === 422) {
+            userErrorMessage = 'Invalid checkout configuration'
+          } else if (statusCode >= 500) {
+            userErrorMessage = 'Payment service temporarily unavailable. Please try again later.'
+          }
+        }
+        // Include more details in development
+        if (isDevelopment) {
+          userErrorMessage += `: ${error.message}`
+        }
+      } else if (isDevelopment) {
+        // In development, show the actual error message
+        userErrorMessage = error.message
+      }
+    }
+
     return NextResponse.json<ApiResponse>(
       {
         success: false,
-        error: 'Failed to create checkout session',
+        error: userErrorMessage,
+        // Include error details in development mode for debugging
+        ...(isDevelopment && {
+          debug: {
+            errorName,
+            errorMessage,
+            ...errorDetails,
+          },
+        }),
       },
       { status: 500 }
     )

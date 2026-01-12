@@ -52,8 +52,42 @@ async function lemonsqueezyRequest(
     clearTimeout(timeoutId)
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Unknown error' }))
-      throw new Error(`Lemon Squeezy API error: ${JSON.stringify(error)}`)
+      // Try to parse error response
+      let errorBody: any
+      let errorText: string | null = null
+      
+      try {
+        errorText = await response.text()
+        errorBody = errorText ? JSON.parse(errorText) : { error: 'Unknown error' }
+      } catch (parseError) {
+        errorBody = { error: 'Failed to parse error response', raw: errorText }
+      }
+
+      // Log full error details for debugging
+      console.error('Lemon Squeezy API Error:', {
+        endpoint,
+        method: options.method || 'GET',
+        status: response.status,
+        statusText: response.statusText,
+        error: errorBody,
+        url,
+      })
+
+      // Create a more descriptive error message
+      const errorMessage = errorBody.errors
+        ? errorBody.errors.map((err: any) => err.detail || err.title || JSON.stringify(err)).join('; ')
+        : errorBody.error || errorBody.message || JSON.stringify(errorBody)
+      
+      const enhancedError = new Error(
+        `Lemon Squeezy API error (${response.status} ${response.statusText}) on ${endpoint}: ${errorMessage}`
+      )
+      
+      // Attach additional error details for debugging
+      ;(enhancedError as any).status = response.status
+      ;(enhancedError as any).endpoint = endpoint
+      ;(enhancedError as any).errorBody = errorBody
+      
+      throw enhancedError
     }
 
     return response
@@ -61,7 +95,26 @@ async function lemonsqueezyRequest(
     clearTimeout(timeoutId)
     
     if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error(`Lemon Squeezy API request timeout after ${timeoutMs}ms`)
+      const timeoutError = new Error(
+        `Lemon Squeezy API request timeout after ${timeoutMs}ms on ${endpoint}`
+      )
+      ;(timeoutError as any).endpoint = endpoint
+      throw timeoutError
+    }
+    
+    // If it's already our enhanced error, re-throw it
+    if (error instanceof Error && (error as any).endpoint) {
+      throw error
+    }
+    
+    // For other errors, enhance them with context
+    if (error instanceof Error) {
+      const enhancedError = new Error(
+        `Lemon Squeezy API request failed on ${endpoint}: ${error.message}`
+      )
+      ;(enhancedError as any).endpoint = endpoint
+      ;(enhancedError as any).originalError = error
+      throw enhancedError
     }
     
     throw error
@@ -95,25 +148,35 @@ export async function createCheckoutSession(
     throw new Error('LEMONSQUEEZY_STORE_ID is not configured')
   }
 
+  // Build attributes object
+  const attributes: any = {
+    checkout_options: {
+      button_color: '#7047EB',
+    },
+    checkout_data: {
+      custom: {
+        user_id: userId,
+        tier: tier,
+      },
+      email: userEmail,
+    },
+    expires_at: null,
+    preview: false,
+  }
+
+  // Add redirect URL to product_options if successUrl is provided
+  if (successUrl) {
+    attributes.product_options = {
+      redirect_url: successUrl,
+    }
+  }
+
   const response = await lemonsqueezyRequest('/checkouts', {
     method: 'POST',
     body: JSON.stringify({
       data: {
         type: 'checkouts',
-        attributes: {
-          checkout_options: {
-            button_color: '#7047EB',
-          },
-          checkout_data: {
-            custom: {
-              user_id: userId,
-              tier: tier,
-            },
-            email: userEmail,
-          },
-          expires_at: null,
-          preview: false,
-        },
+        attributes,
         relationships: {
           store: {
             data: {
