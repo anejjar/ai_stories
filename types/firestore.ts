@@ -11,8 +11,8 @@ export interface FirestoreUser {
   subscriptionTier: SubscriptionTier
   createdAt: Timestamp
   updatedAt: Timestamp
-  stripeCustomerId?: string
-  stripeSubscriptionId?: string
+  lemonsqueezyCustomerId?: string
+  lemonsqueezySubscriptionId?: string
 }
 
 // Firestore Story Document
@@ -41,7 +41,7 @@ export interface FirestoreTrialUsage {
 // Firestore Payment Document
 export interface FirestorePayment {
   userId: string
-  stripePaymentIntentId: string
+  lemonsqueezyOrderId: string
   amount: number
   currency: string
   status: 'pending' | 'succeeded' | 'failed'
@@ -59,8 +59,8 @@ export function firestoreUserToUser(id: string, data: FirestoreUser): User {
     subscriptionTier: data.subscriptionTier,
     createdAt: data.createdAt.toDate(),
     updatedAt: data.updatedAt.toDate(),
-    stripeCustomerId: data.stripeCustomerId,
-    stripeSubscriptionId: data.stripeSubscriptionId,
+    lemonsqueezyCustomerId: data.lemonsqueezyCustomerId,
+    lemonsqueezySubscriptionId: data.lemonsqueezySubscriptionId,
   }
 }
 
@@ -70,8 +70,8 @@ export function userToFirestoreUser(user: Partial<User>): Partial<FirestoreUser>
     displayName: user.displayName,
     photoURL: user.photoURL,
     subscriptionTier: user.subscriptionTier,
-    stripeCustomerId: user.stripeCustomerId,
-    stripeSubscriptionId: user.stripeSubscriptionId,
+    lemonsqueezyCustomerId: user.lemonsqueezyCustomerId,
+    lemonsqueezySubscriptionId: user.lemonsqueezySubscriptionId,
   } as Partial<FirestoreUser>
 }
 

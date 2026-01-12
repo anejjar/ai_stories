@@ -11,8 +11,8 @@ export interface DatabaseUser {
   subscription_tier: SubscriptionTier
   created_at: string // ISO timestamp
   updated_at: string // ISO timestamp
-  stripe_customer_id: string | null
-  stripe_subscription_id: string | null
+  lemonsqueezy_customer_id: string | null
+  lemonsqueezy_subscription_id: string | null
   onboarding_completed: boolean
   onboarding_step: 'welcome' | 'profile_setup' | 'tour_active' | 'first_story' | 'completed'
   onboarding_dismissed_at: string | null // ISO timestamp
@@ -65,7 +65,7 @@ export interface DatabaseTrialUsage {
 export interface DatabasePayment {
   id: string
   user_id: string
-  stripe_payment_intent_id: string
+  lemonsqueezy_order_id: string
   amount: number
   currency: string
   status: 'pending' | 'succeeded' | 'failed'
@@ -142,8 +142,8 @@ export function databaseUserToUser(data: DatabaseUser): User {
     subscriptionTier: data.subscription_tier,
     createdAt: new Date(data.created_at),
     updatedAt: new Date(data.updated_at),
-    stripeCustomerId: data.stripe_customer_id || undefined,
-    stripeSubscriptionId: data.stripe_subscription_id || undefined,
+    lemonsqueezyCustomerId: data.lemonsqueezy_customer_id || undefined,
+    lemonsqueezySubscriptionId: data.lemonsqueezy_subscription_id || undefined,
     onboardingCompleted: data.onboarding_completed,
     onboardingStep: data.onboarding_step as any,
     onboardingDismissedAt: data.onboarding_dismissed_at ? new Date(data.onboarding_dismissed_at) : undefined,
@@ -157,8 +157,8 @@ export function userToDatabaseUser(user: Partial<User>): Partial<DatabaseUser> {
     display_name: user.displayName || null,
     photo_url: user.photoURL || null,
     subscription_tier: user.subscriptionTier,
-    stripe_customer_id: user.stripeCustomerId || null,
-    stripe_subscription_id: user.stripeSubscriptionId || null,
+    lemonsqueezy_customer_id: user.lemonsqueezyCustomerId || null,
+    lemonsqueezy_subscription_id: user.lemonsqueezySubscriptionId || null,
   } as Partial<DatabaseUser>
 }
 
@@ -290,7 +290,7 @@ export function databasePaymentToPayment(data: DatabasePayment): Payment {
   return {
     id: data.id,
     userId: data.user_id,
-    stripePaymentIntentId: data.stripe_payment_intent_id,
+    lemonsqueezyOrderId: data.lemonsqueezy_order_id,
     amount: data.amount,
     currency: data.currency,
     status: data.status,
@@ -309,8 +309,8 @@ export function firestoreUserToUser(id: string, data: any): User {
     subscriptionTier: data.subscription_tier || data.subscriptionTier,
     createdAt: data.created_at ? new Date(data.created_at) : new Date(),
     updatedAt: data.updated_at ? new Date(data.updated_at) : new Date(),
-    stripeCustomerId: data.stripe_customer_id || data.stripeCustomerId,
-    stripeSubscriptionId: data.stripe_subscription_id || data.stripeSubscriptionId,
+    lemonsqueezyCustomerId: data.lemonsqueezy_customer_id || data.lemonsqueezyCustomerId,
+    lemonsqueezySubscriptionId: data.lemonsqueezy_subscription_id || data.lemonsqueezySubscriptionId,
   }
 }
 

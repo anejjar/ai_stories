@@ -153,8 +153,8 @@ export interface StoryReport {
 }
 
 export interface AdminUserDetail extends AdminUser {
-  stripeCustomerId?: string
-  stripeSubscriptionId?: string
+  lemonsqueezyCustomerId?: string
+  lemonsqueezySubscriptionId?: string
   totalStories: number
   readingStreak: {
     current: number

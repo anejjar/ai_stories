@@ -23,12 +23,12 @@ const envSchema = z.object({
   STABILITY_AI_API_KEY: z.string().min(1).optional(),
   STABLE_DIFFUSION_API_KEY: z.string().min(1).optional(),
 
-  // Stripe
-  STRIPE_SECRET_KEY: z.string().min(1),
-  STRIPE_PUBLISHABLE_KEY: z.string().min(1),
-  STRIPE_WEBHOOK_SECRET: z.string().optional(),
-  STRIPE_PRO_PRICE_ID: z.string().optional(),
-  STRIPE_PRO_MAX_PRICE_ID: z.string().optional(),
+  // Lemon Squeezy
+  LEMONSQUEEZY_API_KEY: z.string().min(1),
+  LEMONSQUEEZY_STORE_ID: z.string().min(1),
+  LEMONSQUEEZY_WEBHOOK_SECRET: z.string().optional(),
+  LEMONSQUEEZY_PRO_VARIANT_ID: z.string().optional(),
+  LEMONSQUEEZY_FAMILY_VARIANT_ID: z.string().optional(),
 
   // Email (waitlist)
   RESEND_API_KEY: z.string().min(1).optional(),

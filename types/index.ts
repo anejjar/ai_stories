@@ -10,8 +10,8 @@ export interface User {
   subscriptionTier: SubscriptionTier
   createdAt: Date
   updatedAt: Date
-  stripeCustomerId?: string
-  stripeSubscriptionId?: string
+  lemonsqueezyCustomerId?: string
+  lemonsqueezySubscriptionId?: string
   onboardingCompleted?: boolean
   onboardingStep?: OnboardingStep
   onboardingDismissedAt?: Date
@@ -108,7 +108,7 @@ export interface TrialUsage {
 export interface Payment {
   id: string
   userId: string
-  stripePaymentIntentId: string
+  lemonsqueezyOrderId: string
   amount: number
   currency: string
   status: 'pending' | 'succeeded' | 'failed'

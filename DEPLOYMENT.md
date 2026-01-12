@@ -6,7 +6,7 @@ This guide walks you through deploying AI Stories to production.
 
 - [Vercel account](https://vercel.com) (recommended) or other hosting provider
 - [Supabase project](https://supabase.com) (production instance)
-- [Stripe account](https://stripe.com) (live mode)
+- [Lemon Squeezy account](https://lemonsqueezy.com) (live mode)
 - [OpenAI API key](https://platform.openai.com) or other AI provider
 
 ## Step 1: Prepare Supabase (Production)
@@ -38,31 +38,38 @@ supabase/migrations/003_user_profile_trigger.sql
 3. Enable Google OAuth (optional)
 4. Set up redirect URLs for your production domain
 
-## Step 2: Configure Stripe (Production)
+## Step 2: Configure Lemon Squeezy (Production)
 
 ### Switch to Live Mode
-1. Toggle to Live mode in Stripe Dashboard
+1. Toggle to Live mode in Lemon Squeezy Dashboard
 2. Complete account verification
 
-### Create Products
+### Get API Key and Store ID
+1. Go to Settings > API
+2. Copy your API Key
+3. Go to Settings > Stores
+4. Copy your Store ID
+
+### Create Products and Variants
 1. Go to Products > Add Product
 2. Create "PRO" subscription:
    - Name: AI Stories PRO
    - Price: $9.99/month (or your price)
-   - Note the Price ID
+   - After creating, add a variant and note the Variant ID
 3. Create "Family Plan" subscription:
    - Name: AI Stories Family Plan
-   - Price: $19.99/month (or your price)
-   - Note the Price ID
+   - Price: $24.99/month (or your price)
+   - After creating, add a variant and note the Variant ID
 
 ### Set Up Webhooks
-1. Go to Developers > Webhooks
-2. Add endpoint: `https://yourdomain.com/api/payments/webhook`
+1. Go to Settings > Webhooks
+2. Create webhook: `https://yourdomain.com/api/payments/webhook`
 3. Select events:
-   - `checkout.session.completed`
-   - `customer.subscription.created`
-   - `customer.subscription.updated`
-   - `customer.subscription.deleted`
+   - `subscription_created`
+   - `subscription_updated`
+   - `subscription_cancelled`
+   - `subscription_expired`
+   - `subscription_payment_success`
 4. Note the webhook signing secret
 
 ## Step 3: Deploy to Vercel
@@ -86,12 +93,12 @@ AI_PROVIDER=openai
 OPENAI_API_KEY=sk-your-production-key
 IMAGE_PROVIDER=dalle
 
-# Stripe (Live Mode)
-STRIPE_SECRET_KEY=sk_live_xxx
-STRIPE_PUBLISHABLE_KEY=pk_live_xxx
-STRIPE_WEBHOOK_SECRET=whsec_xxx
-STRIPE_PRO_PRICE_ID=price_xxx
-STRIPE_FAMILY_PRICE_ID=price_xxx
+# Lemon Squeezy (Live Mode)
+LEMONSQUEEZY_API_KEY=your-lemonsqueezy-api-key
+LEMONSQUEEZY_STORE_ID=your-store-id
+LEMONSQUEEZY_WEBHOOK_SECRET=your-webhook-secret
+LEMONSQUEEZY_PRO_VARIANT_ID=your-pro-variant-id
+LEMONSQUEEZY_FAMILY_VARIANT_ID=your-family-variant-id
 
 # App URL
 NEXT_PUBLIC_APP_URL=https://yourdomain.com
@@ -116,7 +123,7 @@ NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
 ### Verify Functionality
 - [ ] User can sign up/login
 - [ ] Story generation works
-- [ ] Payment flow works (use Stripe test card first)
+- [ ] Payment flow works (use Lemon Squeezy test mode first)
 - [ ] Images are generated (Family Plan)
 - [ ] PDF export works
 - [ ] Audio playback works
@@ -128,7 +135,7 @@ NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
 ### Set Up Alerts
 - Configure Vercel Analytics
 - Set up error tracking (Sentry recommended)
-- Monitor Stripe webhook failures
+- Monitor Lemon Squeezy webhook failures
 
 ## Environment Variables Reference
 
@@ -141,11 +148,11 @@ NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
 | `OPENAI_API_KEY` | Conditional | OpenAI API key |
 | `GEMINI_API_KEY` | Conditional | Google Gemini API key |
 | `IMAGE_PROVIDER` | Yes | Image provider: dalle, stable-diffusion |
-| `STRIPE_SECRET_KEY` | Yes | Stripe secret key |
-| `STRIPE_PUBLISHABLE_KEY` | Yes | Stripe publishable key |
-| `STRIPE_WEBHOOK_SECRET` | Yes | Stripe webhook signing secret |
-| `STRIPE_PRO_PRICE_ID` | Yes | Stripe PRO price ID |
-| `STRIPE_FAMILY_PRICE_ID` | Yes | Stripe Family Plan price ID |
+| `LEMONSQUEEZY_API_KEY` | Yes | Lemon Squeezy API key |
+| `LEMONSQUEEZY_STORE_ID` | Yes | Lemon Squeezy store ID |
+| `LEMONSQUEEZY_WEBHOOK_SECRET` | Yes | Lemon Squeezy webhook signing secret |
+| `LEMONSQUEEZY_PRO_VARIANT_ID` | Yes | Lemon Squeezy PRO variant ID |
+| `LEMONSQUEEZY_FAMILY_VARIANT_ID` | Yes | Lemon Squeezy Family Plan variant ID |
 | `NEXT_PUBLIC_APP_URL` | Yes | Production app URL |
 | `NEXT_PUBLIC_GA_ID` | No | Google Analytics ID |
 
@@ -162,10 +169,10 @@ NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
 - Ensure cookies are working (same-site settings)
 
 ### Payment Issues
-- Verify Stripe keys (live vs test)
+- Verify Lemon Squeezy keys (live vs test)
 - Check webhook endpoint is accessible
 - Verify webhook secret is correct
-- Check Stripe Dashboard for failed webhooks
+- Check Lemon Squeezy Dashboard for failed webhooks
 
 ### Image Generation Fails
 - Verify OpenAI API key has access to DALL-E
@@ -197,6 +204,6 @@ NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
 For issues, check:
 1. Vercel deployment logs
 2. Supabase logs
-3. Stripe webhook logs
+3. Lemon Squeezy webhook logs
 4. Browser console for client-side errors
 

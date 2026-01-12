@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth/middleware'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import { stripe, SUBSCRIPTION_PRICES } from '@/lib/payments/stripe'
+import {
+  createCheckoutSession,
+  getVariantIdForTier,
+  SUBSCRIPTION_PRICES,
+} from '@/lib/payments/lemonsqueezy'
 import type { ApiResponse, SubscriptionTier } from '@/types'
 
 // Helper to get user profile from Supabase (server-side)
@@ -19,26 +23,16 @@ async function getUserProfile(userId: string) {
   return data
 }
 
-// Get Stripe price ID for subscription tier
-function getPriceIdForTier(tier: SubscriptionTier): string | null {
-  const priceIds: Record<SubscriptionTier, string | null> = {
-    trial: null,
-    pro: process.env.STRIPE_PRO_PRICE_ID || null,
-    family: process.env.STRIPE_FAMILY_PRICE_ID || null,
-  }
-  return priceIds[tier]
-}
-
 export async function POST(request: NextRequest) {
   const { userId, response } = await requireAuth(request)
   if (response) return response
 
   try {
-    if (!stripe) {
+    if (!process.env.LEMONSQUEEZY_API_KEY) {
       return NextResponse.json<ApiResponse>(
         {
           success: false,
-          error: 'Stripe is not configured',
+          error: 'Lemon Squeezy is not configured',
         },
         { status: 500 }
       )
@@ -69,33 +63,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get or create Stripe customer
-    let customerId = userProfile.stripe_customer_id
-
-    if (!customerId) {
-      // Create new Stripe customer
-      const customer = await stripe.customers.create({
-        email: userProfile.email,
-        metadata: {
-          userId,
-        },
-      })
-      customerId = customer.id
-
-      // Save customer ID to user profile
-      await (supabaseAdmin
-        .from('users') as any)
-        .update({ stripe_customer_id: customerId })
-        .eq('id', userId)
-    }
-
-    // Get price ID for tier
-    const priceId = getPriceIdForTier(tier as SubscriptionTier)
-    if (!priceId) {
+    // Get variant ID for tier
+    const variantId = getVariantIdForTier(tier as SubscriptionTier)
+    if (!variantId) {
       return NextResponse.json<ApiResponse>(
         {
           success: false,
-          error: `Price ID not configured for tier: ${tier}`,
+          error: `Variant ID not configured for tier: ${tier}`,
         },
         { status: 500 }
       )
@@ -103,28 +77,31 @@ export async function POST(request: NextRequest) {
 
     // Create checkout session
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      payment_method_types: ['card'],
-      line_items: [
+    const checkout = await createCheckoutSession(
+      variantId,
+      userId,
+      userProfile.email,
+      tier as SubscriptionTier,
+      `${baseUrl}/payment/success`,
+      `${baseUrl}/payment/cancel`
+    )
+
+    // Extract checkout URL from Lemon Squeezy response
+    const checkoutUrl = checkout.data?.attributes?.url
+    if (!checkoutUrl) {
+      return NextResponse.json<ApiResponse>(
         {
-          price: priceId,
-          quantity: 1,
+          success: false,
+          error: 'Failed to get checkout URL from Lemon Squeezy',
         },
-      ],
-      mode: 'subscription',
-      success_url: `${baseUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/payment/cancel`,
-      metadata: {
-        userId,
-        tier,
-      },
-    })
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json<ApiResponse<{ checkoutUrl: string }>>({
       success: true,
       data: {
-        checkoutUrl: session.url || '',
+        checkoutUrl,
       },
     })
   } catch (error) {

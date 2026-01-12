@@ -341,9 +341,7 @@ CREATE POLICY "Users can manage their ratings on public stories"
 DROP POLICY IF EXISTS "Users can create reports" ON story_reports;
 CREATE POLICY "Users can create reports"
   ON story_reports FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
-
-DROP POLICY IF EXISTS "Users can view their own reports" ON story_reports;
+  WITH CHECK (auth.uid() = user_id);DROP POLICY IF EXISTS "Users can view their own reports" ON story_reports;
 CREATE POLICY "Users can view their own reports"
   ON story_reports FOR SELECT
   USING (auth.uid() = user_id);

@@ -16,7 +16,7 @@ function PaymentSuccessContent() {
   const [upgradeTier, setUpgradeTier] = useState<'pro' | 'family' | null>(null)
 
   useEffect(() => {
-    // In a real app, you'd verify the session_id with Stripe
+    // In a real app, you'd verify the session_id with Lemon Squeezy
     // For now, we'll just show a success message
     const sessionId = searchParams.get('session_id')
     if (sessionId) {

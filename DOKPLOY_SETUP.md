@@ -80,7 +80,7 @@ The following variables **must** be added as Build Arguments (not just Environme
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY` (required during build for API route prerendering)
 - `NEXT_PUBLIC_APP_URL`
-- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+- (No NEXT_PUBLIC_ variables needed for Lemon Squeezy)
 
 ### Why SUPABASE_SERVICE_ROLE_KEY is a Build Argument
 Next.js attempts to collect page data during the build process, which includes evaluating API routes. Some API routes (like `/api/child-profiles/verify-migration`) use the Supabase admin client, which requires the service role key. Without this key available during build, you'll see errors like:

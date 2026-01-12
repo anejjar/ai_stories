@@ -98,18 +98,18 @@ Alternatively, you can copy and paste the SQL from those files into the SQL Edit
 
 ### 4.1 Create Stripe Account
 
-1. Go to [Stripe Dashboard](https://dashboard.stripe.com)
+1. Go to [Lemon Squeezy Dashboard](https://app.lemonsqueezy.com)
 2. Sign up or log in
 3. Complete account setup (use test mode for development)
 
-### 4.2 Get API Keys
+### 4.2 Get API Key and Store ID
 
-1. Go to Developers > API keys
-2. Copy your **Publishable key** (starts with `pk_test_`)
-3. Copy your **Secret key** (starts with `sk_test_`)
-   - Click "Reveal test key" to see it
+1. Go to Settings > API
+2. Copy your **API Key** (click "Reveal" if needed)
+3. Go to Settings > Stores
+4. Copy your **Store ID** (found in the store URL or store settings)
 
-### 4.3 Create Products and Prices
+### 4.3 Create Products and Variants
 
 1. Go to Products > Add product
 2. Create two products:
@@ -118,26 +118,26 @@ Alternatively, you can copy and paste the SQL from those files into the SQL Edit
    - Name: "PRO"
    - Description: "Unlimited text story generation"
    - Pricing: Recurring, Monthly, $9.99
-   - Copy the Price ID (starts with `price_`)
+   - After creating, add a variant and copy the **Variant ID**
 
    **Product 2: Family Plan**
    - Name: "Family Plan"
    - Description: "Unlimited stories with AI illustrations"
-   - Pricing: Recurring, Monthly, $19.99
-   - Copy the Price ID (starts with `price_`)
+   - Pricing: Recurring, Monthly, $24.99
+   - After creating, add a variant and copy the **Variant ID**
 
 ### 4.4 Set Up Webhooks (for production)
 
-1. Go to Developers > Webhooks
-2. Click "Add endpoint"
-3. Enter your production URL: `https://yourdomain.com/api/webhooks/stripe`
+1. Go to Settings > Webhooks
+2. Click "Create webhook"
+3. Enter your production URL: `https://yourdomain.com/api/payments/webhook`
 4. Select events:
-   - `customer.subscription.created`
-   - `customer.subscription.updated`
-   - `customer.subscription.deleted`
-   - `payment_intent.succeeded`
-   - `payment_intent.payment_failed`
-5. Copy the webhook signing secret (starts with `whsec_`)
+   - `subscription_created`
+   - `subscription_updated`
+   - `subscription_cancelled`
+   - `subscription_expired`
+   - `subscription_payment_success`
+5. Copy the webhook signing secret
 
 ## Step 5: Configure Environment Variables
 
@@ -151,9 +151,9 @@ Alternatively, you can copy and paste the SQL from those files into the SQL Edit
    - Supabase Anon Key (from Step 2.2)
    - Supabase Service Role Key (from Step 2.2)
    - Gemini API Key (from Step 3)
-   - Stripe keys (from Step 4.2)
-   - Stripe Price IDs (from Step 4.3)
-   - Stripe Webhook Secret (from Step 4.4, optional for development)
+   - Lemon Squeezy API Key and Store ID (from Step 4.2)
+   - Lemon Squeezy Variant IDs (from Step 4.3)
+   - Lemon Squeezy Webhook Secret (from Step 4.4, optional for development)
    - App URL (use `http://localhost:3000` for development)
 
 Example `.env.local`:
@@ -162,8 +162,10 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 GEMINI_API_KEY=your-gemini-key
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_PUBLISHABLE_KEY=pk_test_...
+LEMONSQUEEZY_API_KEY=your-lemonsqueezy-api-key
+LEMONSQUEEZY_STORE_ID=your-store-id
+LEMONSQUEEZY_PRO_VARIANT_ID=your-pro-variant-id
+LEMONSQUEEZY_FAMILY_VARIANT_ID=your-family-variant-id
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 

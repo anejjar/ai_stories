@@ -249,7 +249,7 @@ export function UpgradeModal({ open, onOpenChange, tier }: UpgradeModalProps) {
             <p className="text-center mt-6 text-xs font-bold text-gray-400">
               By upgrading, you agree to our Terms and Conditions.
               <br />
-              Secure payment processed by Stripe.
+              Secure payment processed by Lemon Squeezy.
             </p>
           </div>
         </div>
