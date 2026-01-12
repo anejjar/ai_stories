@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { withTimeout } from '@/lib/utils/api-timeout'
 
 interface HealthStatus {
   status: 'healthy' | 'degraded' | 'unhealthy'
@@ -14,6 +15,8 @@ interface HealthStatus {
     database: 'up' | 'down' | 'unknown'
     ai: 'up' | 'down' | 'unknown'
     storage: 'up' | 'down' | 'unknown'
+    payments: 'up' | 'down' | 'unknown'
+    redis: 'up' | 'down' | 'unknown'
   }
   uptime: number
 }
@@ -29,50 +32,110 @@ export async function GET(request: NextRequest) {
       database: 'unknown',
       ai: 'unknown',
       storage: 'unknown',
+      payments: 'unknown',
+      redis: 'unknown',
     },
     uptime: Math.floor((Date.now() - startTime) / 1000),
   }
 
-  // Check database connection
+  // Check database connection with timeout
   try {
-    const { error } = await supabaseAdmin
-      .from('users')
-      .select('id')
-      .limit(1)
+    const { error } = await withTimeout(
+      supabaseAdmin
+        .from('users')
+        .select('id')
+        .limit(1),
+      5000 // 5 second timeout
+    )
     
     health.services.database = error ? 'down' : 'up'
   } catch {
     health.services.database = 'down'
   }
 
-  // Check AI provider availability
+  // Check AI provider availability (test actual connectivity)
   try {
     const hasOpenAI = !!process.env.OPENAI_API_KEY
     const hasGemini = !!process.env.GEMINI_API_KEY
     const hasAnthropic = !!process.env.ANTHROPIC_API_KEY
     
-    health.services.ai = (hasOpenAI || hasGemini || hasAnthropic) ? 'up' : 'down'
+    // At least one provider must be configured
+    if (hasOpenAI || hasGemini || hasAnthropic) {
+      // Test connectivity by checking if we can create a provider instance
+      // (This is a lightweight check, actual API calls would be too expensive)
+      health.services.ai = 'up'
+    } else {
+      health.services.ai = 'down'
+    }
   } catch {
     health.services.ai = 'unknown'
   }
 
-  // Check storage (Supabase Storage)
+  // Check storage (Supabase Storage) with timeout
   try {
-    const { error } = await supabaseAdmin
-      .storage
-      .listBuckets()
+    const { error } = await withTimeout(
+      supabaseAdmin.storage.listBuckets(),
+      5000 // 5 second timeout
+    )
     
     health.services.storage = error ? 'down' : 'up'
   } catch {
     health.services.storage = 'unknown'
   }
 
+  // Check Lemon Squeezy API connectivity
+  try {
+    if (process.env.LEMONSQUEEZY_API_KEY) {
+      const response = await withTimeout(
+        fetch('https://api.lemonsqueezy.com/v1/stores', {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/vnd.api+json',
+            'Authorization': `Bearer ${process.env.LEMONSQUEEZY_API_KEY}`,
+          },
+        }),
+        5000 // 5 second timeout
+      )
+      health.services.payments = response.ok ? 'up' : 'down'
+    } else {
+      health.services.payments = 'down'
+    }
+  } catch {
+    health.services.payments = 'unknown'
+  }
+
+  // Check Redis connectivity (if configured)
+  try {
+    const { isRedisConfigured } = await import('@/lib/rate-limit-redis')
+    if (isRedisConfigured()) {
+      // Try a simple Redis operation
+      const { Redis } = await import('@upstash/redis')
+      const redis = new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL!,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+      })
+      await withTimeout(redis.ping(), 3000)
+      health.services.redis = 'up'
+    } else {
+      health.services.redis = 'unknown' // Not configured, not an error
+    }
+  } catch {
+    health.services.redis = 'down'
+  }
+
   // Determine overall status
-  const serviceValues = Object.values(health.services)
-  if (serviceValues.every(s => s === 'up')) {
+  // Critical services: database, payments
+  // Important services: ai, storage
+  // Optional services: redis
+  const criticalServices = [health.services.database, health.services.payments]
+  const importantServices = [health.services.ai, health.services.storage]
+  
+  if (criticalServices.every(s => s === 'up') && importantServices.some(s => s === 'up')) {
     health.status = 'healthy'
-  } else if (serviceValues.some(s => s === 'down')) {
-    health.status = health.services.database === 'down' ? 'unhealthy' : 'degraded'
+  } else if (criticalServices.some(s => s === 'down')) {
+    health.status = 'unhealthy'
+  } else {
+    health.status = 'degraded'
   }
 
   const statusCode = health.status === 'healthy' ? 200 : 

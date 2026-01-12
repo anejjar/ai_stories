@@ -207,10 +207,10 @@ export default function UserDetailPage() {
               <p className="text-sm text-gray-600">Created:</p>
               <p className="text-sm">{new Date(user.createdAt).toLocaleString()}</p>
             </div>
-            {user.stripeCustomerId && (
+            {user.lemonsqueezyCustomerId && (
               <div>
-                <p className="text-sm text-gray-600">Stripe Customer ID:</p>
-                <p className="text-sm font-mono">{user.stripeCustomerId}</p>
+                <p className="text-sm text-gray-600">Lemon Squeezy Customer ID:</p>
+                <p className="text-sm font-mono">{user.lemonsqueezyCustomerId}</p>
               </div>
             )}
           </div>

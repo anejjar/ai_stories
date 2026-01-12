@@ -52,7 +52,11 @@ export async function GET(request: NextRequest) {
 
     // Apply search filter
     if (search) {
-      query = query.or(`title.ilike.%${search}%`)
+      const sanitized = sanitizeSearchQuery(search)
+      if (sanitized.length > 0) {
+        const escapedTerm = escapeLikePattern(sanitized)
+        query = query.or(`title.ilike.%${escapedTerm}%`)
+      }
     }
 
     const { data: storiesData, error, count } = await query

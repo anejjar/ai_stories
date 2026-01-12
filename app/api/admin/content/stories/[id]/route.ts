@@ -37,6 +37,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
       )
     }
 
+    const storyTyped = story as any
+
     // Log admin activity
     const { ipAddress, userAgent } = getRequestMetadata(request)
     await logAdminActivity({
@@ -44,7 +46,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       actionType: 'story_review',
       targetId: storyId,
       targetType: 'story',
-      details: { title: story.title, authorEmail: story.author?.email },
+      details: { title: storyTyped.title, authorEmail: storyTyped.author?.email },
       ipAddress,
       userAgent,
     })
@@ -74,18 +76,20 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     const { id: storyId } = await context.params
 
     // Get story details before deletion
-    const { data: story } = await supabaseAdmin
+    const { data: story, error: storyError } = await supabaseAdmin
       .from('stories')
       .select('title, user_id')
       .eq('id', storyId)
       .single()
 
-    if (!story) {
+    if (storyError || !story) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Story not found' },
         { status: 404 }
       )
     }
+
+    const storyTyped = story as { title: string; user_id: string }
 
     // Delete the story
     const { error } = await supabaseAdmin
@@ -105,7 +109,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       actionType: 'story_delete',
       targetId: storyId,
       targetType: 'story',
-      details: { title: story.title, userId: story.user_id },
+      details: { title: storyTyped.title, userId: storyTyped.user_id },
       ipAddress,
       userAgent,
     })

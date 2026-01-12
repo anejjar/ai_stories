@@ -2,11 +2,9 @@
 const nextConfig = {
   output: 'standalone',
   typescript: {
-    // !! WARN !!
-    // Dangerously allow production builds to successfully complete even if
-    // your project has type errors.
-    // !! WARN !!
-    ignoreBuildErrors: true,
+    // Type checking is now enabled for production safety
+    // Run `npm run type-check` to verify before deploying
+    ignoreBuildErrors: false,
   },
   reactStrictMode: true,
   images: {

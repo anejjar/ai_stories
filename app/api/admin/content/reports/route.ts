@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
       throw error
     }
 
-    const reports: StoryReport[] = (reportsData || []).map(report => ({
+    const reports: StoryReport[] = (reportsData || []).map((report: any) => ({
       id: report.id,
       storyId: report.story_id,
       userId: report.user_id,

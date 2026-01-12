@@ -16,11 +16,17 @@ import { sendWeeklySummaryEmails } from '@/lib/email/notification-service'
  */
 export async function GET(request: NextRequest) {
   try {
-    // Verify cron secret to prevent unauthorized access
+    // Verify cron secret to prevent unauthorized access (fail-closed)
     const authHeader = request.headers.get('authorization')
     const cronSecret = process.env.CRON_SECRET
 
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    if (!cronSecret) {
+      console.error('CRON_SECRET not configured')
+      return NextResponse.json({ error: 'Service misconfigured' }, { status: 500 })
+    }
+
+    if (authHeader !== `Bearer ${cronSecret}`) {
+      console.warn('Unauthorized cron job attempt')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

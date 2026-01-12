@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 /**
  * GET /api/achievements
@@ -8,23 +7,7 @@ import { cookies } from 'next/headers'
  */
 export async function GET(request: Request) {
   try {
-    const cookieStore = cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options)
-            })
-          },
-        },
-      }
-    )
+    const supabase = await createServerSupabaseClient()
 
     // Get current user
     const {
@@ -76,23 +59,7 @@ export async function GET(request: Request) {
  */
 export async function POST(request: Request) {
   try {
-    const cookieStore = cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options)
-            })
-          },
-        },
-      }
-    )
+    const supabase = await createServerSupabaseClient()
 
     // Get current user
     const {
@@ -105,7 +72,7 @@ export async function POST(request: Request) {
     }
 
     // Call the database function to check and award achievements
-    const { data, error } = await supabase.rpc('check_and_award_achievements', {
+    const { data, error } = await (supabase.rpc as any)('check_and_award_achievements', {
       user_uuid: user.id,
     })
 

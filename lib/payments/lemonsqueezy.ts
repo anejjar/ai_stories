@@ -19,11 +19,12 @@ export const SUBSCRIPTION_PRICES: Record<SubscriptionTier, number> = {
 }
 
 /**
- * Lemon Squeezy API client
+ * Lemon Squeezy API client with timeout support
  */
 async function lemonsqueezyRequest(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  timeoutMs: number = 30000 // 30 seconds default
 ): Promise<Response> {
   const apiKey = process.env.LEMONSQUEEZY_API_KEY
   if (!apiKey) {
@@ -31,22 +32,40 @@ async function lemonsqueezyRequest(
   }
 
   const url = `${LEMONSQUEEZY_API_URL}${endpoint}`
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      'Accept': 'application/vnd.api+json',
-      'Content-Type': 'application/vnd.api+json',
-      'Authorization': `Bearer ${apiKey}`,
-      ...options.headers,
-    },
-  })
+  
+  // Create AbortController for timeout
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Unknown error' }))
-    throw new Error(`Lemon Squeezy API error: ${JSON.stringify(error)}`)
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        'Accept': 'application/vnd.api+json',
+        'Content-Type': 'application/vnd.api+json',
+        'Authorization': `Bearer ${apiKey}`,
+        ...options.headers,
+      },
+    })
+
+    clearTimeout(timeoutId)
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Unknown error' }))
+      throw new Error(`Lemon Squeezy API error: ${JSON.stringify(error)}`)
+    }
+
+    return response
+  } catch (error) {
+    clearTimeout(timeoutId)
+    
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error(`Lemon Squeezy API request timeout after ${timeoutMs}ms`)
+    }
+    
+    throw error
   }
-
-  return response
 }
 
 /**

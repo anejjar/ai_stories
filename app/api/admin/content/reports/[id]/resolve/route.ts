@@ -43,22 +43,24 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     // Get report details
-    const { data: report } = await supabaseAdmin
+    const { data: report, error: reportError } = await supabaseAdmin
       .from('story_reports')
       .select('story_id')
       .eq('id', reportId)
       .single()
 
-    if (!report) {
+    if (reportError || !report) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Report not found' },
         { status: 404 }
       )
     }
 
+    const reportTyped = report as { story_id: string }
+
     // Update report status to resolved
-    const { data: updatedReport, error: updateError } = await supabaseAdmin
-      .from('story_reports')
+    const { data: updatedReport, error: updateError } = await (supabaseAdmin
+      .from('story_reports') as any)
       .update({
         status: 'resolved',
         action_taken: actionTaken,
@@ -70,19 +72,21 @@ export async function POST(request: NextRequest, context: RouteContext) {
       .select()
       .single()
 
-    if (updateError) {
+    if (updateError || !updatedReport) {
       console.error('Failed to resolve report:', updateError)
-      throw updateError
+      throw updateError || new Error('Failed to update report')
     }
+
+    const updatedReportTyped = updatedReport as { id: string; status: string; action_taken: string }
 
     // Take action on the story if needed
     if (actionTaken === 'story_hidden') {
-      await supabaseAdmin
-        .from('stories')
+      await (supabaseAdmin
+        .from('stories') as any)
         .update({ visibility: 'private' })
-        .eq('id', report.story_id)
+        .eq('id', reportTyped.story_id)
     } else if (actionTaken === 'story_deleted') {
-      await supabaseAdmin.from('stories').delete().eq('id', report.story_id)
+      await supabaseAdmin.from('stories').delete().eq('id', reportTyped.story_id)
     }
 
     // Log admin activity
@@ -95,7 +99,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       details: {
         action: 'resolve',
         actionTaken,
-        storyId: report.story_id,
+        storyId: reportTyped.story_id,
       },
       ipAddress,
       userAgent,
@@ -104,9 +108,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
     return NextResponse.json<ApiResponse>({
       success: true,
       data: {
-        reportId: updatedReport.id,
-        status: updatedReport.status,
-        actionTaken: updatedReport.action_taken,
+        reportId: updatedReportTyped.id,
+        status: updatedReportTyped.status,
+        actionTaken: updatedReportTyped.action_taken,
       },
     })
   } catch (error) {

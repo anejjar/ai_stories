@@ -144,7 +144,7 @@ export default function LibraryPage() {
       <UpgradeModal
         open={showUpgradeModal}
         onOpenChange={setShowUpgradeModal}
-        tier="pro_max"
+        tier="family"
       />
     </>
   )

@@ -1,14 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { ProtectedRoute } from '@/components/auth/protected-route'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { CheckCircle, Sparkles, Crown } from 'lucide-react'
 import Link from 'next/link'
-
-import { Suspense } from 'react'
+import { ErrorBoundary } from '@/components/error-boundary'
 
 function PaymentSuccessContent() {
   const searchParams = useSearchParams()
@@ -86,13 +85,15 @@ function PaymentSuccessContent() {
 
 export default function PaymentSuccessPage() {
   return (
-    <Suspense fallback={
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-      </div>
-    }>
-      <PaymentSuccessContent />
-    </Suspense>
+    <ErrorBoundary>
+      <Suspense fallback={
+        <div className="flex justify-center items-center min-h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+        </div>
+      }>
+        <PaymentSuccessContent />
+      </Suspense>
+    </ErrorBoundary>
   )
 }
 

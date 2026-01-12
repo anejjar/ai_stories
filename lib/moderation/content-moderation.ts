@@ -1,9 +1,23 @@
 // Content moderation utilities for kid-safe content
 
-const PROFANITY_WORDS = [
-  // Add common profanity words here (keeping it minimal for example)
-  // In production, use a proper profanity filter library
+import Filter from 'bad-words'
+
+// Initialize profanity filter with strict settings for kids
+const profanityFilter = new Filter()
+
+// Additional unsafe words specific to children's content
+const ADDITIONAL_UNSAFE_WORDS = [
+  'kill', 'killed', 'killing', 'murder', 'blood', 'bloody',
+  'weapon', 'gun', 'knife', 'sword', 'bomb', 'explosion',
+  'drug', 'drugs', 'alcohol', 'beer', 'wine', 'drunk',
+  'suicide', 'die', 'dying', 'corpse', 'dead body',
+  'kidnap', 'kidnapped', 'kidnapping', 'abduct',
+  'abuse', 'abused', 'torture', 'tortured',
+  'hate', 'hatred', 'racist', 'racism',
+  'sexy', 'sexual', 'naked', 'nude',
 ]
+
+profanityFilter.addWords(...ADDITIONAL_UNSAFE_WORDS)
 
 const UNSAFE_THEMES = [
   'violence',
@@ -13,14 +27,28 @@ const UNSAFE_THEMES = [
   'death',
   'war',
   'fighting',
+  'weapon',
+  'guns',
+  'blood',
+  'gore',
+  'murder',
+  'killing',
+  'kidnapping',
+  'abuse',
+  'drugs',
+  'alcohol',
+  'adult content',
+  'sexual',
+  'terrorism',
+  'hate',
+  'discrimination',
 ]
 
 /**
- * Check if input contains profanity
+ * Check if input contains profanity or inappropriate content
  */
 export function containsProfanity(text: string): boolean {
-  const lowerText = text.toLowerCase()
-  return PROFANITY_WORDS.some((word) => lowerText.includes(word.toLowerCase()))
+  return profanityFilter.isProfane(text)
 }
 
 /**

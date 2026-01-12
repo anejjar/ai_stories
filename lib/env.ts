@@ -34,6 +34,13 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().min(1).optional(),
   WAITLIST_FROM_EMAIL: z.string().email().optional(),
 
+  // Cron Security
+  CRON_SECRET: z.string().min(1).optional(),
+
+  // Redis (Rate Limiting)
+  UPSTASH_REDIS_REST_URL: z.string().url().optional(),
+  UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
+
   // App
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),
   NEXT_PUBLIC_GLITCHTIP_DSN: z.string().url().optional(),
@@ -51,10 +58,46 @@ export function validateEnv(): Env {
   } catch (error) {
     if (error instanceof z.ZodError) {
       const missingVars = error.errors.map((e) => e.path.join('.')).join(', ')
-      throw new Error(`Missing or invalid environment variables: ${missingVars}`)
+      const errorMessage = `Missing or invalid environment variables: ${missingVars}`
+      console.error('❌ Environment validation failed:', errorMessage)
+      console.error('Required variables:', error.errors.map(e => e.path.join('.')).join(', '))
+      throw new Error(errorMessage)
     }
     throw error
   }
+}
+
+/**
+ * Validate environment variables at startup (non-blocking in development)
+ * In production, this will throw and prevent the app from starting
+ */
+export function validateEnvAtStartup(): void {
+  if (process.env.NODE_ENV === 'production') {
+    // In production, strict validation - fail fast
+    try {
+      validateEnv()
+      console.log('✅ Environment variables validated successfully')
+    } catch (error) {
+      console.error('❌ CRITICAL: Environment validation failed in production')
+      console.error(error)
+      process.exit(1)
+    }
+  } else {
+    // In development, warn but don't fail
+    try {
+      validateEnv()
+      console.log('✅ Environment variables validated successfully')
+    } catch (error) {
+      console.warn('⚠️  Environment validation warnings (development mode):', error)
+      console.warn('⚠️  Some features may not work correctly. Please check your .env.local file.')
+    }
+  }
+}
+
+// Auto-validate on module load (runs once when module is imported)
+if (typeof window === 'undefined') {
+  // Only run on server-side
+  validateEnvAtStartup()
 }
 
 /**

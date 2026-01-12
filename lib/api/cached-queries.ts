@@ -32,8 +32,14 @@ export const getCachedPublicStories = unstable_cache(
     }
 
     if (search && search.trim().length > 0) {
-      const searchTerm = search.trim()
-      query = query.or(`title.ilike.%${searchTerm}%,content.ilike.%${searchTerm}%`)
+      // Sanitize and validate search term
+      const sanitized = sanitizeSearchQuery(search)
+      
+      if (sanitized.length > 0) {
+        // Escape remaining special characters for ilike
+        const escapedTerm = escapeLikePattern(sanitized)
+        query = query.or(`title.ilike.%${escapedTerm}%,content.ilike.%${escapedTerm}%`)
+      }
     }
 
     // Apply sorting

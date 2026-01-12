@@ -31,7 +31,7 @@ export async function POST(
   if (response) return response
 
   // Rate limiting for expensive image generation
-  const rateLimitResult = checkRateLimit(userId, RATE_LIMITS.imageGeneration)
+  const rateLimitResult = await checkRateLimit(userId, RATE_LIMITS.imageGeneration)
   if (!rateLimitResult.success) {
     return NextResponse.json<ApiResponse>(
       {

@@ -1,15 +1,29 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { handleCorsPreflight, addCorsHeaders } from '@/lib/middleware/cors'
+// Validate environment variables at startup
+import '@/lib/env'
+// Setup graceful shutdown handlers
+import '@/lib/utils/graceful-shutdown'
 
 /**
  * App middleware for authentication and session management
  */
 export async function middleware(request: NextRequest) {
+  // Handle CORS preflight requests
+  const corsResponse = handleCorsPreflight(request)
+  if (corsResponse) {
+    return corsResponse
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   })
+
+  // Add CORS headers to all responses
+  response = addCorsHeaders(request, response)
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -52,7 +52,7 @@ export default function Home() {
     router.push('/signup')
   }
 
-  const handleUpgrade = (tier: 'pro' | 'pro_max') => {
+  const handleUpgrade = (tier: 'pro' | 'family') => {
     router.push(`/signup?tier=${tier}`)
   }
 
@@ -461,7 +461,7 @@ export default function Home() {
               features: ['Everything in Pro', 'AI-illustrated stories', 'Child appearance customization', 'PDF export for printing', 'High-res storybooks'],
               color: 'border-playwize-orange shadow-2xl',
               btnBg: 'bg-playwize-orange',
-              tier: 'pro_max',
+              tier: 'family',
               popular: true
             }
           ].map((plan, i) => (

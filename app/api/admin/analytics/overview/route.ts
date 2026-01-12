@@ -44,32 +44,36 @@ export async function GET(request: NextRequest) {
 
     // Process users data
     const totalUsers = usersResult.count || 0
+    const usersData = (usersResult.data || []) as Array<{ created_at: string; subscription_tier: string }>
     const newUsersThisWeek =
-      usersResult.data?.filter((u) => new Date(u.created_at) >= weekAgo).length || 0
+      usersData.filter((u) => new Date(u.created_at) >= weekAgo).length || 0
 
     const subscriptionDistribution = {
-      trial: usersResult.data?.filter((u) => u.subscription_tier === 'trial').length || 0,
-      pro: usersResult.data?.filter((u) => u.subscription_tier === 'pro').length || 0,
-      family: usersResult.data?.filter((u) => u.subscription_tier === 'family').length || 0,
+      trial: usersData.filter((u) => u.subscription_tier === 'trial').length || 0,
+      pro: usersData.filter((u) => u.subscription_tier === 'pro').length || 0,
+      family: usersData.filter((u) => u.subscription_tier === 'family').length || 0,
     }
 
     // Process stories data
     const totalStories = storiesResult.count || 0
+    const storiesData = (storiesResult.data || []) as Array<{ created_at: string; visibility: string }>
     const publicStories =
-      storiesResult.data?.filter((s) => s.visibility === 'public').length || 0
+      storiesData.filter((s) => s.visibility === 'public').length || 0
     const privateStories =
-      storiesResult.data?.filter((s) => s.visibility === 'private').length || 0
+      storiesData.filter((s) => s.visibility === 'private').length || 0
     const newStoriesThisWeek =
-      storiesResult.data?.filter((s) => new Date(s.created_at) >= weekAgo).length || 0
+      storiesData.filter((s) => new Date(s.created_at) >= weekAgo).length || 0
 
     // Process reports data
-    const pendingReports = reportsResult.data?.filter((r) => r.status === 'pending').length || 0
-    const reviewedReports = reportsResult.data?.filter((r) => r.status === 'reviewed').length || 0
-    const resolvedReports = reportsResult.data?.filter((r) => r.status === 'resolved').length || 0
+    const reportsData = (reportsResult.data || []) as Array<{ status: string }>
+    const pendingReports = reportsData.filter((r) => r.status === 'pending').length || 0
+    const reviewedReports = reportsData.filter((r) => r.status === 'reviewed').length || 0
+    const resolvedReports = reportsData.filter((r) => r.status === 'resolved').length || 0
 
     // Process payments data
+    const paymentsData = (paymentsResult.data || []) as Array<{ amount: number }>
     const revenueThisMonth =
-      paymentsResult.data?.reduce((sum, p) => sum + p.amount / 100, 0) || 0 // Convert cents to dollars
+      paymentsData.reduce((sum, p) => sum + p.amount / 100, 0) || 0 // Convert cents to dollars
 
     const stats: AdminDashboardStats = {
       users: {

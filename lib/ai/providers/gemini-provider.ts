@@ -29,19 +29,36 @@ export class GeminiProvider implements AIProvider {
 
     // Try gemini-2.5-flash first (faster, cheaper), fallback to gemini-2.5-pro
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
-      const result = await model.generateContent(prompt)
+      const model = this.genAI.getGenerativeModel({ 
+        model: 'gemini-2.5-flash',
+        generationConfig: {
+          // Add timeout via request options if supported
+        }
+      })
+      
+      // Wrap with timeout (60 seconds for text generation)
+      const { withTimeout } = await import('@/lib/utils/api-timeout')
+      const result = await withTimeout(
+        model.generateContent(prompt),
+        60000,
+        'Gemini API request timeout'
+      )
       const response = await result.response
       return response.text()
     } catch (error: any) {
       console.error('Error generating story with gemini-2.5-flash:', error)
 
       // If gemini-2.5-flash fails, try gemini-2.5-pro as fallback
-      if (error.message?.includes('404') || error.message?.includes('not found')) {
+      if (error.message?.includes('404') || error.message?.includes('not found') || error.message?.includes('timeout')) {
         console.log('Trying fallback model: gemini-2.5-pro')
         try {
+          const { withTimeout } = await import('@/lib/utils/api-timeout')
           const fallbackModel = this.genAI.getGenerativeModel({ model: 'gemini-2.5-pro' })
-          const result = await fallbackModel.generateContent(prompt)
+          const result = await withTimeout(
+            fallbackModel.generateContent(prompt),
+            60000,
+            'Gemini API request timeout (fallback)'
+          )
           const response = await result.response
           return response.text()
         } catch (fallbackError: any) {

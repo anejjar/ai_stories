@@ -40,22 +40,23 @@ export async function GET(request: NextRequest, context: RouteContext) {
       )
     }
 
+    const reportDataTyped = reportData as any
     const report: StoryReport = {
-      id: reportData.id,
-      storyId: reportData.story_id,
-      userId: reportData.user_id,
-      reason: reportData.reason,
-      description: reportData.description || undefined,
-      status: reportData.status,
-      reviewedBy: reportData.reviewed_by || undefined,
-      reviewedAt: reportData.reviewed_at ? new Date(reportData.reviewed_at) : undefined,
-      resolutionNotes: reportData.resolution_notes || undefined,
-      actionTaken: reportData.action_taken || undefined,
-      createdAt: new Date(reportData.created_at),
-      updatedAt: new Date(reportData.updated_at),
-      story: reportData.story as any,
-      reporter: reportData.reporter as any,
-      reviewer: reportData.reviewer as any,
+      id: reportDataTyped.id,
+      storyId: reportDataTyped.story_id,
+      userId: reportDataTyped.user_id,
+      reason: reportDataTyped.reason,
+      description: reportDataTyped.description || undefined,
+      status: reportDataTyped.status,
+      reviewedBy: reportDataTyped.reviewed_by || undefined,
+      reviewedAt: reportDataTyped.reviewed_at ? new Date(reportDataTyped.reviewed_at) : undefined,
+      resolutionNotes: reportDataTyped.resolution_notes || undefined,
+      actionTaken: reportDataTyped.action_taken || undefined,
+      createdAt: new Date(reportDataTyped.created_at),
+      updatedAt: new Date(reportDataTyped.updated_at),
+      story: reportDataTyped.story as any,
+      reporter: reportDataTyped.reporter as any,
+      reviewer: reportDataTyped.reviewer as any,
     }
 
     // Log admin activity
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       actionType: 'report_review',
       targetId: reportId,
       targetType: 'report',
-      details: { action: 'view', storyId: reportData.story_id },
+      details: { action: 'view', storyId: reportDataTyped.story_id },
       ipAddress,
       userAgent,
     })
@@ -108,17 +109,19 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       updates.reviewed_at = new Date().toISOString()
     }
 
-    const { data: updatedReport, error } = await supabaseAdmin
-      .from('story_reports')
+    const { data: updatedReport, error } = await (supabaseAdmin
+      .from('story_reports') as any)
       .update(updates)
       .eq('id', reportId)
       .select()
       .single()
 
-    if (error) {
+    if (error || !updatedReport) {
       console.error('Failed to update report:', error)
-      throw error
+      throw error || new Error('Failed to update report')
     }
+
+    const updatedReportTyped = updatedReport as any
 
     // Log admin activity
     const { ipAddress, userAgent } = getRequestMetadata(request)
@@ -127,14 +130,14 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       actionType: 'report_review',
       targetId: reportId,
       targetType: 'report',
-      details: { updates, storyId: updatedReport.story_id },
+      details: { updates, storyId: updatedReportTyped.story_id },
       ipAddress,
       userAgent,
     })
 
     return NextResponse.json<ApiResponse>({
       success: true,
-      data: updatedReport,
+      data: updatedReportTyped,
     })
   } catch (error) {
     console.error('Admin report update error:', error)

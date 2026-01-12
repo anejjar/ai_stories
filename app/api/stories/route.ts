@@ -140,8 +140,18 @@ export async function POST(request: NextRequest) {
   const { userId, response } = await requireAuth(request)
   if (response) return response
 
+  // CSRF protection (optional - SameSite cookies provide basic protection)
+  // For enhanced security, uncomment and implement CSRF token validation
+  // const csrfCheck = await requireCsrfToken(request)
+  // if (!csrfCheck.valid) {
+  //   return NextResponse.json<ApiResponse>(
+  //     { success: false, error: csrfCheck.error || 'CSRF validation failed' },
+  //     { status: 403 }
+  //   )
+  // }
+
   // Rate limiting
-  const rateLimitResult = checkRateLimit(userId, RATE_LIMITS.storyGeneration)
+  const rateLimitResult = await checkRateLimit(userId, RATE_LIMITS.storyGeneration)
   if (!rateLimitResult.success) {
     return NextResponse.json<ApiResponse>(
       {

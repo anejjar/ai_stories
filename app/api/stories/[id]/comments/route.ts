@@ -194,7 +194,7 @@ export async function POST(
       parentCommentId?: string
     }
 
-    // Validate content
+    // Validate and sanitize content
     if (!content || content.trim().length === 0) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Comment content is required' },
@@ -205,6 +205,18 @@ export async function POST(
     if (content.length > 1000) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Comment is too long (max 1000 characters)' },
+        { status: 400 }
+      )
+    }
+
+    // Sanitize content to prevent XSS
+    // Remove HTML tags and script content
+    const { sanitizeTextInput } = await import('@/lib/validation/input-sanitizer')
+    const sanitizedContent = sanitizeTextInput(content, 1000)
+    
+    if (sanitizedContent.length === 0) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: 'Comment content is invalid' },
         { status: 400 }
       )
     }
@@ -222,6 +234,9 @@ export async function POST(
         { status: 404 }
       )
     }
+
+    // Use sanitized content for database insert
+    const finalContent = sanitizedContent
 
     if (story.visibility !== 'public') {
       return NextResponse.json<ApiResponse>(
@@ -246,13 +261,13 @@ export async function POST(
       }
     }
 
-    // Insert comment
+    // Insert comment with sanitized content
     const { data: newComment, error: insertError } = await supabase
       .from('story_comments')
       .insert({
         story_id: storyId,
         user_id: user.id,
-        content: content.trim(),
+        content: finalContent, // Use sanitized content
         parent_comment_id: parentCommentId || null
       })
       .select()

@@ -23,7 +23,7 @@ export default function ProfilePage() {
 
   const getTierBadge = (tier: string) => {
     switch (tier) {
-      case 'pro_max':
+      case 'family':
         return (
           <Badge className="bg-playwize-orange text-white font-black rounded-full px-6 py-2 border-0 shadow-lg">
             <Crown className="h-4 w-4 mr-2" />
@@ -190,7 +190,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Usage Dashboard */}
-          {(userProfile.subscriptionTier === 'pro' || userProfile.subscriptionTier === 'family' || userProfile.subscriptionTier === 'pro_max') && (
+          {(userProfile.subscriptionTier === 'pro' || userProfile.subscriptionTier === 'family') && (
             <div className="md:col-span-2">
               <div className="bg-white rounded-[4rem] border-4 border-gray-100 shadow-sm overflow-hidden">
                 <div className="bg-playwize-purple p-8 text-white">

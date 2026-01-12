@@ -33,7 +33,11 @@ export async function GET(request: NextRequest) {
 
     // Apply search filter
     if (search) {
-      query = query.or(`email.ilike.%${search}%,display_name.ilike.%${search}%`)
+      const sanitized = sanitizeSearchQuery(search)
+      if (sanitized.length > 0) {
+        const escapedTerm = escapeLikePattern(sanitized)
+        query = query.or(`email.ilike.%${escapedTerm}%,display_name.ilike.%${escapedTerm}%`)
+      }
     }
 
     // Apply tier filter

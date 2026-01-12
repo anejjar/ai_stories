@@ -27,6 +27,18 @@ export async function POST(request: NextRequest) {
   const { userId, response } = await requireAuth(request)
   if (response) return response
 
+  // CSRF protection for payment operations
+  // Note: SameSite cookies provide basic CSRF protection
+  // For enhanced security, implement CSRF token validation here
+  // const { requireCsrfToken } = await import('@/lib/middleware/csrf')
+  // const csrfCheck = await requireCsrfToken(request)
+  // if (!csrfCheck.valid) {
+  //   return NextResponse.json<ApiResponse>(
+  //     { success: false, error: 'CSRF validation failed' },
+  //     { status: 403 }
+  //   )
+  // }
+
   try {
     if (!process.env.LEMONSQUEEZY_API_KEY) {
       return NextResponse.json<ApiResponse>(
