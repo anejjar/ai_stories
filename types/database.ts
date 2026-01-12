@@ -17,6 +17,7 @@ export interface DatabaseUser {
   onboarding_step: 'welcome' | 'profile_setup' | 'tour_active' | 'first_story' | 'completed'
   onboarding_dismissed_at: string | null // ISO timestamp
   onboarding_checklist: OnboardingChecklist | null // JSONB
+  welcome_email_sent_at: string | null // ISO timestamp
 }
 
 // Database Story Row (matches PostgreSQL stories table)

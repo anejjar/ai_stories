@@ -77,6 +77,7 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith('/login') ||
     request.nextUrl.pathname.startsWith('/signup') ||
     request.nextUrl.pathname.startsWith('/forgot-password') ||
+    request.nextUrl.pathname.startsWith('/verify-email') ||
     request.nextUrl.pathname.startsWith('/privacy') ||
     request.nextUrl.pathname.startsWith('/blog') ||
     request.nextUrl.pathname.startsWith('/discover') ||
@@ -97,6 +98,22 @@ export async function middleware(request: NextRequest) {
     // Optionally preserve the original URL to redirect back after login
     url.searchParams.set('redirectedFrom', request.nextUrl.pathname)
     return NextResponse.redirect(url)
+  }
+
+  // Check email verification for protected routes (except auth callback which handles verification)
+  if (user && !isPublicRoute && !request.nextUrl.pathname.startsWith('/auth/callback')) {
+    // Check if email is verified
+    const isEmailVerified = !!user.email_confirmed_at
+    
+    if (!isEmailVerified) {
+      // Redirect to verification page
+      const url = request.nextUrl.clone()
+      url.pathname = '/verify-email'
+      if (user.email) {
+        url.searchParams.set('email', user.email)
+      }
+      return NextResponse.redirect(url)
+    }
   }
 
   // If the user is logged in and trying to access login/signup,

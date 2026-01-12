@@ -8,15 +8,46 @@ import { UpgradeModal } from '@/components/modals/upgrade-modal'
 import { useStories } from '@/hooks/use-stories'
 import { useAuth } from '@/hooks/use-auth'
 import { useTrial } from '@/hooks/use-trial'
+import { EmailVerificationRequired } from '@/components/auth/email-verification-required'
 import Link from 'next/link'
 import { Plus, BookOpen, Loader2, Crown, Sparkles } from 'lucide-react'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase/client'
 
 export default function LibraryPage() {
+  const router = useRouter()
   const { data: stories, isLoading, error } = useStories()
-  const { userProfile } = useAuth()
+  const { userProfile, user, isEmailVerified, loading: authLoading } = useAuth()
   const { isTrialCompleted, storiesGenerated } = useTrial()
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+
+  const handleResendVerification = async () => {
+    if (!user?.email) return
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: user.email,
+      })
+
+      if (error) throw error
+    } catch (error) {
+      console.error('Failed to resend verification email:', error)
+    }
+  }
+
+  // Show email verification required if not verified
+  if (!authLoading && user && !isEmailVerified) {
+    return (
+      <div className="py-12 px-4 max-w-3xl mx-auto">
+        <EmailVerificationRequired
+          email={user.email}
+          onResend={handleResendVerification}
+        />
+      </div>
+    )
+  }
 
   const isFamily = userProfile?.subscriptionTier === 'family'
   const isPro = userProfile?.subscriptionTier === 'pro'
@@ -52,12 +83,23 @@ export default function LibraryPage() {
             )}
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/create">
-              <Button className="h-14 px-8 rounded-full bg-playwize-purple hover:bg-purple-700 text-white font-black text-lg shadow-lg shadow-purple-200 transition-all hover:scale-105 active:scale-95">
+            {isEmailVerified ? (
+              <Link href="/create">
+                <Button className="h-14 px-8 rounded-full bg-playwize-purple hover:bg-purple-700 text-white font-black text-lg shadow-lg shadow-purple-200 transition-all hover:scale-105 active:scale-95">
+                  <Plus className="h-6 w-6 mr-2" />
+                  Create Story 🎉
+                </Button>
+              </Link>
+            ) : (
+              <Button 
+                onClick={() => router.push('/verify-email')}
+                className="h-14 px-8 rounded-full bg-gray-400 hover:bg-gray-500 text-white font-black text-lg shadow-lg transition-all cursor-not-allowed"
+                disabled
+              >
                 <Plus className="h-6 w-6 mr-2" />
-                Create Story 🎉
+                Verify Email to Create
               </Button>
-            </Link>
+            )}
           </div>
         </div>
 
@@ -124,12 +166,24 @@ export default function LibraryPage() {
                 Start your journey by creating your first personalized story for your child. It only takes seconds! ⚡
               </p>
             </div>
-            <Link href="/create">
-              <Button size="lg" className="h-16 px-12 rounded-full bg-playwize-purple hover:bg-purple-700 text-white font-black text-xl shadow-xl shadow-purple-100 transition-all hover:scale-105 active:scale-95">
+            {isEmailVerified ? (
+              <Link href="/create">
+                <Button size="lg" className="h-16 px-12 rounded-full bg-playwize-purple hover:bg-purple-700 text-white font-black text-xl shadow-xl shadow-purple-100 transition-all hover:scale-105 active:scale-95">
+                  <Plus className="h-8 w-8 mr-2" />
+                  Create Your First Story! 🎉
+                </Button>
+              </Link>
+            ) : (
+              <Button 
+                onClick={() => router.push('/verify-email')}
+                size="lg" 
+                className="h-16 px-12 rounded-full bg-gray-400 hover:bg-gray-500 text-white font-black text-xl shadow-xl transition-all cursor-not-allowed"
+                disabled
+              >
                 <Plus className="h-8 w-8 mr-2" />
-                Create Your First Story! 🎉
+                Verify Email to Create
               </Button>
-            </Link>
+            )}
           </div>
         )}
 

@@ -5,6 +5,7 @@ import { cookies } from 'next/headers'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
+  const type = searchParams.get('type') // 'signup' or 'recovery' etc.
   // if "next" is in search params, use it as the redirection URL
   const next = searchParams.get('next') ?? '/library'
 
@@ -42,6 +43,29 @@ export async function GET(request: Request) {
         return NextResponse.redirect(
           `${origin}/login?error=${encodeURIComponent('Google sign-in is currently disabled. Please use email/password to sign in.')}`
         )
+      }
+
+      // Check if this is email verification
+      // If email_confirmed_at exists and type is 'signup', it's likely a new verification
+      // We'll let the API route check if welcome email was already sent to avoid duplicates
+      const isEmailVerification = type === 'signup' && data.user.email_confirmed_at
+
+      if (isEmailVerification && data.user.email) {
+        // Send welcome email asynchronously (don't wait for it)
+        // Use fetch to call our API route - it will check if already sent
+        fetch(`${origin}/api/auth/send-welcome-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: data.user.id,
+            email: data.user.email,
+          }),
+        }).catch((err) => {
+          // Log error but don't block the redirect
+          console.error('Failed to send welcome email:', err)
+        })
       }
     }
 

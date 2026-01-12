@@ -82,21 +82,20 @@ function SignupForm() {
       return
     }
 
-    if (user) {
-      // Wait for session to be fully established
+    // Always require email verification - never redirect to library if email isn't verified
+    // If user object exists but email isn't confirmed, still require verification
+    if (user && user.email_confirmed_at) {
+      // Email already confirmed (unlikely on signup, but handle it)
       await new Promise(resolve => setTimeout(resolve, 500))
-
-      // Database trigger automatically creates user profile
-      // Redirect to library
       window.location.href = '/library'
     } else {
-      // Email confirmation required
-      setError('✅ Account created! Please check your email to confirm your account before signing in.')
+      // Email confirmation required - redirect to verification page
+      setError('✅ Account created! Please check your email to verify your account.')
       setLoading(false)
-      // Auto-redirect to login after 3 seconds
+      // Redirect to verification page after 2 seconds
       setTimeout(() => {
-        router.push('/login')
-      }, 3000)
+        router.push(`/verify-email?email=${encodeURIComponent(email)}`)
+      }, 2000)
     }
   }
 

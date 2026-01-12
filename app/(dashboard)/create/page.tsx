@@ -247,18 +247,22 @@ function CreateContent() {
           </Card>
         </div>
       </div>
-      <UpgradeModal
-        open={showUpgradeModal}
-        onOpenChange={setShowUpgradeModal}
-        tier={upgradeTier}
-      />
-      <CreatePageTour />
-      <SuccessModal
-        open={showSuccessModal}
-        onOpenChange={setShowSuccessModal}
-        storyId={createdStory?.id}
-        storyTitle={createdStory?.title}
-      />
+      {canShowModals && (
+        <>
+          <UpgradeModal
+            open={showUpgradeModal}
+            onOpenChange={setShowUpgradeModal}
+            tier={upgradeTier}
+          />
+          <CreatePageTour />
+          <SuccessModal
+            open={showSuccessModal}
+            onOpenChange={setShowSuccessModal}
+            storyId={createdStory?.id}
+            storyTitle={createdStory?.title}
+          />
+        </>
+      )}
     </>
   )
 }
