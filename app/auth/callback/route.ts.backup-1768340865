@@ -3,19 +3,11 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
 export async function GET(request: Request) {
-  const requestUrl = new URL(request.url)
-  const { searchParams } = requestUrl
+  const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   const type = searchParams.get('type') // 'signup' or 'recovery' etc.
   // if "next" is in search params, use it as the redirection URL
   const next = searchParams.get('next') ?? '/library'
-
-  // Use NEXT_PUBLIC_APP_URL as the base URL for redirects in production
-  // This ensures redirects work correctly behind proxies and in production
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || requestUrl.origin
-
-  // Ensure we never redirect to 0.0.0.0 or invalid origins
-  const origin = baseUrl.includes('0.0.0.0') ? requestUrl.origin : baseUrl
 
   if (code) {
     const cookieStore = await cookies()
@@ -85,3 +77,4 @@ export async function GET(request: Request) {
   // return the user to an error page with instructions
   return NextResponse.redirect(`${origin}/login?error=Could not authenticate user`)
 }
+
