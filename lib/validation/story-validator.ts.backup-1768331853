@@ -2,7 +2,6 @@
  * Story Data Validation
  * Validates story data before database operations
  */
-import { validateAIResponse } from '../moderation/ai-response-validator'
 
 export interface ValidationResult {
   isValid: boolean
@@ -28,12 +27,6 @@ function validateContentLength(content: string): string | null {
   
   if (content.trim().length < 50) {
     return 'Story content must be at least 50 characters'
-  // Check for AI refusal patterns
-  const aiValidation = validateAIResponse(content)
-  if (!aiValidation.isValid) {
-    return `Story content appears to be invalid: ${aiValidation.reason}`
-  }
-
   }
   
   return null

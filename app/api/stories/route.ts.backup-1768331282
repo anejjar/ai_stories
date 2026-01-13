@@ -4,8 +4,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getProviderManager } from '@/lib/ai/provider-manager'
 import { checkTrialLimit, incrementTrialUsage } from '@/lib/trial/trial-service-server'
 import { checkStoryLimit, incrementStoryUsage } from '@/lib/usage/daily-limits'
-import { validateStoryInput, validateMultiChildStoryInput } from '@/lib/moderation/content-moderation'
-import { validateAIResponse, validateIllustratedBookContent } from '@/lib/moderation/ai-response-validator'
+import { validateStoryInput } from '@/lib/moderation/content-moderation'
 import { checkRateLimit, RATE_LIMITS, getRateLimitHeaders } from '@/lib/rate-limit'
 import type { ApiResponse, StoryInput, Story } from '@/types'
 import { storyToDatabaseStory, databaseStoryToStory, firestoreStoryToStory, type DatabaseStory } from '@/types/database'
@@ -289,25 +288,24 @@ export async function POST(request: NextRequest) {
 
     // Content moderation - validate for kid-safe content
     const validation = isMultiChild
-      ? validateMultiChildStoryInput(
-          storyInput.children!,
-          storyInput.theme,
-          storyInput.moral
-        )
+      ? validateStoryInput({
+        childName: storyInput.children![0].name, // Use first child for validation
+        adjectives: storyInput.children![0].adjectives,
+        theme: storyInput.theme,
+        moral: storyInput.moral,
+      })
       : validateStoryInput({
-          childName: storyInput.childName!,
-          adjectives: storyInput.adjectives!,
-          theme: storyInput.theme,
-          moral: storyInput.moral,
-        })
+        childName: storyInput.childName!,
+        adjectives: storyInput.adjectives!,
+        theme: storyInput.theme,
+        moral: storyInput.moral,
+      })
 
     if (!validation.isValid) {
       return NextResponse.json<ApiResponse>(
         {
           success: false,
-          error: 'We detected content that may not be appropriate for children. ' +
-                 validation.errors.join('. ') +
-                 ' Please try different words.',
+          error: validation.errors.join('. '),
         },
         { status: 400 }
       )
@@ -383,28 +381,6 @@ export async function POST(request: NextRequest) {
             hasUrl: !!p.illustration_url,
             urlLength: p.illustration_url.length
           })))
-          // Validate illustrated book content
-          const bookContentValidation = validateIllustratedBookContent(
-            storyContent,
-            bookPages
-          )
-
-          if (!bookContentValidation.isValid) {
-            console.error('Illustrated book validation failed:', {
-              reason: bookContentValidation.reason,
-              confidence: bookContentValidation.confidence,
-              contentPreview: storyContent.substring(0, 200)
-            })
-
-            return NextResponse.json<ApiResponse>(
-              {
-                success: false,
-                error: 'We were unable to create an appropriate illustrated story with the provided details. ' +
-                       'Please try using different character names or themes.' ,
-              },
-              { status: 400 }
-            )
-          }
         } catch (illustratedError) {
           console.error('❌ Failed to generate illustrated book:', illustratedError)
           console.error('Illustrated book error details:', {
@@ -420,25 +396,6 @@ export async function POST(request: NextRequest) {
       // Regular story generation (text-only)
       storyContent = await generateRegularStory(providerManager, storyInput, isMultiChild)
     }
-    // Validate AI response for refusal messages
-    const aiResponseValidation = validateAIResponse(storyContent)
-    if (!aiResponseValidation.isValid) {
-      console.error('AI response validation failed:', {
-        reason: aiResponseValidation.reason,
-        confidence: aiResponseValidation.confidence,
-        contentPreview: storyContent.substring(0, 200)
-      })
-
-      return NextResponse.json<ApiResponse>(
-        {
-          success: false,
-          error: 'We were unable to create an appropriate story with the provided details. ' +
-                 'Please try using different character names or themes.' ,
-        },
-        { status: 400 }
-      )
-    }
-
 
     // Generate story title
     const titleChildName = isMultiChild

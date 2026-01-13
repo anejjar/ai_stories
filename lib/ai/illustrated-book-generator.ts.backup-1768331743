@@ -14,7 +14,6 @@ import {
   selectArtStyle,
   type IllustrationRequest
 } from './illustration-prompt-builder'
-import { validateAIResponse } from '../moderation/ai-response-validator'
 import { extractScenesFromStory as extractScenes, extractKeyVisualMoment } from './scene-extractor'
 
 export interface BookScene {
@@ -103,15 +102,6 @@ export async function generateIllustratedBook(params: {
     templateId: params.templateId,
     customPrompt: storyPrompt,
   })
-  // Validate AI-generated story content
-  const aiResponseValidation = validateAIResponse(storyContent)
-  if (!aiResponseValidation.isValid) {
-    throw new Error(
-      `AI response validation failed: ${aiResponseValidation.reason}. ` +
-      `Please try different character names or themes.`
-    )
-  }
-
 
   // Determine character rendering tier
   const characterTier = determineCharacterTier(params.aiDescription, params.appearance)

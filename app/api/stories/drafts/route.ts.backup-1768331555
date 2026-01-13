@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth/middleware'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { getProviderManager } from '@/lib/ai/provider-manager'
-import { validateStoryInput } from '@/lib/moderation/content-moderation'
-import { validateAIResponse } from '@/lib/moderation/ai-response-validator'
+import { checkTrialLimit, incrementTrialUsage } from '@/lib/trial/trial-service-server'
 import { validateStoryInput } from '@/lib/moderation/content-moderation'
 import type { ApiResponse, DraftGenerationRequest, Story } from '@/types'
 import { storyToDatabaseStory, databaseStoryToStory } from '@/types/database'
@@ -130,17 +129,6 @@ export async function POST(request: NextRequest) {
           moral: draftRequest.moral,
           templateId: draftRequest.templateId,
         })
-        // Validate AI response for refusal messages
-        const aiResponseValidation = validateAIResponse(storyContent)
-        if (!aiResponseValidation.isValid) {
-          console.error(`Draft ${i + 1} validation failed:`, {
-            reason: aiResponseValidation.reason,
-            confidence: aiResponseValidation.confidence
-          })
-          // Skip this draft and continue with others
-          continue
-        }
-
 
         // Generate story title
         const storyTitle = generateStoryTitle(
