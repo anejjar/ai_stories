@@ -10,12 +10,59 @@ export async function GET(request: Request) {
   // if "next" is in search params, use it as the redirection URL
   const next = searchParams.get('next') ?? '/library'
 
-  // Use NEXT_PUBLIC_APP_URL as the base URL for redirects in production
-  // This ensures redirects work correctly behind proxies and in production
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || requestUrl.origin
+  // Get the production URL from environment variable
+  // This MUST be set in your production environment (Vercel/Dokploy/Docker)
+  const productionUrl = process.env.NEXT_PUBLIC_APP_URL
 
-  // Ensure we never redirect to 0.0.0.0 or invalid origins
-  const origin = baseUrl.includes('0.0.0.0') ? requestUrl.origin : baseUrl
+  // Get the redirect_to parameter from Supabase callback
+  const redirectTo = searchParams.get('redirect_to')
+
+  // Determine the base URL for redirects
+  let origin: string
+
+  // Priority 1: Use production URL if set
+  if (productionUrl && !productionUrl.includes('localhost') && !productionUrl.includes('0.0.0.0')) {
+    origin = productionUrl
+  }
+  // Priority 2: Use redirect_to if it looks like a valid production URL
+  else if (redirectTo && !redirectTo.includes('localhost') && !redirectTo.includes('0.0.0.0') && !redirectTo.includes(':3000')) {
+    try {
+      const redirectUrl = new URL(redirectTo)
+      origin = redirectUrl.origin
+    } catch {
+      origin = 'https://tales.anejjar.com' // Fallback to production domain
+    }
+  }
+  // Priority 3: Check X-Forwarded-Host header (for reverse proxies)
+  else if (request.headers.get('x-forwarded-host')) {
+    const forwardedHost = request.headers.get('x-forwarded-host')
+    const forwardedProto = request.headers.get('x-forwarded-proto') || 'https'
+    origin = `${forwardedProto}://${forwardedHost}`
+  }
+  // Priority 4: Check Host header
+  else if (request.headers.get('host') && !request.headers.get('host')?.includes('localhost')) {
+    const host = request.headers.get('host')
+    // If host doesn't look like a domain (e.g., Docker container ID), use fallback
+    if (host && !host.match(/^[a-f0-9]{12}/) && host.includes('.')) {
+      const proto = request.headers.get('x-forwarded-proto') || 'https'
+      origin = `${proto}://${host}`
+    } else {
+      origin = 'https://tales.anejjar.com' // Fallback to production domain
+    }
+  }
+  // Final fallback: Use production domain
+  else {
+    origin = 'https://tales.anejjar.com'
+  }
+
+  // Log for debugging (remove in production if needed)
+  console.log('Auth callback redirect determination:', {
+    productionUrl,
+    redirectTo,
+    forwardedHost: request.headers.get('x-forwarded-host'),
+    host: request.headers.get('host'),
+    finalOrigin: origin
+  })
 
   if (code) {
     const cookieStore = await cookies()
