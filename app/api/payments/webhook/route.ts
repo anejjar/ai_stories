@@ -136,10 +136,31 @@ export async function POST(request: NextRequest) {
       // Determine tier from variant ID before calling RPC
       let tier = 'trial'
       const variantId = attributes.variant_id?.toString()
+
+      // Debug logging for variant ID comparison
+      logger.info('🔍 Webhook variant ID comparison', {
+        eventId,
+        receivedVariantId: variantId,
+        receivedVariantIdType: typeof variantId,
+        proVariantId: process.env.LEMONSQUEEZY_PRO_VARIANT_ID,
+        proVariantIdType: typeof process.env.LEMONSQUEEZY_PRO_VARIANT_ID,
+        familyVariantId: process.env.LEMONSQUEEZY_FAMILY_VARIANT_ID,
+        proMatch: variantId === process.env.LEMONSQUEEZY_PRO_VARIANT_ID,
+        familyMatch: variantId === process.env.LEMONSQUEEZY_FAMILY_VARIANT_ID,
+      })
+
       if (variantId === process.env.LEMONSQUEEZY_PRO_VARIANT_ID) {
         tier = 'pro'
+        logger.info('✅ Matched PRO variant', { variantId })
       } else if (variantId === process.env.LEMONSQUEEZY_FAMILY_VARIANT_ID) {
         tier = 'family'
+        logger.info('✅ Matched FAMILY variant', { variantId })
+      } else {
+        logger.warn('⚠️  No variant match, defaulting to trial', {
+          variantId,
+          expectedProId: process.env.LEMONSQUEEZY_PRO_VARIANT_ID,
+          expectedFamilyId: process.env.LEMONSQUEEZY_FAMILY_VARIANT_ID,
+        })
       }
 
       // Use RPC function for atomic transaction-like processing
