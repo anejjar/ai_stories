@@ -86,6 +86,17 @@ export async function GET(request: Request) {
 
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
+    // Log detailed error information for debugging
+    if (error) {
+      console.error('Auth callback error:', {
+        error: error.message,
+        code: error.name,
+        status: error.status,
+        type,
+        timestamp: new Date().toISOString()
+      })
+    }
+
     // Check if this is a Google OAuth login
     if (!error && data?.user) {
       const isGoogleUser = data.user.app_metadata?.provider === 'google'
@@ -127,8 +138,31 @@ export async function GET(request: Request) {
     if (!error) {
       return NextResponse.redirect(`${origin}${next}`)
     }
+
+    // Handle specific error cases with better messages
+    let errorMessage = 'Could not authenticate user'
+
+    if (error) {
+      if (error.message?.includes('expired')) {
+        errorMessage = 'Verification link has expired. Please request a new one.'
+      } else if (error.message?.includes('already been used') || error.message?.includes('invalid')) {
+        errorMessage = 'This verification link has already been used or is invalid. Please check your email for the latest link.'
+      } else if (error.message?.includes('not found')) {
+        errorMessage = 'Verification link is invalid. Please sign up again.'
+      } else {
+        // Include the actual error for debugging
+        errorMessage = `Authentication failed: ${error.message}`
+      }
+    }
+
+    return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(errorMessage)}`)
   }
 
-  // return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/login?error=Could not authenticate user`)
+  // No code parameter provided
+  console.error('Auth callback called without code parameter', {
+    searchParams: Object.fromEntries(searchParams.entries()),
+    timestamp: new Date().toISOString()
+  })
+
+  return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent('Invalid authentication link. Please try signing in again.')}`)
 }
