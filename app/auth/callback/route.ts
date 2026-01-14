@@ -97,21 +97,8 @@ export async function GET(request: Request) {
       })
     }
 
-    // Check if this is a Google OAuth login
+    // Check if this is email verification
     if (!error && data?.user) {
-      const isGoogleUser = data.user.app_metadata?.provider === 'google'
-
-      if (isGoogleUser) {
-        // Sign out the user immediately
-        await supabase.auth.signOut()
-
-        // Redirect to login with error message
-        return NextResponse.redirect(
-          `${origin}/login?error=${encodeURIComponent('Google sign-in is currently disabled. Please use email/password to sign in.')}`
-        )
-      }
-
-      // Check if this is email verification
       // If email_confirmed_at exists and type is 'signup', it's likely a new verification
       // We'll let the API route check if welcome email was already sent to avoid duplicates
       const isEmailVerification = type === 'signup' && data.user.email_confirmed_at

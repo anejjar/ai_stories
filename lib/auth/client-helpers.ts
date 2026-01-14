@@ -71,14 +71,6 @@ export async function signUpWithEmail(email: string, password: string) {
  * Sign in with Google
  */
 export async function signInWithGoogle() {
-  // Block if Google auth is disabled
-  if (!FEATURES.GOOGLE_AUTH_ENABLED) {
-    return {
-      user: null,
-      error: 'Google sign-in is currently disabled. Please use email/password to sign in.'
-    }
-  }
-
   try {
     const redirectUrl = getRedirectUrl('/auth/callback')
 
