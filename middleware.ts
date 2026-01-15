@@ -72,19 +72,32 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   // Define public routes
+  // Note: Route groups like (public), (auth), (dashboard), (admin) don't affect URLs
   const isPublicRoute =
     request.nextUrl.pathname === '/' ||
+    // Auth routes - (auth) group
     request.nextUrl.pathname.startsWith('/login') ||
     request.nextUrl.pathname.startsWith('/signup') ||
     request.nextUrl.pathname.startsWith('/forgot-password') ||
     request.nextUrl.pathname.startsWith('/verify-email') ||
-    request.nextUrl.pathname.startsWith('/privacy') ||
-    request.nextUrl.pathname.startsWith('/blog') ||
-    request.nextUrl.pathname.startsWith('/discover') ||
-    request.nextUrl.pathname.startsWith('/story/') ||
-    request.nextUrl.pathname.startsWith('/pricing') ||
+    // Auth callbacks - kept at /auth/* for Supabase compatibility
     request.nextUrl.pathname.startsWith('/auth/callback') ||
     request.nextUrl.pathname.startsWith('/auth/reset-password') ||
+    // Public marketing pages - (public) group
+    request.nextUrl.pathname.startsWith('/about') ||
+    request.nextUrl.pathname.startsWith('/blog') ||
+    request.nextUrl.pathname.startsWith('/contact') ||
+    request.nextUrl.pathname.startsWith('/features') ||
+    request.nextUrl.pathname.startsWith('/how-it-works') ||
+    request.nextUrl.pathname.startsWith('/pricing') ||
+    request.nextUrl.pathname.startsWith('/privacy') ||
+    request.nextUrl.pathname.startsWith('/story-examples') ||
+    request.nextUrl.pathname.startsWith('/support') ||
+    request.nextUrl.pathname.startsWith('/terms') ||
+    // Public access to dashboard features (for sharing)
+    request.nextUrl.pathname.startsWith('/discover') ||
+    request.nextUrl.pathname.startsWith('/story/') ||
+    // API routes
     request.nextUrl.pathname.startsWith('/api/')
 
   // Check if accessing admin routes

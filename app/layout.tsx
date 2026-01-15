@@ -19,21 +19,28 @@ const nunito = Nunito({
   variable: '--font-nunito',
 })
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://safeaistories.com'
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ai-tales.com'
 
 export const metadata: Metadata = {
   title: {
-    default: 'AI Bedtime Stories Kids Love | Safe AI Stories Generator',
-    template: '%s | Safe AI Stories',
+    default: 'AI Story Generator for Kids | Personalized Bedtime Stories | AI Tales',
+    template: '%s | AI Tales',
   },
-  description: 'Create magical, personalized bedtime stories in seconds with AI. Safe, ad-free tales your kids will love. Try free tonight—sweet dreams guaranteed! ✨',
+  description: 'Create unlimited personalized bedtime stories in seconds with AI. Safe, educational, human-moderated stories where your child is the hero. Start free—no credit card required. Join 10,000+ families.',
   keywords: [
     // Primary Keywords
-    'ai bedtime stories',
-    'bedtime story generator',
+    'AI story generator for kids',
     'personalized bedtime stories',
-    'ai story generator for kids',
-    'custom bedtime stories',
+    'bedtime story generator',
+    'AI stories for children',
+    'personalized children\'s stories',
+    // Secondary Keywords
+    'educational storytelling',
+    'interactive stories for kids',
+    'safe AI content for children',
+    'family storytelling app',
+    'AI-illustrated children\'s books',
+    'bedtime story audio',
     // Long-tail Keywords
     'bedtime stories with child\'s name',
     'ai generated children\'s stories',
@@ -50,31 +57,34 @@ export const metadata: Metadata = {
     'ai bedtime story maker',
     'educational bedtime stories ai',
     'instant bedtime story generator',
+    'how to create personalized story for child',
+    'wonderbly alternative',
+    'epic alternative',
   ],
-  authors: [{ name: 'Safe AI Stories' }],
-  creator: 'Safe AI Stories',
-  publisher: 'Safe AI Stories',
+  authors: [{ name: 'AI Tales' }],
+  creator: 'AI Tales',
+  publisher: 'AI Tales',
   metadataBase: new URL(appUrl),
   openGraph: {
     type: 'website',
     locale: 'en_US',
     url: appUrl,
-    siteName: 'Safe AI Stories',
-    title: 'AI Bedtime Stories Kids Love | Safe AI Stories Generator',
-    description: 'Create magical, personalized bedtime stories in seconds with AI. Safe, ad-free tales your kids will love. Try free tonight—sweet dreams guaranteed! ✨',
+    siteName: 'AI Tales',
+    title: 'AI Story Generator for Kids | AI Tales',
+    description: 'Create unlimited personalized bedtime stories in seconds with AI. Safe, educational, human-moderated stories where your child is the hero. Start free—no credit card required. Join 10,000+ families.',
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Safe AI Stories - Personalized AI Bedtime Stories for Kids',
+        alt: 'AI Tales - Personalized AI Story Generator for Kids',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AI Bedtime Stories Kids Love | Safe AI Stories',
-    description: 'Create magical, personalized bedtime stories in seconds with AI. Safe, ad-free tales your kids will love. Try free tonight! ✨',
+    title: 'AI Story Generator for Kids | AI Tales',
+    description: 'Create unlimited personalized bedtime stories in seconds with AI. Safe, educational, human-moderated stories where your child is the hero. Start free!',
     images: ['/og-image.png'],
   },
   robots: {
