@@ -108,12 +108,19 @@ export function useUsageLimitWarning() {
 
 /**
  * Format time remaining until reset
+ * Handles both Date objects and date strings (from JSON serialization)
  */
-export function formatTimeUntilReset(resetAt?: Date): string {
+export function formatTimeUntilReset(resetAt?: Date | string): string {
   if (!resetAt) return 'Unknown'
 
+  // Convert string to Date if needed (dates from JSON are strings)
+  const resetDate = resetAt instanceof Date ? resetAt : new Date(resetAt)
+  
+  // Check if date is valid
+  if (isNaN(resetDate.getTime())) return 'Unknown'
+
   const now = new Date()
-  const diff = resetAt.getTime() - now.getTime()
+  const diff = resetDate.getTime() - now.getTime()
 
   if (diff <= 0) return 'Now'
 

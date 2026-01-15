@@ -19,6 +19,7 @@ import {
   Sparkles,
   Bell,
   Compass,
+  HelpCircle,
 } from 'lucide-react'
 import { StreakCounter } from '@/components/achievements/streak-counter'
 
@@ -67,6 +68,7 @@ export function MainNav() {
     { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
     { href: '/profile', label: 'Profile', icon: User },
     { href: '/settings/notifications', label: 'Notifications', icon: Bell },
+    { href: '/support', label: 'Help & Support', icon: HelpCircle },
   ]
 
   const isActive = (href: string) => {

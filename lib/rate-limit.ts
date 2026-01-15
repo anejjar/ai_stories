@@ -162,6 +162,13 @@ export const RATE_LIMITS = {
     windowSeconds: 3600, // 3 signups per hour per IP
     identifier: 'waitlist',
   },
+
+  // Support contact form - prevent spam
+  supportContact: {
+    limit: 5,
+    windowSeconds: 3600, // 5 tickets per hour per user
+    identifier: 'support-contact',
+  },
 } as const
 
 /**

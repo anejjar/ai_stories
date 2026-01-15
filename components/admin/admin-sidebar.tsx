@@ -8,11 +8,13 @@ import {
   FileText,
   AlertCircle,
   Settings,
+  MessageSquare,
 } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Users', href: '/admin/users', icon: Users },
+  { name: 'Support Tickets', href: '/admin/support/tickets', icon: MessageSquare },
   { name: 'Content Reports', href: '/admin/content/reports', icon: AlertCircle },
   { name: 'Stories', href: '/admin/content/stories', icon: FileText },
   { name: 'Activity Log', href: '/admin/activity', icon: Settings },

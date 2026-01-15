@@ -1,10 +1,10 @@
 import { Badge } from '@/components/ui/badge'
 import type { SubscriptionTier } from '@/types'
-import type { StoryReportStatus } from '@/types/admin'
+import type { StoryReportStatus, SupportTicketStatus } from '@/types/admin'
 
 interface StatusBadgeProps {
   status: string
-  type: 'subscription' | 'report' | 'visibility'
+  type: 'subscription' | 'report' | 'visibility' | 'ticket'
 }
 
 export function StatusBadge({ status, type }: StatusBadgeProps) {
@@ -45,6 +45,27 @@ export function StatusBadge({ status, type }: StatusBadgeProps) {
     return (
       <Badge variant="outline" className={colors[status as 'public' | 'private']}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
+      </Badge>
+    )
+  }
+
+  if (type === 'ticket') {
+    const ticketStatus = status as SupportTicketStatus
+    const colors = {
+      open: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+      in_progress: 'bg-blue-100 text-blue-800 border-blue-300',
+      resolved: 'bg-green-100 text-green-800 border-green-300',
+      closed: 'bg-gray-100 text-gray-800 border-gray-300',
+    }
+    const labels = {
+      open: 'Open',
+      in_progress: 'In Progress',
+      resolved: 'Resolved',
+      closed: 'Closed',
+    }
+    return (
+      <Badge variant="outline" className={colors[ticketStatus]}>
+        {labels[ticketStatus]}
       </Badge>
     )
   }

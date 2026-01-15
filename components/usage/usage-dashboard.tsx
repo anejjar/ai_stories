@@ -9,7 +9,7 @@ interface UsageProgressBarProps {
   current: number
   limit: number
   label: string
-  resetAt?: Date
+  resetAt?: Date | string
 }
 
 function UsageProgressBar({ current, limit, label, resetAt }: UsageProgressBarProps) {

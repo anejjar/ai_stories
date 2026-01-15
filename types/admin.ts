@@ -17,6 +17,55 @@ export type AdminActionType =
   | 'story_review'
   | 'story_delete'
   | 'report_review'
+  | 'ticket_view'
+  | 'ticket_update'
+  | 'ticket_resolve'
+
+// Support Ticket Types
+export type SupportTicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed'
+export type SupportTicketCategory = 'bug_report' | 'account_issue' | 'billing_payment' | 'general_inquiry'
+export type SupportTicketPriority = 'low' | 'normal' | 'high'
+
+export interface SupportTicket {
+  id: string
+  userId?: string
+  userEmail: string
+  userName?: string
+  ticketNumber: string
+  category: SupportTicketCategory
+  subject: string
+  message: string
+  status: SupportTicketStatus
+  priority: SupportTicketPriority
+  adminId?: string
+  adminNotes?: string
+  adminResponse?: string
+  resolvedAt?: Date
+  createdAt: Date
+  updatedAt: Date
+  // Related data (populated on detail view)
+  user?: {
+    id: string
+    email: string
+    displayName?: string
+  }
+  admin?: {
+    id: string
+    email: string
+    displayName?: string
+  }
+}
+
+export interface SupportTicketFilters {
+  status?: SupportTicketStatus | 'all'
+  category?: SupportTicketCategory | 'all'
+  priority?: SupportTicketPriority | 'all'
+  search?: string
+  sortBy?: 'created_at' | 'updated_at' | 'priority'
+  sortOrder?: 'asc' | 'desc'
+  page?: number
+  limit?: number
+}
 
 export interface AdminActivity {
   id: string
