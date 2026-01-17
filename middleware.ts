@@ -14,6 +14,11 @@ export async function middleware(request: NextRequest) {
     return corsResponse
   }
 
+  // Skip middleware for webhook endpoints - they handle their own auth
+  if (request.nextUrl.pathname.startsWith('/api/webhooks/')) {
+    return NextResponse.next()
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,

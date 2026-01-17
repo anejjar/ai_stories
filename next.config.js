@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
+  // Prevent trailing slash redirects (important for webhooks)
+  skipTrailingSlashRedirect: true,
   typescript: {
     // Temporarily ignore build errors due to Supabase type inference limitations
     // Most type errors are from Supabase's complex generic types not fully inferring our Database schema
