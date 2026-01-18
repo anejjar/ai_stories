@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Compass, Loader2, BookOpen, Plus, Sparkles } from 'lucide-react'
+import { Compass, Loader2, BookOpen, Plus, Sparkles, Globe, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { DiscoveryFilters } from '@/components/discover/discovery-filters'
 import { PublicStoryCard } from '@/components/discover/public-story-card'
@@ -114,6 +114,68 @@ export default function DiscoverPage() {
           onFiltersChange={handleFiltersChange}
         />
       </div>
+
+      {/* Encourage Public Stories Section */}
+      {!isLoading && (
+        <div className="bg-gradient-to-br from-purple-50 via-white to-orange-50 rounded-[3rem] border-4 border-purple-200 shadow-lg p-8 md:p-12 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-purple-100/30 rounded-full -mr-32 -mt-32 blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-orange-100/30 rounded-full -ml-24 -mb-24 blur-3xl" />
+          
+          <div className="relative z-10">
+            <div className="flex flex-col md:flex-row items-center gap-8">
+              {/* Icon Section */}
+              <div className="flex-shrink-0">
+                <div className="h-24 w-24 rounded-[2rem] bg-gradient-to-br from-[#7c3aed] to-purple-600 flex items-center justify-center shadow-xl">
+                  <Globe className="h-12 w-12 text-white" />
+                </div>
+              </div>
+
+              {/* Content Section */}
+              <div className="flex-1 text-center md:text-left space-y-4">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-100 text-playwize-purple text-sm font-black border border-purple-200 mb-2">
+                  <Users className="h-4 w-4" />
+                  <span>Share Your Stories</span>
+                </div>
+                
+                <h2 className="text-3xl md:text-4xl font-black text-gray-900">
+                  Create Text Stories & Share with the Community
+                </h2>
+                
+                <p className="text-lg text-gray-600 font-medium max-w-2xl">
+                  Create amazing text stories and make them public so others can discover, read, and enjoy your creative work. Your stories can inspire and bring joy to readers around the world!
+                </p>
+
+                <div className="flex flex-wrap items-center gap-4 pt-2">
+                  <div className="flex items-center gap-2 text-sm font-bold text-gray-700">
+                    <BookOpen className="h-5 w-5 text-playwize-purple" />
+                    <span>Create text stories</span>
+                  </div>
+                  <div className="text-gray-300">•</div>
+                  <div className="flex items-center gap-2 text-sm font-bold text-gray-700">
+                    <Globe className="h-5 w-5 text-playwize-purple" />
+                    <span>Make them public</span>
+                  </div>
+                  <div className="text-gray-300">•</div>
+                  <div className="flex items-center gap-2 text-sm font-bold text-gray-700">
+                    <Users className="h-5 w-5 text-playwize-purple" />
+                    <span>Share with everyone</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* CTA Button */}
+              <div className="flex-shrink-0">
+                <Link href="/create">
+                  <Button className="h-14 px-8 rounded-full bg-playwize-purple hover:bg-purple-700 text-white font-black text-lg shadow-xl shadow-purple-200 transition-all hover:scale-105 active:scale-95">
+                    <Sparkles className="h-6 w-6 mr-2" />
+                    Create Story
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stories Grid */}
       <div className="pb-12">
