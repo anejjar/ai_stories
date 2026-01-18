@@ -5,7 +5,7 @@ import { generateSupportTicketEmail } from '@/lib/email/templates/support-ticket
 import { generateSupportConfirmationEmail } from '@/lib/email/templates/support-confirmation'
 import { checkRateLimit, RATE_LIMITS, getRateLimitHeaders } from '@/lib/rate-limit'
 
-const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'support@safeaistories.com'
+const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'support@ai-tales.com'
 
 const VALID_CATEGORIES = ['bug_report', 'account_issue', 'billing_payment', 'general_inquiry']
 

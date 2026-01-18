@@ -90,7 +90,7 @@ export default function SupportPage() {
             </div>
             <div>
               <p className="font-black text-gray-900">Email Support</p>
-              <p className="text-sm text-gray-500">support@safeaistories.com</p>
+              <p className="text-sm text-gray-500">support@ai-tales.com</p>
             </div>
           </div>
 

@@ -132,10 +132,10 @@ export default function PrivacyPage() {
             <h3 className="text-2xl font-black text-gray-900">Questions About Privacy?</h3>
             <p className="text-gray-500 font-bold max-w-xl mx-auto">
               We are here to help. Reach out anytime with concerns or questions at{' '}
-              <a href="mailto:privacy@safeaistories.com" className="text-playwize-purple underline">privacy@safeaistories.com</a>
+              <a href="mailto:privacy@ai-tales.com" className="text-playwize-purple underline">privacy@ai-tales.com</a>
             </p>
             <a
-              href="mailto:support@safeaistories.com"
+              href="mailto:support@ai-tales.com"
               className="inline-block h-16 px-12 rounded-full bg-playwize-purple hover:bg-purple-700 text-white font-black text-xl shadow-xl shadow-purple-100 transition-all hover:scale-105 active:scale-95 flex items-center gap-3 mx-auto w-fit"
             >
               Contact Support 🚀

@@ -72,7 +72,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         description={post.description}
         datePublished={post.date}
         authorName={post.author}
-        imageUrl={post.image || 'https://safeaistories.com/og-image.png'}
+        imageUrl={post.image || 'https://ai-tales.com/og-image.png'}
       />
 
       <div className="max-w-4xl mx-auto space-y-12 relative z-10">
