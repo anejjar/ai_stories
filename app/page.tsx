@@ -685,10 +685,7 @@ export default function Home() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {testimonials.map((t, i) => (
               <div key={i} className="bg-white p-10 rounded-[3rem] shadow-sm border border-gray-50 text-left relative group hover:shadow-xl transition-all">
-                <div className="absolute top-6 right-10 flex gap-1 text-playwize-orange">
-                  {[...Array(t.rating)].map((_, j) => <Star key={j} className="h-5 w-5 fill-playwize-orange" />)}
-                </div>
-                <p className="text-lg text-gray-600 font-medium leading-relaxed pr-24 italic mb-6">
+                <p className="text-lg text-gray-600 font-medium leading-relaxed italic mb-6">
                   "{t.quote}"
                 </p>
                 <div className="mt-8 flex items-center gap-4">
@@ -1082,8 +1079,14 @@ export default function Home() {
               </div>
             </div>
             <div className="relative hidden lg:block">
-              <div className="h-80 w-full bg-white/20 rounded-[3rem] backdrop-blur-md border border-white/30 flex items-center justify-center">
-                <BookOpen className="h-40 w-40 text-white opacity-50" />
+              <div className="h-80 w-full bg-white/20 rounded-[3rem] backdrop-blur-md border border-white/30 flex items-center justify-center overflow-hidden">
+                <Image 
+                  src="/hero-bedtime.png" 
+                  alt="Bedtime story hero" 
+                  width={320}
+                  height={320}
+                  className="object-contain"
+                />
               </div>
             </div>
           </div>
