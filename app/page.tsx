@@ -374,7 +374,13 @@ export default function Home() {
             </div>
 
             {/* Feature 2: Educational Integration */}
-            <div className="bg-white/60 p-8 rounded-[3rem] border-2 border-gray-100 space-y-4">
+            <div className="bg-white/60 p-8 rounded-[3rem] border-2 border-gray-100 space-y-4 relative">
+              <div className="absolute top-4 right-4">
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-orange-100 text-playwize-orange text-xs font-black uppercase tracking-wider border border-orange-200">
+                  <Clock className="h-3 w-3" />
+                  Coming Soon
+                </span>
+              </div>
               <div className="h-16 w-16 rounded-2xl bg-playwize-orange/10 flex items-center justify-center">
                 <Brain className="h-8 w-8 text-playwize-orange" />
               </div>
@@ -396,13 +402,19 @@ export default function Home() {
             </div>
 
             {/* Feature 4: Interactive Learning Elements */}
-            <div className="bg-white/60 p-8 rounded-[3rem] border-2 border-gray-100 space-y-4">
+            <div className="bg-white/60 p-8 rounded-[3rem] border-2 border-gray-100 space-y-4 relative">
+              <div className="absolute top-4 right-4">
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-orange-100 text-playwize-orange text-xs font-black uppercase tracking-wider border border-orange-200">
+                  <Clock className="h-3 w-3" />
+                  Coming Soon
+                </span>
+              </div>
               <div className="h-16 w-16 rounded-2xl bg-playwize-orange/10 flex items-center justify-center">
                 <Zap className="h-8 w-8 text-playwize-orange" />
               </div>
               <h3 className="text-2xl font-black text-gray-900">Interactive Stories for Kids That Build Critical Thinking</h3>
               <p className="text-gray-600 font-medium leading-relaxed">
-                Our stories include comprehension questions, choice-driven narratives, and creative prompts. Your child isn't just reading—they're thinking, deciding, and creating. Active engagement, not passive consumption.
+                Our stories will include comprehension questions, choice-driven narratives, and creative prompts. Your child won't just be reading—they'll be thinking, deciding, and creating. Active engagement, not passive consumption. <span className="text-playwize-orange font-bold">Coming soon!</span>
               </p>
             </div>
 
@@ -440,13 +452,19 @@ export default function Home() {
             </div>
 
             {/* Feature 8: Text-to-Speech & Audio */}
-            <div className="bg-white/60 p-8 rounded-[3rem] border-2 border-gray-100 space-y-4">
+            <div className="bg-white/60 p-8 rounded-[3rem] border-2 border-gray-100 space-y-4 relative">
+              <div className="absolute top-4 right-4">
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-orange-100 text-playwize-orange text-xs font-black uppercase tracking-wider border border-orange-200">
+                  <Clock className="h-3 w-3" />
+                  Coming Soon
+                </span>
+              </div>
               <div className="h-16 w-16 rounded-2xl bg-playwize-orange/10 flex items-center justify-center">
                 <Volume2 className="h-8 w-8 text-playwize-orange" />
               </div>
               <h3 className="text-2xl font-black text-gray-900">Bedtime Story Audio for Hands-Free Reading</h3>
               <p className="text-gray-600 font-medium leading-relaxed">
-                Let AI Tales read the story while you cuddle. Perfect for exhausted parents or when you want to listen together. Professional narration that brings stories to life.
+                Let AI Tales read the story while you cuddle. Perfect for exhausted parents or when you want to listen together. Professional narration that brings stories to life. <span className="text-playwize-orange font-bold">Coming soon!</span>
               </p>
             </div>
           </div>
