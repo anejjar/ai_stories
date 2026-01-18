@@ -117,12 +117,14 @@ export async function sendWeeklySummaryEmails(): Promise<EmailResult> {
         await new Promise((resolve) => setTimeout(resolve, 100))
       } catch (error) {
         result.failed++
-        result.errors.push(`Error processing user ${pref.user_id}: ${error}`)
+        const errorMsg = error instanceof Error ? error.message : JSON.stringify(error)
+        result.errors.push(`Error processing user ${pref.user_id}: ${errorMsg}`)
       }
     }
   } catch (error) {
     result.success = false
-    result.errors.push(`Fatal error: ${error}`)
+    const errorMsg = error instanceof Error ? error.message : JSON.stringify(error)
+    result.errors.push(`Fatal error: ${errorMsg}`)
   }
 
   return result
@@ -222,12 +224,14 @@ export async function sendBedtimeReminderEmails(targetTime?: string): Promise<Em
         await new Promise((resolve) => setTimeout(resolve, 100))
       } catch (error) {
         result.failed++
-        result.errors.push(`Error processing user ${pref.user_id}: ${error}`)
+        const errorMsg = error instanceof Error ? error.message : JSON.stringify(error)
+        result.errors.push(`Error processing user ${pref.user_id}: ${errorMsg}`)
       }
     }
   } catch (error) {
     result.success = false
-    result.errors.push(`Fatal error: ${error}`)
+    const errorMsg = error instanceof Error ? error.message : JSON.stringify(error)
+    result.errors.push(`Fatal error: ${errorMsg}`)
   }
 
   return result
