@@ -16,7 +16,6 @@ export interface PublicStory extends Omit<Story, 'visibility'> {
   publishedAt: Date
   isLikedByUser?: boolean
   userRating?: number
-  authorName?: string
 }
 
 // =====================================================

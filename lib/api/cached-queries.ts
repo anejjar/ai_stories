@@ -24,7 +24,7 @@ export const getCachedPublicStories = unstable_cache(
     
     let query = supabaseAdmin
       .from('stories')
-      .select('*, author:users(email, display_name)', { count: 'exact' })
+      .select('*', { count: 'exact' })
       .eq('visibility', 'public')
       .or('is_illustrated_book.eq.false,is_illustrated_book.is.null')
 
@@ -75,9 +75,6 @@ export const getCachedPublicStories = unstable_cache(
 
     const stories = (data || []).map((dbStory: any) => {
       const story = databaseStoryToStory(dbStory)
-      const authorName = dbStory.author?.display_name ||
-        dbStory.author?.email?.split('@')[0] ||
-        'Anonymous'
 
       return {
         ...story,
@@ -87,8 +84,7 @@ export const getCachedPublicStories = unstable_cache(
         commentsCount: dbStory.comments_count || 0,
         averageRating: parseFloat(dbStory.average_rating) || 0,
         ratingsCount: dbStory.ratings_count || 0,
-        publishedAt: dbStory.published_at || dbStory.created_at,
-        authorName
+        publishedAt: dbStory.published_at || dbStory.created_at
       }
     })
 

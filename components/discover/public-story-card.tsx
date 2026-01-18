@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { OptimizedImage } from '@/components/ui/optimized-image'
-import { BookOpen, Heart, MessageCircle, Star, Eye, User } from 'lucide-react'
+import { BookOpen, Heart, MessageCircle, Star, Eye } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import type { PublicStory } from '@/types/discovery'
 
@@ -71,13 +71,8 @@ export function PublicStoryCard({ story }: PublicStoryCardProps) {
             {story.title}
           </h3>
 
-          {/* Author & Time */}
-          <div className="flex items-center gap-3 text-sm font-bold text-gray-400">
-            <div className="h-8 w-8 rounded-full bg-gray-50 flex items-center justify-center border-2 border-white shadow-sm">
-              <User className="h-4 w-4 text-gray-400" />
-            </div>
-            <span className="font-black text-gray-600 truncate max-w-[100px]">{story.authorName || 'Anonymous'}</span>
-            <span className="text-gray-200">|</span>
+          {/* Published Time */}
+          <div className="flex items-center gap-2 text-sm font-bold text-gray-400">
             <span className="text-xs uppercase tracking-widest">{timeAgo}</span>
           </div>
 
