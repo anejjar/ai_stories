@@ -70,18 +70,38 @@ export function StoryInsights({ childName, profileId }: StoryInsightsProps) {
     // Get last story date
     const lastStory = childStories[0] as { createdAt?: string } | undefined
 
-    setInsights({
-      totalStories: childStories.length,
-      favoriteThemes: sortedThemes,
-      lastStoryDate: lastStory?.createdAt || null,
-      loading: false,
+    setInsights((prev) => {
+      // Only update if data actually changed to prevent unnecessary re-renders
+      const newInsights = {
+        totalStories: childStories.length,
+        favoriteThemes: sortedThemes,
+        lastStoryDate: lastStory?.createdAt || null,
+        loading: false,
+      }
+      
+      // Check if data actually changed
+      if (
+        prev.totalStories === newInsights.totalStories &&
+        prev.favoriteThemes.join(',') === newInsights.favoriteThemes.join(',') &&
+        prev.lastStoryDate === newInsights.lastStoryDate &&
+        prev.loading === newInsights.loading
+      ) {
+        return prev // Return previous state to prevent re-render
+      }
+      
+      return newInsights
     })
   }, [])
 
   useEffect(() => {
     // Skip if name hasn't meaningfully changed or is too short
     if (!childName || childName.trim().length < 2) {
-      setInsights({ totalStories: 0, favoriteThemes: [], lastStoryDate: null, loading: false })
+      setInsights((prev) => {
+        if (prev.totalStories === 0 && prev.favoriteThemes.length === 0 && !prev.lastStoryDate && !prev.loading) {
+          return prev // No change needed
+        }
+        return { totalStories: 0, favoriteThemes: [], lastStoryDate: null, loading: false }
+      })
       return
     }
 
@@ -96,6 +116,7 @@ export function StoryInsights({ childName, profileId }: StoryInsightsProps) {
     const now = Date.now()
     if (storiesCache.data && now - storiesCache.timestamp < CACHE_TTL) {
       lastChildNameRef.current = normalizedName
+      fetchedRef.current = true
       processStories(storiesCache.data, childName)
       return
     }
@@ -127,7 +148,8 @@ export function StoryInsights({ childName, profileId }: StoryInsightsProps) {
     }, 500) // 500ms debounce
 
     return () => clearTimeout(timeoutId)
-  }, [childName, profileId, getAccessToken, processStories])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [childName, profileId, getAccessToken])
 
   if (insights.loading) {
     return (

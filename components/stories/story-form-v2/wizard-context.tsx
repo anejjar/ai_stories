@@ -88,6 +88,7 @@ interface WizardContextValue {
   hasDraft: boolean
   restoreDraft: () => void
   clearDraft: () => void
+  setIsAutoSelecting: (isAuto: boolean) => void
 
   // Last successful settings (for Quick Create)
   lastSettings: LastStorySettings | null
@@ -117,6 +118,7 @@ const WizardContext = createContext<WizardContextValue | null>(null)
 const PREFERENCES_KEY = 'story-form-v2-preferences'
 const DRAFT_KEY = 'story-form-v2-draft'
 const LAST_SETTINGS_KEY = 'story-form-v2-last-settings'
+const DRAFT_DISMISSED_KEY = 'story-form-v2-draft-dismissed'
 
 // Initial form data
 const initialFormData: WizardFormData = {
@@ -151,6 +153,8 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   })
   const [hasDraft, setHasDraft] = useState(false)
   const [lastSettings, setLastSettings] = useState<LastStorySettings | null>(null)
+  const [userHasMadeChanges, setUserHasMadeChanges] = useState(false)
+  const [isAutoSelecting, setIsAutoSelecting] = useState(false)
 
   // Load preferences, draft, and last settings from localStorage on mount
   useEffect(() => {
@@ -162,6 +166,22 @@ export function WizardProvider({ children }: { children: ReactNode }) {
         setPreferences(parsed)
       }
 
+      // Check if user dismissed the modal
+      let isDismissed = false
+      const dismissed = localStorage.getItem(DRAFT_DISMISSED_KEY)
+      if (dismissed) {
+        // Check if it was dismissed recently (within 1 hour)
+        const dismissedTime = parseInt(dismissed, 10)
+        const oneHourAgo = Date.now() - 60 * 60 * 1000
+        if (dismissedTime > oneHourAgo) {
+          // Modal was recently dismissed, don't show it
+          isDismissed = true
+        } else {
+          // Dismissal expired, clear it
+          localStorage.removeItem(DRAFT_DISMISSED_KEY)
+        }
+      }
+
       // Check for existing draft
       const draftStored = localStorage.getItem(DRAFT_KEY)
       if (draftStored) {
@@ -169,12 +189,20 @@ export function WizardProvider({ children }: { children: ReactNode }) {
         // Only consider draft valid if:
         // 1. Less than 24 hours old
         // 2. User progressed beyond step 0 (has template or adjectives selected)
+        // 3. Has user-initiated changes (not just auto-selection)
+        // 4. Modal was not recently dismissed
         const isRecent = Date.now() - draft.savedAt < 24 * 60 * 60 * 1000
         const hasMeaningfulProgress = draft.formData.templateId || draft.formData.adjectives.length > 0
-        if (isRecent && draft.formData.childName && hasMeaningfulProgress) {
+        // Check if draft has user changes (stored in draft metadata)
+        const hasUserChanges = (draft as any).hasUserChanges !== false // Default to true for old drafts
+        
+        if (isRecent && draft.formData.childName && hasMeaningfulProgress && hasUserChanges && !isDismissed) {
           setHasDraft(true)
         } else {
-          localStorage.removeItem(DRAFT_KEY)
+          // If dismissed, clear the draft
+          if (isDismissed) {
+            localStorage.removeItem(DRAFT_KEY)
+          }
         }
       }
 
@@ -198,12 +226,17 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  // Auto-save draft when form data changes
+  // Auto-save draft when form data changes (only if user made changes)
   useEffect(() => {
-    // Only save if there's meaningful data
-    if (formData.childName || formData.templateId || formData.adjectives.length > 0) {
+    // Don't save if we're auto-selecting (e.g., profile auto-selection)
+    if (isAutoSelecting) {
+      return
+    }
+
+    // Only save if there's meaningful data AND user has made changes
+    if (userHasMadeChanges && (formData.childName || formData.templateId || formData.adjectives.length > 0)) {
       try {
-        const draft: WizardDraft = {
+        const draft: WizardDraft & { hasUserChanges: boolean } = {
           formData: {
             childName: formData.childName,
             children: formData.children,
@@ -216,6 +249,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
           },
           currentStep,
           savedAt: Date.now(),
+          hasUserChanges: true,
         }
         localStorage.setItem(DRAFT_KEY, JSON.stringify(draft))
         setHasDraft(true)
@@ -223,7 +257,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
         // Ignore localStorage errors
       }
     }
-  }, [formData, currentStep])
+  }, [formData, currentStep, userHasMadeChanges, isAutoSelecting])
 
   // Restore draft from localStorage
   const restoreDraft = useCallback(() => {
@@ -238,6 +272,9 @@ export function WizardProvider({ children }: { children: ReactNode }) {
         }))
         setCurrentStep(draft.currentStep)
         setHasDraft(false)
+        // Clear dismissed flag since user chose to resume
+        localStorage.removeItem(DRAFT_DISMISSED_KEY)
+        setUserHasMadeChanges(true) // Mark that we're restoring user changes
       }
     } catch {
       // Ignore localStorage errors
@@ -248,7 +285,10 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   const clearDraft = useCallback(() => {
     try {
       localStorage.removeItem(DRAFT_KEY)
+      // Mark that user dismissed the modal so it doesn't show again after refresh
+      localStorage.setItem(DRAFT_DISMISSED_KEY, Date.now().toString())
       setHasDraft(false)
+      setUserHasMadeChanges(false)
       // Reset form data to initial state
       setFormData(initialFormData)
       setCurrentStep(0)
@@ -298,7 +338,12 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   const hasLastSettings = !!lastSettings && !!lastSettings.templateId
 
   // Update form data
-  const updateFormData = useCallback(<K extends keyof WizardFormData>(key: K, value: WizardFormData[K]) => {
+  const updateFormData = useCallback(<K extends keyof WizardFormData>(key: K, value: WizardFormData[K], isUserAction: boolean = true) => {
+    // Track if this is a user-initiated change (not auto-selection)
+    if (isUserAction && !isAutoSelecting) {
+      setUserHasMadeChanges(true)
+    }
+
     setFormData((prev) => ({ ...prev, [key]: value }))
 
     // Update field validation in real-time
@@ -331,7 +376,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
         },
       }))
     }
-  }, [])
+  }, [isAutoSelecting])
 
   // Touch a field (mark as interacted)
   const touchField = useCallback((field: keyof FieldValidation) => {
@@ -504,6 +549,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
         hasDraft,
         restoreDraft,
         clearDraft,
+        setIsAutoSelecting,
         lastSettings,
         saveLastSettings,
         applyLastSettings,

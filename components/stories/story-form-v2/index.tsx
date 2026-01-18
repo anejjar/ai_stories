@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useEffect } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { WizardProvider, useWizard, WIZARD_STEPS } from './wizard-context'
 import { StepIndicator } from './step-indicator'
@@ -8,7 +8,6 @@ import { StepChild } from './steps/step-child'
 import { StepTemplate } from './steps/step-template'
 import { StepCustomize } from './steps/step-customize'
 import { StepReview } from './steps/step-review'
-import { DraftResumeModal } from './draft-resume-modal'
 import type { StoryInput } from '@/types'
 
 interface StoryFormV2Props {
@@ -19,27 +18,12 @@ interface StoryFormV2Props {
 }
 
 function StoryFormV2Inner({ onSubmit, disabled, loading, onShowUpgrade }: StoryFormV2Props) {
-  const { currentStep, goToStep, validateStep, getStoryInput, hasDraft, restoreDraft, clearDraft } = useWizard()
-  const [showDraftModal, setShowDraftModal] = useState(false)
-  const [hasCheckedDraft, setHasCheckedDraft] = useState(false)
+  const { currentStep, goToStep, validateStep, getStoryInput, clearDraft } = useWizard()
 
-  // Check for draft on mount
+  // Clear any existing draft on mount (modal is disabled)
   useEffect(() => {
-    if (!hasCheckedDraft && hasDraft) {
-      setShowDraftModal(true)
-      setHasCheckedDraft(true)
-    }
-  }, [hasDraft, hasCheckedDraft])
-
-  const handleResumeDraft = () => {
-    restoreDraft()
-    setShowDraftModal(false)
-  }
-
-  const handleStartFresh = () => {
     clearDraft()
-    setShowDraftModal(false)
-  }
+  }, [clearDraft])
 
   // Calculate completed steps
   const completedSteps = useMemo(() => {
@@ -81,13 +65,6 @@ function StoryFormV2Inner({ onSubmit, disabled, loading, onShowUpgrade }: StoryF
 
   return (
     <>
-      {/* Draft resume modal */}
-      <DraftResumeModal
-        open={showDraftModal}
-        onResume={handleResumeDraft}
-        onStartFresh={handleStartFresh}
-      />
-
       <div className="w-full max-w-2xl mx-auto">
         {/* Step indicator */}
         <div className="mb-8 px-4">

@@ -39,6 +39,7 @@ export function StepChild({ disabled }: StepChildProps) {
     savePreference,
     nextStep,
     validateStep,
+    setIsAutoSelecting,
   } = useWizard()
 
   const isFamily = userProfile?.subscriptionTier === 'family'
@@ -60,10 +61,14 @@ export function StepChild({ disabled }: StepChildProps) {
     ) {
       const lastProfile = childProfiles.find((p) => p.id === preferences.lastProfileId)
       if (lastProfile) {
-        handleProfileSelect(preferences.lastProfileId)
+        // Mark as auto-selecting to prevent draft save
+        setIsAutoSelecting(true)
+        handleProfileSelect(preferences.lastProfileId, false) // false = not user action
+        // Reset auto-selecting flag after a short delay
+        setTimeout(() => setIsAutoSelecting(false), 100)
       }
     }
-  }, [childProfiles, preferences.lastProfileId])
+  }, [childProfiles, preferences.lastProfileId, setIsAutoSelecting])
 
   const fetchChildProfiles = async () => {
     setLoadingProfiles(true)
@@ -84,13 +89,15 @@ export function StepChild({ disabled }: StepChildProps) {
     }
   }
 
-  const handleProfileSelect = (profileId: string) => {
+  const handleProfileSelect = (profileId: string, isUserAction: boolean = true) => {
     const profile = childProfiles.find((p) => p.id === profileId)
     if (profile) {
-      updateFormData('selectedProfileId', profileId)
-      updateFormData('selectedProfile', profile)
-      updateFormData('childName', profile.name)
-      savePreference('lastProfileId', profileId)
+      updateFormData('selectedProfileId', profileId, isUserAction)
+      updateFormData('selectedProfile', profile, isUserAction)
+      updateFormData('childName', profile.name, isUserAction)
+      if (isUserAction) {
+        savePreference('lastProfileId', profileId)
+      }
     }
   }
 
