@@ -3,8 +3,7 @@
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { OptimizedImage } from '@/components/ui/optimized-image'
-import { BookOpen, Heart, MessageCircle, Star, Eye } from 'lucide-react'
+import { Heart, MessageCircle, Star, Eye } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import type { PublicStory } from '@/types/discovery'
 
@@ -26,46 +25,23 @@ export function PublicStoryCard({ story }: PublicStoryCardProps) {
     console.error('Error formatting date:', error)
   }
 
-  // Determine cover image
-  const coverImage = story.imageUrls && story.imageUrls.length > 0 ? story.imageUrls[0] : null
-
   return (
     <Link href={`/story/${story.id}`}>
       <Card className="group h-full flex flex-col hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-4 border-gray-100 bg-white rounded-[3rem] overflow-hidden shadow-sm cursor-pointer">
-        {/* Cover Image Area */}
-        <div className="relative h-56 w-full overflow-hidden bg-gray-50 border-b-4 border-gray-100">
-          {coverImage ? (
-            <OptimizedImage
-              src={coverImage}
-              alt={story.title}
-              fill
-              className="transition-transform duration-700 group-hover:scale-110 object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-purple-50 flex items-center justify-center p-6 relative">
-              <div className="absolute inset-0 circle-pattern opacity-20" />
-              <BookOpen className="h-20 w-20 text-playwize-purple opacity-30 relative z-10" />
-            </div>
-          )}
-
-          {/* Theme Badge */}
-          <div className="absolute top-4 left-4">
-            <Badge className="bg-white/95 text-playwize-purple border-0 shadow-lg font-black px-4 py-1.5 rounded-full text-xs uppercase tracking-widest">
+        <CardContent className="flex-1 pt-8 px-8 pb-6 space-y-4">
+          {/* Header with Theme Badge and Liked indicator */}
+          <div className="flex items-start justify-between gap-4">
+            <Badge className="bg-purple-100 text-playwize-purple border-0 shadow-md font-black px-4 py-1.5 rounded-full text-xs uppercase tracking-widest">
               {story.theme}
             </Badge>
-          </div>
-
-          {/* Liked indicator */}
-          {story.isLikedByUser && (
-            <div className="absolute top-4 right-4">
-              <div className="bg-playwize-orange text-white rounded-full p-2.5 shadow-lg animate-pulse">
+            
+            {/* Liked indicator */}
+            {story.isLikedByUser && (
+              <div className="bg-playwize-orange text-white rounded-full p-2.5 shadow-lg animate-pulse flex-shrink-0">
                 <Heart className="h-5 w-5 fill-current" />
               </div>
-            </div>
-          )}
-        </div>
-
-        <CardContent className="flex-1 pt-8 px-8 pb-6 space-y-4">
+            )}
+          </div>
           {/* Title */}
           <h3 className="text-2xl font-black text-gray-900 line-clamp-2 leading-tight group-hover:text-playwize-purple transition-colors mb-3">
             {story.title}
