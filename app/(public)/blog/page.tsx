@@ -61,57 +61,56 @@ export default async function BlogPage() {
               </div>
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
-              {posts.map((post) => (
-                <div
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {posts.map((post, index) => (
+                <Link
                   key={post.slug}
-                  className="bg-white rounded-[3.5rem] border-4 border-gray-100 shadow-sm hover:shadow-2xl transition-all hover:-translate-y-2 group overflow-hidden flex flex-col"
+                  href={`/blog/${post.slug}`}
+                  className="bg-white rounded-[2.5rem] border-4 border-gray-100 shadow-sm hover:shadow-2xl hover:border-purple-100 transition-all hover:-translate-y-2 group overflow-hidden flex flex-col"
                 >
-                  <Link href={`/blog/${post.slug}`} className="flex-1 flex flex-col">
-                    {post.image && (
-                      <div className="relative h-64 w-full overflow-hidden border-b-4 border-gray-100">
-                        <img
-                          src={post.image}
-                          alt={post.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                        />
-                        <div className="absolute top-4 left-4">
-                          <Badge className="bg-white/95 text-playwize-purple border-0 shadow-lg font-black px-4 py-1.5 rounded-full text-xs uppercase tracking-widest">
-                            {post.category}
-                          </Badge>
-                        </div>
-                      </div>
-                    )}
-                    <div className="p-10 flex-1 flex flex-col space-y-6">
-                      <div className="flex items-center gap-4 text-xs font-black text-gray-400 uppercase tracking-widest">
-                        <div className="flex items-center gap-1.5">
-                          <Calendar className="h-4 w-4" />
-                          <span>{new Date(post.date).toLocaleDateString()}</span>
-                        </div>
-                        <span className="text-gray-200">|</span>
-                        <div className="flex items-center gap-1.5">
-                          <Clock className="h-4 w-4" />
-                          <span>{post.readingTime}</span>
-                        </div>
-                      </div>
-                      
-                      <h3 className="text-2xl font-black text-gray-900 leading-tight group-hover:text-playwize-purple transition-colors">
-                        {post.title}
-                      </h3>
-                      
-                      <p className="text-gray-500 font-medium line-clamp-3 leading-relaxed">
-                        {post.description}
-                      </p>
-                      
-                      <div className="pt-4 mt-auto">
-                        <div className="inline-flex items-center gap-2 text-playwize-purple font-black uppercase tracking-widest text-sm group-hover:gap-4 transition-all">
-                          <span>Read Article</span>
-                          <ArrowRight className="h-5 w-5" />
-                        </div>
+                  {/* Category Color Bar */}
+                  <div className={`h-2 w-full ${
+                    index % 4 === 0 ? 'bg-playwize-purple' :
+                    index % 4 === 1 ? 'bg-playwize-orange' :
+                    index % 4 === 2 ? 'bg-green-500' :
+                    'bg-blue-500'
+                  }`} />
+
+                  <div className="p-8 flex-1 flex flex-col space-y-5">
+                    {/* Category & Meta */}
+                    <div className="flex items-center justify-between">
+                      <Badge className="bg-purple-50 text-playwize-purple border-0 font-black px-3 py-1 rounded-full text-xs uppercase tracking-wider">
+                        {post.category}
+                      </Badge>
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-gray-400">
+                        <Clock className="h-3.5 w-3.5" />
+                        <span>{post.readingTime}</span>
                       </div>
                     </div>
-                  </Link>
-                </div>
+
+                    {/* Title */}
+                    <h3 className="text-xl font-black text-gray-900 leading-snug group-hover:text-playwize-purple transition-colors line-clamp-2">
+                      {post.title}
+                    </h3>
+
+                    {/* Description */}
+                    <p className="text-gray-500 font-medium text-sm line-clamp-3 leading-relaxed flex-1">
+                      {post.description}
+                    </p>
+
+                    {/* Footer */}
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                      <div className="flex items-center gap-2 text-xs text-gray-400">
+                        <Calendar className="h-3.5 w-3.5" />
+                        <span>{new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-playwize-purple font-black text-xs uppercase tracking-wider group-hover:gap-3 transition-all">
+                        <span>Read</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </div>
+                    </div>
+                  </div>
+                </Link>
               ))}
             </div>
           )}

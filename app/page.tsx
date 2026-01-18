@@ -904,7 +904,78 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Section 12: FAQ Section */}
+        {/* Section 12: Blog Section */}
+        <section className="max-w-7xl mx-auto px-4 py-24 space-y-16">
+          <div className="text-center space-y-4">
+            <h2 className="text-playwize-purple font-black uppercase tracking-widest text-sm">From Our Blog</h2>
+            <h3 className="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight">
+              Parenting Tips & Bedtime Wisdom
+            </h3>
+            <p className="text-xl text-gray-600 font-medium max-w-2xl mx-auto">
+              Expert advice on bedtime routines, reading development, and creating magical moments with your kids.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                title: "How to Build a Perfect Bedtime Routine",
+                description: "Create a calming bedtime routine that helps your child fall asleep faster and sleep better.",
+                category: "Parenting Tips",
+                slug: "bedtime-routine-guide-for-kids",
+                color: "bg-playwize-purple"
+              },
+              {
+                title: "Why Personalized Stories Help Reluctant Readers",
+                description: "Discover science-backed strategies to turn reluctant readers into book lovers.",
+                category: "Reading & Education",
+                slug: "helping-reluctant-readers",
+                color: "bg-playwize-orange"
+              },
+              {
+                title: "Screen Time for Kids: Making It Educational",
+                description: "Transform your child's screen time into a learning opportunity with these strategies.",
+                category: "Parenting Tips",
+                slug: "educational-screen-time-for-kids",
+                color: "bg-green-500"
+              }
+            ].map((post, index) => (
+              <Link
+                key={index}
+                href={`/blog/${post.slug}`}
+                className="bg-white rounded-[2.5rem] border-4 border-gray-100 shadow-sm hover:shadow-2xl hover:border-purple-100 transition-all hover:-translate-y-2 group overflow-hidden"
+              >
+                <div className={`h-2 w-full ${post.color}`} />
+                <div className="p-8 space-y-5">
+                  <span className="inline-block bg-purple-50 text-playwize-purple font-black px-3 py-1 rounded-full text-xs uppercase tracking-wider">
+                    {post.category}
+                  </span>
+                  <h4 className="text-xl font-black text-gray-900 leading-snug group-hover:text-playwize-purple transition-colors">
+                    {post.title}
+                  </h4>
+                  <p className="text-gray-500 font-medium text-sm leading-relaxed">
+                    {post.description}
+                  </p>
+                  <div className="flex items-center gap-1.5 text-playwize-purple font-black text-xs uppercase tracking-wider pt-2 group-hover:gap-3 transition-all">
+                    <span>Read Article</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <Link href="/blog">
+              <Button variant="outline" className="h-14 px-10 rounded-full border-2 border-gray-200 hover:border-playwize-purple font-black text-lg">
+                View All Articles
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+          </div>
+        </section>
+
+        {/* Section 13: FAQ Section */}
         <section className="max-w-4xl mx-auto px-4 py-24 space-y-16">
           <div className="text-center space-y-4">
             <h2 className="text-playwize-orange font-black uppercase tracking-widest text-sm">FAQ</h2>
@@ -1051,6 +1122,7 @@ export default function Home() {
               <h5 className="font-black text-gray-900 uppercase tracking-widest text-sm border-b-4 border-playwize-purple inline-block pb-1">Company</h5>
               <ul className="space-y-4">
                 <li><Link href="/about" className="text-gray-500 hover:text-playwize-purple font-bold transition-colors">About AI Tales</Link></li>
+                <li><Link href="/blog" className="text-gray-500 hover:text-playwize-purple font-bold transition-colors">Blog</Link></li>
                 <li><Link href="/contact" className="text-gray-500 hover:text-playwize-purple font-bold transition-colors">Contact</Link></li>
                 <li><Link href="/privacy" className="text-gray-500 hover:text-playwize-purple font-bold transition-colors">Privacy Policy</Link></li>
                 <li><Link href="/terms" className="text-gray-500 hover:text-playwize-purple font-bold transition-colors">Terms of Service</Link></li>

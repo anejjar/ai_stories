@@ -132,7 +132,50 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
           {/* Article Content */}
           <div className="bg-white rounded-[3.5rem] border-4 border-gray-100 shadow-2xl p-8 md:p-16">
-            <div className="prose prose-lg prose-purple max-w-none prose-headings:font-black prose-headings:tracking-tight prose-p:font-medium prose-p:text-gray-600 prose-p:leading-relaxed prose-strong:font-black">
+            <div className="prose prose-lg prose-purple max-w-none
+              prose-headings:font-black prose-headings:tracking-tight prose-headings:text-gray-900
+              prose-p:font-medium prose-p:text-gray-600 prose-p:leading-8 prose-p:mb-8 prose-p:text-base
+              prose-strong:font-black prose-strong:text-gray-800
+              prose-em:italic prose-em:text-gray-700
+              prose-h1:text-4xl prose-h1:mt-16 prose-h1:mb-8 prose-h1:font-black prose-h1:leading-tight
+              prose-h2:text-3xl prose-h2:mt-14 prose-h2:mb-7 prose-h2:pb-4 prose-h2:border-b-2 prose-h2:border-purple-100 prose-h2:font-black
+              prose-h3:text-2xl prose-h3:mt-12 prose-h3:mb-5 prose-h3:text-playwize-purple prose-h3:font-black
+              prose-h4:text-xl prose-h4:mt-10 prose-h4:mb-4 prose-h4:font-black
+              prose-h5:text-lg prose-h5:mt-8 prose-h5:mb-3 prose-h5:font-black
+              prose-h6:text-base prose-h6:mt-6 prose-h6:mb-2 prose-h6:font-black
+              prose-a:text-playwize-purple prose-a:font-bold prose-a:no-underline 
+              hover:prose-a:underline prose-a:transition-all prose-a:decoration-2
+              prose-ul:my-8 prose-ul:space-y-3 prose-ul:list-disc prose-ul:pl-6
+              prose-ol:my-8 prose-ol:space-y-3 prose-ol:list-decimal prose-ol:pl-6
+              prose-li:text-gray-600 prose-li:font-medium prose-li:leading-8 prose-li:mb-2 prose-li:pl-2
+              prose-li:marker:text-playwize-purple prose-li:marker:font-bold
+              prose-blockquote:border-l-4 prose-blockquote:border-playwize-purple 
+              prose-blockquote:bg-purple-50 prose-blockquote:rounded-r-2xl 
+              prose-blockquote:py-6 prose-blockquote:px-8 prose-blockquote:my-8
+              prose-blockquote:not-italic prose-blockquote:text-gray-700 prose-blockquote:font-bold
+              prose-blockquote:text-lg prose-blockquote:leading-relaxed
+              prose-code:bg-gray-100 prose-code:px-2.5 prose-code:py-1.5 
+              prose-code:rounded-lg prose-code:text-sm prose-code:font-bold 
+              prose-code:text-playwize-purple prose-code:before:content-none 
+              prose-code:after:content-none prose-code:border prose-code:border-gray-200
+              prose-pre:bg-gray-900 prose-pre:rounded-2xl prose-pre:p-8 prose-pre:my-8
+              prose-pre:overflow-x-auto prose-pre:shadow-lg
+              prose-pre-code:bg-transparent prose-pre-code:text-gray-100 
+              prose-pre-code:border-0 prose-pre-code:px-0 prose-pre-code:py-0
+              prose-table:border-collapse prose-table:w-full prose-table:my-8
+              prose-table:shadow-sm prose-table:rounded-lg prose-table:overflow-hidden
+              prose-th:bg-purple-50 prose-th:text-left prose-th:p-5 
+              prose-th:font-black prose-th:text-gray-900 prose-th:border-b-2 
+              prose-th:border-purple-200 prose-th:text-sm prose-th:uppercase prose-th:tracking-wider
+              prose-td:p-5 prose-td:border-b prose-td:border-gray-100 
+              prose-td:text-gray-600 prose-td:text-sm prose-td:leading-relaxed
+              prose-tr:hover:bg-purple-50/50 prose-tr:transition-colors
+              prose-hr:my-14 prose-hr:border-gray-200 prose-hr:border-t-2
+              prose-img:rounded-2xl prose-img:shadow-lg prose-img:my-8
+              prose-img:border-2 prose-img:border-gray-100
+              prose-p:first-of-type:text-lg prose-p:first-of-type:leading-relaxed
+              prose-p:first-of-type:mb-8
+            ">
               {post.content}
             </div>
           </div>
