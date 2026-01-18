@@ -50,11 +50,20 @@ export async function sendWeeklySummaryEmails(): Promise<EmailResult> {
         // Get user data
         const { data: userData, error: userError } = await supabase
           .from('users')
-          .select('id, child_name')
+          .select('id')
           .eq('id', pref.user_id)
           .single()
 
         if (userError) throw userError
+
+        // Get first child profile name (if any)
+        const { data: childProfile } = await supabase
+          .from('child_profiles')
+          .select('name')
+          .eq('user_id', pref.user_id)
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .single()
 
         // Get user email from auth
         const { data: authData, error: authError } = await supabase.auth.admin.getUserById(
@@ -88,7 +97,7 @@ export async function sendWeeklySummaryEmails(): Promise<EmailResult> {
         // Generate email
         const { html, text } = generateWeeklySummaryEmail({
           userName: authData.user.user_metadata?.name || 'there',
-          childName: userData.child_name || undefined,
+          childName: childProfile?.name || undefined,
           storiesCreated: summary.stories_created,
           storiesRead: summary.stories_read,
           totalReadingTime: summary.total_reading_time,
@@ -167,11 +176,20 @@ export async function sendBedtimeReminderEmails(targetTime?: string): Promise<Em
         // Get user data
         const { data: userData, error: userError } = await supabase
           .from('users')
-          .select('id, child_name, reading_streak_current')
+          .select('id, reading_streak_current')
           .eq('id', pref.user_id)
           .single()
 
         if (userError) throw userError
+
+        // Get first child profile name (if any)
+        const { data: childProfile } = await supabase
+          .from('child_profiles')
+          .select('name')
+          .eq('user_id', pref.user_id)
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .single()
 
         // Get user email
         const { data: authData, error: authError } = await supabase.auth.admin.getUserById(
@@ -195,7 +213,7 @@ export async function sendBedtimeReminderEmails(targetTime?: string): Promise<Em
         // Generate email
         const { html, text } = generateBedtimeReminderEmail({
           userName: authData.user.user_metadata?.name || 'there',
-          childName: userData.child_name || undefined,
+          childName: childProfile?.name || undefined,
           reminderTime: formatTime(pref.bedtime_reminder_time),
           currentStreak: userData.reading_streak_current || 0,
           recentStories: (recentStories || []).map((s) => ({
@@ -277,8 +295,17 @@ export async function sendAchievementNotification(
     // Get user data
     const { data: userData } = await supabase
       .from('users')
-      .select('child_name, total_points, reader_level')
+      .select('total_points, reader_level')
       .eq('id', userId)
+      .single()
+
+    // Get first child profile name (if any)
+    const { data: childProfile } = await supabase
+      .from('child_profiles')
+      .select('name')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: true })
+      .limit(1)
       .single()
 
     // Determine next level points
@@ -307,7 +334,7 @@ export async function sendAchievementNotification(
     // Generate email
     const { html, text } = generateAchievementNotificationEmail({
       userName: authData.user.user_metadata?.name || 'there',
-      childName: userData?.child_name || undefined,
+      childName: childProfile?.name || undefined,
       achievements: achievementData.map((a) => ({
         name: a.name,
         description: a.description,
