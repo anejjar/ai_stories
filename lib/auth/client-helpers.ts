@@ -69,10 +69,11 @@ export async function signUpWithEmail(email: string, password: string) {
 
 /**
  * Sign in with Google
+ * @param flow - 'signup' or 'login' to determine post-auth redirect destination
  */
-export async function signInWithGoogle() {
+export async function signInWithGoogle(flow: 'signup' | 'login' = 'login') {
   try {
-    const redirectUrl = getRedirectUrl('/auth/callback')
+    const redirectUrl = getRedirectUrl(`/auth/callback?flow=${flow}`)
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',

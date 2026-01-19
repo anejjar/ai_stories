@@ -7,8 +7,12 @@ export async function GET(request: Request) {
   const { searchParams } = requestUrl
   const code = searchParams.get('code')
   const type = searchParams.get('type') // 'signup' or 'recovery' etc.
+  const flow = searchParams.get('flow') // 'signup' or 'login' from OAuth
+  // Determine if this is a signup flow (email verification or OAuth signup)
+  const isSignup = type === 'signup' || flow === 'signup'
   // if "next" is in search params, use it as the redirection URL
-  const next = searchParams.get('next') ?? '/library'
+  // For signups, redirect to /create; for logins, redirect to /library
+  const next = searchParams.get('next') ?? (isSignup ? '/create' : '/library')
 
   // Get the production URL from environment variable
   // This MUST be set in your production environment (Vercel/Dokploy/Docker)

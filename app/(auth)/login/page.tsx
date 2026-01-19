@@ -82,7 +82,7 @@ function LoginForm() {
     setError('')
     setLoading(true)
 
-    const { user, error: authError } = await signInWithGoogle()
+    const { user, error: authError } = await signInWithGoogle('login')
 
     if (authError) {
       setError(authError)
