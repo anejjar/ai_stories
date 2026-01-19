@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Compass, Loader2, BookOpen, Plus, Sparkles } from 'lucide-react'
+import { Compass, Loader2, BookOpen, Plus, Sparkles, Globe, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { DiscoveryFilters } from '@/components/discover/discovery-filters'
 import { PublicStoryCard } from '@/components/discover/public-story-card'
@@ -72,39 +72,25 @@ export default function DiscoverPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 via-pink-50 to-yellow-50">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-br from-purple-500 to-pink-500 p-3 rounded-2xl shadow-lg">
-                <Compass className="h-8 w-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-4xl font-bold text-gray-900 font-comic">
-                  Discover Stories
-                </h1>
-                <p className="text-gray-600 mt-1">
-                  Explore wonderful stories created by our community
-                </p>
-              </div>
-            </div>
-
-            <Link href="/create">
-              <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg">
-                <Plus className="h-5 w-5 mr-2" />
-                Create Story
-              </Button>
-            </Link>
+    <div className="py-12 px-4 max-w-7xl mx-auto space-y-12">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-2 text-center md:text-left">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-100 text-playwize-purple text-sm font-bold border border-purple-200">
+            <Compass className="h-4 w-4" />
+            <span>Community Discover</span>
           </div>
-
-          {/* Results Count */}
+          <h1 className="text-4xl md:text-6xl font-black text-gray-900 tracking-tight">
+            Discover <span className="text-playwize-purple">Stories</span>
+          </h1>
+          <p className="text-gray-600 text-lg font-medium">
+            Explore wonderful stories created by our community
+          </p>
           {!isLoading && (
-            <p className="text-sm text-gray-600">
+            <p className="text-sm font-black text-playwize-orange uppercase tracking-widest mt-4">
               {total > 0 ? (
                 <>
-                  Found <span className="font-semibold text-purple-600">{total}</span> {total === 1 ? 'story' : 'stories'}
+                  Found {total} {total === 1 ? 'magical story' : 'magical stories'}
                 </>
               ) : (
                 'No stories found'
@@ -113,83 +99,158 @@ export default function DiscoverPage() {
           )}
         </div>
 
-        {/* Filters */}
-        <div className="mb-8 bg-white rounded-3xl shadow-lg p-6">
-          <DiscoveryFilters
-            filters={filters}
-            onFiltersChange={handleFiltersChange}
-          />
-        </div>
+        <Link href="/create">
+          <Button className="h-14 px-8 rounded-full bg-playwize-purple hover:bg-purple-700 text-white font-black text-lg shadow-lg shadow-purple-200 transition-all hover:scale-105 active:scale-95">
+            <Plus className="h-6 w-6 mr-2" />
+            Create Story
+          </Button>
+        </Link>
+      </div>
 
-        {/* Stories Grid */}
-        <div className="mb-8">
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <Loader2 className="h-12 w-12 animate-spin text-purple-600 mb-4" />
-              <p className="text-gray-600">Loading amazing stories...</p>
-            </div>
-          ) : stories.length === 0 ? (
-            <div className="text-center py-20">
-              <div className="bg-white rounded-3xl shadow-lg p-12 max-w-md mx-auto">
-                <BookOpen className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  No Stories Found
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  Try adjusting your filters or be the first to create a public story!
+      {/* Filters */}
+      <div className="bg-white rounded-[3rem] border-4 border-gray-100 shadow-sm p-8">
+        <DiscoveryFilters
+          filters={filters}
+          onFiltersChange={handleFiltersChange}
+        />
+      </div>
+
+      {/* Encourage Public Stories Section */}
+      {!isLoading && (
+        <div className="bg-gradient-to-br from-purple-50 via-white to-orange-50 rounded-[3rem] border-4 border-purple-200 shadow-lg p-8 md:p-12 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-purple-100/30 rounded-full -mr-32 -mt-32 blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-orange-100/30 rounded-full -ml-24 -mb-24 blur-3xl" />
+          
+          <div className="relative z-10">
+            <div className="flex flex-col md:flex-row items-center gap-8">
+              {/* Icon Section */}
+              <div className="flex-shrink-0">
+                <div className="h-24 w-24 rounded-[2rem] bg-gradient-to-br from-[#7c3aed] to-purple-600 flex items-center justify-center shadow-xl">
+                  <Globe className="h-12 w-12 text-white" />
+                </div>
+              </div>
+
+              {/* Content Section */}
+              <div className="flex-1 text-center md:text-left space-y-4">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-100 text-playwize-purple text-sm font-black border border-purple-200 mb-2">
+                  <Users className="h-4 w-4" />
+                  <span>Share Your Stories</span>
+                </div>
+                
+                <h2 className="text-3xl md:text-4xl font-black text-gray-900">
+                  Create Text Stories & Share with the Community
+                </h2>
+                
+                <p className="text-lg text-gray-600 font-medium max-w-2xl">
+                  Create amazing text stories and make them public so others can discover, read, and enjoy your creative work. Your stories can inspire and bring joy to readers around the world!
                 </p>
+
+                <div className="flex flex-wrap items-center gap-4 pt-2">
+                  <div className="flex items-center gap-2 text-sm font-bold text-gray-700">
+                    <BookOpen className="h-5 w-5 text-playwize-purple" />
+                    <span>Create text stories</span>
+                  </div>
+                  <div className="text-gray-300">•</div>
+                  <div className="flex items-center gap-2 text-sm font-bold text-gray-700">
+                    <Globe className="h-5 w-5 text-playwize-purple" />
+                    <span>Make them public</span>
+                  </div>
+                  <div className="text-gray-300">•</div>
+                  <div className="flex items-center gap-2 text-sm font-bold text-gray-700">
+                    <Users className="h-5 w-5 text-playwize-purple" />
+                    <span>Share with everyone</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* CTA Button */}
+              <div className="flex-shrink-0">
                 <Link href="/create">
-                  <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Create Your First Story
+                  <Button className="h-14 px-8 rounded-full bg-playwize-purple hover:bg-purple-700 text-white font-black text-lg shadow-xl shadow-purple-200 transition-all hover:scale-105 active:scale-95">
+                    <Sparkles className="h-6 w-6 mr-2" />
+                    Create Story
                   </Button>
                 </Link>
               </div>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {stories.map((story) => (
-                <PublicStoryCard key={story.id} story={story} />
-              ))}
-            </div>
-          )}
+          </div>
         </div>
+      )}
 
-        {/* Pagination */}
-        {!isLoading && totalPages > 1 && (
-          <div className="flex justify-center pb-8">
-            <div className="bg-white rounded-full shadow-lg px-4 py-3">
-              <PaginationControls
-                currentPage={filters.page || 1}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-              />
+      {/* Stories Grid */}
+      <div className="pb-12">
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-32 space-y-6">
+            <div className="relative">
+              <div className="h-20 w-20 rounded-3xl bg-purple-50 animate-pulse" />
+              <Loader2 className="h-10 w-10 animate-spin text-playwize-purple absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
             </div>
+            <p className="text-gray-400 font-black uppercase tracking-widest">Loading amazing stories...</p>
+          </div>
+        ) : stories.length === 0 ? (
+          <div className="text-center py-24 bg-white rounded-[4rem] border-4 border-dashed border-gray-100 space-y-10 max-w-3xl mx-auto">
+            <div className="h-40 w-40 rounded-[3rem] bg-purple-50 flex items-center justify-center shadow-inner animate-float-gentle mx-auto">
+              <BookOpen className="h-20 w-20 text-playwize-purple opacity-40" />
+            </div>
+            <div className="space-y-4">
+              <h3 className="text-3xl font-black text-gray-900">No Stories Found</h3>
+              <p className="text-xl text-gray-500 font-bold max-w-md mx-auto">
+                Try adjusting your filters or be the first to create a public story!
+              </p>
+            </div>
+            <Link href="/create">
+              <Button className="h-16 px-12 rounded-full bg-playwize-purple hover:bg-purple-700 text-white font-black text-xl shadow-xl shadow-purple-100 transition-all hover:scale-105 active:scale-95">
+                <Sparkles className="h-6 w-6 mr-2" />
+                Create Your First Story
+              </Button>
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {stories.map((story) => (
+              <PublicStoryCard key={story.id} story={story} />
+            ))}
           </div>
         )}
+      </div>
 
-        {/* CTA Banner */}
-        {!isLoading && stories.length > 0 && (
-          <div className="mt-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-3xl shadow-2xl p-8 text-center text-white">
-            <Sparkles className="h-12 w-12 mx-auto mb-4 animate-pulse" />
-            <h2 className="text-2xl font-bold mb-2">
+      {/* Pagination */}
+      {!isLoading && totalPages > 1 && (
+        <div className="flex justify-center pb-12">
+          <div className="bg-white rounded-full shadow-xl border-4 border-gray-50 px-6 py-4">
+            <PaginationControls
+              currentPage={filters.page || 1}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* CTA Banner */}
+      {!isLoading && stories.length > 0 && (
+        <div className="bg-playwize-purple rounded-[4rem] p-12 md:p-20 text-center text-white relative overflow-hidden shadow-2xl">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -mr-48 -mt-48 blur-3xl" />
+          <div className="space-y-8 relative z-10">
+            <div className="text-7xl animate-bounce-slow inline-block">✨</div>
+            <h2 className="text-4xl md:text-5xl font-black">
               Ready to Create Your Own Story?
             </h2>
-            <p className="text-purple-100 mb-6">
+            <p className="text-white/80 text-xl font-bold max-w-2xl mx-auto">
               Join our creative community and share your magical stories with the world!
             </p>
             <Link href="/create">
               <Button
                 size="lg"
-                className="bg-white text-purple-600 hover:bg-gray-100 shadow-lg font-bold"
+                className="h-16 px-12 rounded-full bg-white text-playwize-purple hover:bg-gray-100 font-black text-xl shadow-xl transition-all hover:scale-105 active:scale-95"
               >
-                <Plus className="h-5 w-5 mr-2" />
+                <Plus className="h-6 w-6 mr-2" />
                 Start Creating
               </Button>
             </Link>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }

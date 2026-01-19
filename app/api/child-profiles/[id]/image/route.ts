@@ -19,7 +19,7 @@ export async function POST(
   if (response) return response
 
   // Rate limiting for profile image generation
-  const rateLimitResult = checkRateLimit(userId, RATE_LIMITS.profileImageGeneration)
+  const rateLimitResult = await checkRateLimit(userId, RATE_LIMITS.profileImageGeneration)
   if (!rateLimitResult.success) {
     return NextResponse.json<ApiResponse>(
       {

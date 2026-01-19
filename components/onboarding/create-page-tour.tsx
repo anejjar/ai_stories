@@ -28,7 +28,7 @@ const TOUR_STEPS: TourTooltipConfig[] = [
     id: 'trial-badge',
     target: '[data-tour="trial-badge"]',
     title: 'Your Free Trial',
-    description: 'You have 1 free story to try! Upgrade to PRO anytime for unlimited stories and premium features.',
+    description: 'You have 1 free story to try! Upgrade to PRO or Family Plan anytime for unlimited stories and premium features.',
     placement: 'left',
     step: 3,
     totalSteps: 4,

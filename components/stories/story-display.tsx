@@ -11,10 +11,12 @@ import { PrintStoryButton } from '@/components/stories/print-story-button'
 import { EnhancedAudioPlayer } from '@/components/stories/enhanced-audio-player'
 import { BookViewer } from '@/components/stories/book-viewer'
 import { BookViewerV2 } from '@/components/stories/book-viewer-v2'
+import { BookViewerV3 } from '@/components/stories/book-viewer-v3'
 import { AchievementUnlockModal } from '@/components/achievements/achievement-unlock-modal'
-import { Share2, ArrowLeft, BookOpen, Image as ImageIcon, Loader2, Crown } from 'lucide-react'
+import { Share2, ArrowLeft, BookOpen, Image as ImageIcon, Loader2, Crown, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { ShareDialog } from '@/components/stories/share-dialog'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   Dialog,
   DialogContent,
@@ -24,14 +26,19 @@ import { getThemeStyles } from '@/lib/theme-config'
 import type { Story } from '@/types'
 import type { Achievement } from '@/lib/achievements/types'
 
+import { LikeButton } from '@/components/stories/like-button'
+import { CommentsSection } from '@/components/stories/comments-section'
+import { ReportModal } from '@/components/stories/report-modal'
+import { Plus, Flag } from 'lucide-react'
+
 interface StoryDisplayProps {
   story: Story
   onBack?: () => void
-  viewerVersion?: 'v1' | 'v2' // Choose book viewer version (default: v2)
+  viewerVersion?: 'v1' | 'v2' | 'v3' // Choose book viewer version (default: v3)
 }
 
-export function StoryDisplay({ story, onBack, viewerVersion = 'v2' }: StoryDisplayProps) {
-  const { userProfile, getAccessToken } = useAuth()
+export function StoryDisplay({ story, onBack, viewerVersion = 'v3' }: StoryDisplayProps) {
+  const { user, userProfile, getAccessToken } = useAuth()
   const [readingProgress, setReadingProgress] = useState(0)
   const [copied, setCopied] = useState(false)
   const [generatingImages, setGeneratingImages] = useState(false)
@@ -43,9 +50,16 @@ export function StoryDisplay({ story, onBack, viewerVersion = 'v2' }: StoryDispl
   const [unlockedAchievements, setUnlockedAchievements] = useState<Achievement[]>([])
   const [currentAchievementIndex, setCurrentAchievementIndex] = useState(0)
   const [completedPages, setCompletedPages] = useState<number[]>([])
+  // Track if achievement modals have been dismissed to prevent showing again
+  const achievementsDismissedRef = useRef(false)
   const isFamily = userProfile?.subscriptionTier === 'family'
   const isPro = userProfile?.subscriptionTier === 'pro' || isFamily
   const isIllustratedBook = story.isIllustratedBook && story.bookPages && story.bookPages.length > 0
+
+  const isOwner = user?.id === story.userId
+  const isPublic = story.visibility === 'public'
+  const showSocialActions = isPublic // Show likes/comments if story is public
+  const showCreatorActions = isOwner // Only owner can print/share (as requested)
 
   const themeStyles = getThemeStyles(story.theme)
   const currentAchievement = unlockedAchievements[currentAchievementIndex] || null
@@ -166,9 +180,10 @@ export function StoryDisplay({ story, onBack, viewerVersion = 'v2' }: StoryDispl
       // Show next achievement
       setCurrentAchievementIndex(currentAchievementIndex + 1)
     } else {
-      // All achievements shown, clear state
+      // All achievements shown, clear state and mark as dismissed
       setUnlockedAchievements([])
       setCurrentAchievementIndex(0)
+      achievementsDismissedRef.current = true // Mark as dismissed to prevent showing again
     }
   }
 
@@ -264,9 +279,11 @@ export function StoryDisplay({ story, onBack, viewerVersion = 'v2' }: StoryDispl
   }
 
   return (
-    <div className={`min-h-screen ${themeStyles.background} ${themeStyles.cursor || ''} relative transition-colors duration-500`}>
+    <div className={`min-h-screen ${themeStyles.background} ${themeStyles.cursor || ''} relative transition-colors duration-500 overflow-hidden`}>
       {/* Decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-40 -left-20 w-80 h-80 circle-pattern opacity-30" />
+        <div className="absolute top-[60%] -right-20 w-96 h-96 circle-pattern opacity-30" />
         {backgroundFloaters.map((floater, idx) => (
           <div
             key={idx}
@@ -276,390 +293,187 @@ export function StoryDisplay({ story, onBack, viewerVersion = 'v2' }: StoryDispl
             {floater.emoji}
           </div>
         ))}
+        
+        {/* Theme-specific magic overlays */}
+        {story.theme === 'Ocean' && (
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute inset-0 bg-blue-400/5 mix-blend-overlay animate-pulse" />
+            <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-blue-200/20 to-transparent" />
+          </div>
+        )}
+        {story.theme === 'Space' && (
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute inset-0 bg-[url('/stars-pattern.png')] opacity-10 animate-pulse" />
+            <div className="absolute inset-0 bg-purple-900/5 mix-blend-color-dodge" />
+          </div>
+        )}
+        {story.theme === 'Fantasy' && (
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute inset-0 bg-gradient-to-tr from-pink-200/10 via-purple-200/10 to-blue-200/10 animate-gradient-x" />
+          </div>
+        )}
       </div>
 
       {/* Reading Progress Bar */}
-      <div className="fixed top-0 left-0 right-0 h-2 bg-white/20 z-50">
+      <div className="fixed top-0 left-0 right-0 h-3 bg-white/20 z-50">
         <div
-          className={`h-full ${themeStyles.button} transition-all duration-150 shadow-lg`}
+          className="h-full bg-playwize-purple transition-all duration-150 shadow-lg rounded-r-full"
           style={{ width: `${readingProgress}%` }}
         />
       </div>
 
       {/* Header */}
-      <div className={`sticky top-0 bg-white/90 backdrop-blur-md border-b-4 ${themeStyles.navBorder} z-40 shadow-lg transition-colors duration-500`}>
-        <div className="container mx-auto px-4 py-4">
+      <div className="sticky top-0 bg-white/80 backdrop-blur-xl border-b-4 border-gray-100 z-40 shadow-sm transition-colors duration-500">
+        <div className="container mx-auto px-4 py-4 max-w-5xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               {onBack ? (
-                <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full hover:bg-pink-100 border-2 border-transparent hover:border-pink-300">
-                  <ArrowLeft className="h-5 w-5 text-purple-600" />
+                <Button variant="ghost" size="icon" onClick={onBack} className="h-12 w-12 rounded-2xl hover:bg-gray-100 border-2 border-transparent">
+                  <ArrowLeft className="h-6 w-6 text-playwize-purple" />
                 </Button>
               ) : (
                 <Link href="/library">
-                  <Button variant="ghost" size="icon" className="rounded-full hover:bg-pink-100 border-2 border-transparent hover:border-pink-300">
-                    <ArrowLeft className="h-5 w-5 text-purple-600" />
+                  <Button variant="ghost" size="icon" className="h-12 w-12 rounded-2xl hover:bg-gray-100 border-2 border-transparent">
+                    <ArrowLeft className="h-6 w-6 text-playwize-purple" />
                   </Button>
                 </Link>
               )}
-              <div>
-                <h1 className={`text-xl font-bold font-comic ${themeStyles.titleGradient} bg-clip-text text-transparent`}>
-                  📖 Story
+              <div className="hidden sm:block">
+                <h1 className="text-xl font-black text-gray-900 tracking-tight">
+                  {story.title}
                 </h1>
-                <p className="text-xs text-gray-600 font-semibold">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
                   {formatDate(story.createdAt)}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <PrintStoryButton story={story} />
-              <PDFExportButton story={story} />
-              <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
-                <DialogTrigger asChild>
+              {showCreatorActions && (
+                <>
+                  <PrintStoryButton story={story} />
+                  <PDFExportButton story={story} />
+                  <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-12 px-6 gap-2 rounded-full border-2 border-gray-100 hover:border-playwize-purple font-black text-sm transition-all"
+                      >
+                        <Share2 className="h-4 w-4" />
+                        SHARE
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md rounded-[3rem] border-4 border-gray-100 p-0 overflow-hidden shadow-2xl">
+                      <ShareDialog storyId={story.id} storyTitle={story.title} onClose={() => setShowShareDialog(false)} />
+                    </DialogContent>
+                  </Dialog>
+                </>
+              )}
+              {showSocialActions && (
+                <LikeButton
+                  storyId={story.id}
+                  initialLikesCount={story.likesCount || 0}
+                  initialIsLiked={(story as any).isLikedByUser || false}
+                  size="md"
+                />
+              )}
+              {/* Report button - available for all stories (public and private) */}
+              <ReportModal
+                storyId={story.id}
+                trigger={
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
-                    className="gap-2 rounded-full border-2 border-purple-300 hover:bg-purple-100 font-bold"
+                    className="h-12 px-4 gap-2 rounded-full text-gray-500 hover:text-red-600 hover:bg-red-50 font-medium text-sm transition-all"
                   >
-                    <Share2 className="h-4 w-4" />
-                    Share 📤
+                    <Flag className="h-4 w-4" />
+                    <span className="hidden sm:inline">Report</span>
                   </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md rounded-3xl border-4 border-purple-300 p-0">
-                  <ShareDialog storyId={story.id} storyTitle={story.title} onClose={() => setShowShareDialog(false)} />
-                </DialogContent>
-              </Dialog>
+                }
+              />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Story Content */}
-      <div className="container mx-auto px-4 py-8 max-w-3xl relative z-10">
-        {/* Story Metadata */}
-        <div className={`mb-8 space-y-4 bg-white/80 backdrop-blur-sm p-6 rounded-3xl border-4 ${themeStyles.cardBorder} ${themeStyles.cardTexture || ''} shadow-xl transition-colors duration-500`}>
-          <div>
-            <h1 className={`text-4xl md:text-5xl font-bold mb-4 font-comic ${themeStyles.titleGradient} bg-clip-text text-transparent`}>
-              {story.title} {themeStyles.emoji}
-            </h1>
-            <div className="flex flex-wrap gap-2 mb-4">
-              <Badge className={`${themeStyles.badge} font-bold border-2 rounded-full px-3 py-1 shadow-sm`}>
-                {themeStyles.emoji} {story.theme}
-              </Badge>
-              {/* Show children info for multi-child stories */}
-              {story.children && story.children.length > 0 ? (
-                <>
-                  {story.children.map((child: any, idx: number) => (
-                    <div key={idx} className="flex flex-wrap gap-2">
-                      <Badge className="bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold border-2 border-blue-500 rounded-full px-3 py-1">
-                        <span className="text-lg mr-1">👶</span>
-                        {child.name}
-                      </Badge>
-                      {child.adjectives.map((adj: string) => (
-                        <Badge key={adj} className="bg-gradient-to-r from-pink-400 to-purple-400 text-white font-bold border-2 border-pink-500 rounded-full px-3 py-1">
-                          {adj}
-                        </Badge>
-                      ))}
-                    </div>
-                  ))}
-                </>
-              ) : (
-                /* Single-child story (backward compatible) */
-                story.adjectives.map((adj) => (
-                  <Badge key={adj} className="bg-gradient-to-r from-pink-400 to-purple-400 text-white font-bold border-2 border-pink-500 rounded-full px-3 py-1">
-                    {adj}
-                  </Badge>
-                ))
-              )}
-            </div>
-            {story.moral && (
-              <div className={`bg-white/50 border-2 ${themeStyles.cardBorder} rounded-2xl p-4 mt-4`}>
-                <p className="text-base text-gray-800 font-semibold">
-                  <span className="text-2xl mr-2">💡</span>
-                  Lesson: {story.moral}
-                </p>
+      {/* Story Content - Using BookViewerV2/V3 for both illustrated and text stories */}
+      {viewerVersion === 'v3' ? (
+        <div className="relative z-10">
+          <BookViewerV3
+            bookPages={story.isIllustratedBook && story.bookPages ? story.bookPages : [{
+              pageNumber: 1,
+              text: story.content,
+              illustration_url: story.imageUrls?.[0] || ''
+            }]}
+            storyId={story.id}
+            completedPages={completedPages}
+            onPageComplete={handlePageComplete}
+            title={story.title}
+            theme={story.theme}
+          />
+        </div>
+      ) : (
+        <div className="container mx-auto px-4 py-8 max-w-6xl relative z-10">
+          <BookViewerV2
+            bookPages={story.isIllustratedBook && story.bookPages ? story.bookPages : [{
+              pageNumber: 1,
+              text: story.content,
+              illustration_url: story.imageUrls?.[0] || ''
+            }]}
+            storyId={story.id}
+            completedPages={completedPages}
+            onPageComplete={handlePageComplete}
+            title={story.title}
+            theme={story.theme}
+          />
+        </div>
+      )}
+
+      {/* Social Section & Actions */}
+      <div className="container mx-auto px-4 pb-20 max-w-3xl relative z-10 space-y-8">
+        {/* Community Section */}
+        {showSocialActions && (
+          <div className="bg-white p-8 md:p-12 rounded-[3.5rem] border-4 border-gray-100 shadow-sm space-y-10">
+            <div className="flex items-center justify-between border-b-2 border-gray-50 pb-6">
+              <div className="space-y-1">
+                <h3 className="text-2xl font-black text-gray-900">Community Love</h3>
+                <p className="text-gray-500 font-bold">Share your thoughts with the community!</p>
               </div>
-            )}
+              <div className="flex items-center gap-4">
+                <LikeButton
+                  storyId={story.id}
+                  initialLikesCount={story.likesCount || 0}
+                  initialIsLiked={(story as any).isLikedByUser || false}
+                  size="lg"
+                />
+              </div>
+            </div>
+            
+            <CommentsSection 
+              storyId={story.id} 
+              initialCommentsCount={story.commentsCount || 0} 
+            />
           </div>
-        </div>
-
-        {/* Audio Player */}
-        {/*
-        <div className="mb-8">
-          <EnhancedAudioPlayer text={story.content} title={story.title} bedtimeMode={false} />
-        </div>
-        */}
-
-        {/* Conditional Rendering: Illustrated Book vs Regular Story */}
-        {isIllustratedBook ? (
-          /* Illustrated Book Viewer (PRO MAX) */
-          viewerVersion === 'v2' ? (
-            <BookViewerV2
-              bookPages={story.bookPages!}
-              storyId={story.id}
-              completedPages={completedPages}
-              onPageComplete={handlePageComplete}
-            />
-          ) : (
-            <BookViewer
-              title={story.title}
-              bookPages={story.bookPages!}
-              theme={story.theme}
-            />
-          )
-        ) : (
-          <>
-            {/* Story Enhancement Tools (PRO) - Only for regular stories */}
-            {/*<StoryEnhancement storyId={story.id} />*/}
-
-            {/* Generate Images Button (Family Plan) - Only for regular stories */}
-            {isFamily && !storyImages.length && 1 == 2 && (
-              <div className="mb-6 bg-gradient-to-r from-yellow-50 to-orange-50 border-4 border-yellow-300 rounded-2xl p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="text-4xl">🎨</div>
-                    <div>
-                      <h3 className="font-bold text-lg text-gray-800 mb-1">
-                        Add Magical Illustrations! ✨
-                      </h3>
-                      <p className="text-sm text-gray-700 font-semibold">
-                        Generate beautiful AI illustrations for your story
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    onClick={handleGenerateImages}
-                    disabled={generatingImages}
-                    className="rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all font-bold"
-                  >
-                    {generatingImages ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <ImageIcon className="h-4 w-4 mr-2" />
-                        Generate Images 🎨
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Story Images (if available) */}
-            {storyImages.length > 0 && (
-              <div className="mb-8 space-y-6">
-                {storyImages.map((imageUrl, index) => {
-                  const isLoading = imageLoadingStates[index] !== false
-                  const hasError = imageErrorStates[index] === true
-
-                  return (
-                    <div
-                      key={index}
-                      className="bg-white/90 backdrop-blur-sm rounded-3xl border-4 border-purple-300 shadow-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4"
-                      style={{ animationDelay: `${index * 0.2}s` }}
-                    >
-                      <div className="relative w-full aspect-square bg-gradient-to-br from-purple-100 via-pink-100 to-yellow-100">
-                        {/* Loading State */}
-                        {isLoading && !hasError && (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <div className="relative">
-                              <Loader2 className="h-16 w-16 animate-spin text-purple-500" />
-                              <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-3xl animate-bounce-slow">
-                                🎨
-                              </span>
-                            </div>
-                            <p className="mt-4 text-lg font-bold text-gray-700 animate-pulse">
-                              Creating magic... ✨
-                            </p>
-                            <div className="mt-2 flex gap-2">
-                              <span className="text-2xl animate-bounce" style={{ animationDelay: '0s' }}>⭐</span>
-                              <span className="text-2xl animate-bounce" style={{ animationDelay: '0.2s' }}>✨</span>
-                              <span className="text-2xl animate-bounce" style={{ animationDelay: '0.4s' }}>🌟</span>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Error State */}
-                        {hasError && (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center p-8">
-                            <div className="text-6xl mb-4 animate-bounce-slow">😅</div>
-                            <p className="text-lg font-bold text-gray-700 mb-2 text-center">
-                              Oops! Image couldn't load
-                            </p>
-                            <p className="text-sm text-gray-600 text-center font-semibold">
-                              Don't worry, the story is still amazing! 📖
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Image */}
-                        {!hasError && (
-                          <img
-                            src={imageUrl}
-                            alt={`Story illustration ${index + 1} for ${story.children && story.children.length > 0 ? story.children.map((c: any) => c.name).join(' and ') : story.childName}`}
-                            className={`w-full h-full object-cover transition-opacity duration-500 ${isLoading ? 'opacity-0' : 'opacity-100'
-                              }`}
-                            onLoad={() => {
-                              setImageLoadingStates((prev) => ({ ...prev, [index]: false }))
-                            }}
-                            onError={() => {
-                              setImageLoadingStates((prev) => ({ ...prev, [index]: false }))
-                              setImageErrorStates((prev) => ({ ...prev, [index]: true }))
-                            }}
-                          />
-                        )}
-
-                        {/* Decorative overlay when loaded */}
-                        {!isLoading && !hasError && (
-                          <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full p-2 border-2 border-purple-400 shadow-lg animate-in zoom-in">
-                            <span className="text-2xl">✨</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-4 text-center bg-gradient-to-r from-purple-50 to-pink-50">
-                        <p className="text-sm text-gray-600 font-semibold">
-                          Illustration {index + 1} 🎨
-                        </p>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-
-            {/* Story Text - Fun & Engaging for Kids */}
-            <div className={`max-w-none bg-gradient-to-br from-white via-pink-50 to-purple-50 backdrop-blur-sm p-8 md:p-12 rounded-3xl border-4 border-blue-300 ${themeStyles.cardTexture || ''} shadow-2xl`}>
-              <div className="text-2xl md:text-3xl leading-relaxed md:leading-loose text-gray-900 whitespace-pre-wrap font-comic">
-                {story.content.split('\n').map((paragraph, index) => {
-                  if (!paragraph.trim()) {
-                    return <div key={index} className="h-6" />
-                  }
-
-                  // Add decorative elements for first paragraph
-                  const isFirstParagraph = index === 0
-                  const isLastParagraph = index === story.content.split('\n').filter(p => p.trim()).length - 1
-
-                  return (
-                    <div
-                      key={index}
-                      className={`mb-8 md:mb-10 relative ${isFirstParagraph ? 'animate-in fade-in slide-in-from-bottom-4' : ''
-                        }`}
-                      style={{ animationDelay: `${index * 0.1}s` }}
-                    >
-                      {/* Decorative elements for first paragraph */}
-                      {isFirstParagraph && (
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="text-4xl animate-bounce-slow">📖</div>
-                          <div className="h-1 flex-1 bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 rounded-full"></div>
-                          <div className="text-4xl animate-bounce-slow" style={{ animationDelay: '0.5s' }}>✨</div>
-                        </div>
-                      )}
-
-                      <p className="text-gray-900 font-bold leading-relaxed md:leading-loose text-2xl md:text-3xl drop-shadow-sm">
-                        {paragraph.split('.').map((sentence, sentenceIndex, sentences) => {
-                          const trimmedSentence = sentence.trim()
-                          if (!trimmedSentence) return null
-
-                          // Add emoji after certain words for fun
-                          const enhancedSentence = trimmedSentence
-                            .replace(/\b(Once upon a time|Once|Long ago)\b/gi, (match) => `${match} 🎭`)
-                            .replace(/\b(happily ever after|The end|The end\.)\b/gi, (match) => `${match} 🎉`)
-                            .replace(/\b(magic|magical|wonderful|amazing)\b/gi, (match) => `${match} ✨`)
-                            .replace(/\b(friend|friends|friendship)\b/gi, (match) => `${match} 👫`)
-                            .replace(/\b(adventure|journey|quest)\b/gi, (match) => `${match} 🗺️`)
-                            .replace(/\b(dragon|dragon's)\b/gi, (match) => `${match} 🐉`)
-                            .replace(/\b(star|stars|star's)\b/gi, (match) => `${match} ⭐`)
-                            .replace(/\b(ocean|sea|water)\b/gi, (match) => `${match} 🌊`)
-                            .replace(/\b(forest|tree|trees)\b/gi, (match) => `${match} 🌳`)
-                            .replace(/\b(flower|flowers)\b/gi, (match) => `${match} 🌸`)
-                            .replace(/\b(animal|animals)\b/gi, (match) => `${match} 🐾`)
-                            .replace(/\b(bird|birds)\b/gi, (match) => `${match} 🐦`)
-                            .replace(/\b(cat|cats)\b/gi, (match) => `${match} 🐱`)
-                            .replace(/\b(dog|dogs)\b/gi, (match) => `${match} 🐶`)
-                            .replace(/\b(rabbit|rabbits|bunny)\b/gi, (match) => `${match} 🐰`)
-                            .replace(/\b(butterfly|butterflies)\b/gi, (match) => `${match} 🦋`)
-                            .replace(/\b(castle|kingdom|palace)\b/gi, (match) => `${match} 🏰`)
-                            .replace(/\b(princess|prince|king|queen)\b/gi, (match) => `${match} 👑`)
-                            .replace(/\b(heart|love|loved)\b/gi, (match) => `${match} ❤️`)
-                            .replace(/\b(smile|smiled|happy|happily)\b/gi, (match) => `${match} 😊`)
-                            .replace(/\b(laugh|laughed|funny)\b/gi, (match) => `${match} 😄`)
-                            .replace(/\b(surprise|surprised|amazing)\b/gi, (match) => `${match} 😲`)
-
-                          return (
-                            <span key={sentenceIndex}>
-                              {enhancedSentence}
-                              {sentenceIndex < sentences.length - 1 && sentence.trim() && '.'}
-                              {sentenceIndex < sentences.length - 1 && ' '}
-                            </span>
-                          )
-                        })}
-                        {paragraph.trim() && !paragraph.endsWith('.') && !paragraph.endsWith('!') && !paragraph.endsWith('?') && '.'}
-                      </p>
-
-                      {/* Decorative elements for last paragraph */}
-                      {isLastParagraph && (
-                        <div className="flex items-center gap-3 mt-6">
-                          <div className="text-4xl animate-bounce-slow">🎉</div>
-                          <div className="h-1 flex-1 bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-400 rounded-full"></div>
-                          <div className="text-4xl animate-bounce-slow" style={{ animationDelay: '0.5s' }}>✨</div>
-                        </div>
-                      )}
-
-                      {/* Small decorative stars between paragraphs */}
-                      {!isFirstParagraph && !isLastParagraph && index % 2 === 0 && (
-                        <div className="absolute -left-4 top-1/2 transform -translate-y-1/2 text-2xl opacity-30 animate-sparkle">
-                          ⭐
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-
-              {/* Story ending decoration */}
-              <div className="mt-12 text-center">
-                <div className="inline-flex items-center gap-4 bg-gradient-to-r from-yellow-100 to-pink-100 rounded-full px-8 py-4 border-4 border-yellow-300 shadow-lg">
-                  <span className="text-4xl animate-bounce-slow">📚</span>
-                  <span className={`text-2xl font-comic font-bold ${themeStyles.titleGradient} bg-clip-text text-transparent`}>
-                    The End!
-                  </span>
-                  <span className="text-4xl animate-bounce-slow" style={{ animationDelay: '0.3s' }}>✨</span>
-                </div>
-              </div>
-            </div>
-          </>
         )}
 
-        {/* Footer */}
-        <div className={`mt-12 pt-8 border-t-4 ${themeStyles.navBorder} bg-white/80 backdrop-blur-sm p-6 rounded-3xl border-4 ${themeStyles.cardBorder} shadow-lg transition-colors duration-500`}>
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-lg font-bold text-gray-700">
-              <span className="text-2xl mr-2">👶</span>
-              A story for {story.childName}
-            </p>
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={handleShare} className="rounded-full border-2 border-purple-400 hover:bg-purple-100 font-bold">
-                <Share2 className="h-4 w-4 mr-2" />
-                Share Story 📤
-              </Button>
-              <Link href="/library">
-                <Button variant="outline" className={`rounded-full border-2 hover:bg-white font-bold ${themeStyles.primaryColor} ${themeStyles.cardBorder}`}>
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Library 📚
-                </Button>
-              </Link>
-            </div>
+        {/* Footer Navigation
+        <div className="bg-white p-8 md:p-10 rounded-[3rem] border-4 border-gray-100 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-2xl bg-purple-50 flex items-center justify-center text-3xl">👶</div>
+            <p className="font-black text-gray-900 text-lg">A story for {story.childName}</p>
           </div>
-        </div>
+          <Link href={isOwner ? "/library" : "/discover"}>
+            <Button className="h-14 px-8 rounded-full bg-playwize-purple hover:bg-purple-700 text-white font-black text-lg shadow-lg shadow-purple-100 transition-all hover:scale-105 active:scale-95">
+              <ArrowLeft className="h-5 w-5 mr-2" />
+              {isOwner ? "LIBRARY 📚" : "BACK TO DISCOVER 🧭"}
+            </Button>
+          </Link>
+        </div> */}
       </div>
 
-      {/* Achievement Unlock Modal */}
       <AchievementUnlockModal
         achievement={currentAchievement}
-        isOpen={!!currentAchievement}
+        isOpen={!!currentAchievement && !achievementsDismissedRef.current}
         onClose={handleCloseAchievement}
       />
     </div>

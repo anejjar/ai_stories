@@ -48,8 +48,9 @@ export async function GET(
       )
     }
 
+    const storyData = story as any
     // Check if user can view comments (public story or owns the story)
-    if (story.visibility !== 'public' && story.user_id !== user.id) {
+    if (storyData.visibility !== 'public' && storyData.user_id !== user.id) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'You do not have permission to view these comments' },
         { status: 403 }
@@ -72,28 +73,29 @@ export async function GET(
     }
 
     // Fetch user info for all commenters
-    const userIds = [...new Set(commentsData.map(c => c.user_id))]
+    const userIds = [...new Set((commentsData || []).map((c: any) => c.user_id))]
     const { data: users } = await supabaseAdmin
       .from('users')
       .select('id, email, display_name, avatar_url')
       .in('id', userIds)
 
     const usersMap = new Map(
-      users?.map(u => [
+      (users || []).map((u: any) => [
         u.id,
         {
           name: u.display_name || u.email?.split('@')[0] || 'Anonymous',
           avatar: u.avatar_url
         }
-      ]) || []
+      ])
     )
 
     // Build comments tree structure
     const commentsMap = new Map<string, StoryComment>()
-    const topLevelComments: StoryComment[] = []
+    const topLevelComments: StoryComment[] = [] as StoryComment[]
 
     // First pass: Create all comment objects
-    commentsData.forEach(comment => {
+    const comments = (commentsData || []) as any[]
+    comments.forEach((comment: any) => {
       const userInfo = usersMap.get(comment.user_id)
       const commentObj: StoryComment = {
         id: comment.id,
@@ -116,7 +118,7 @@ export async function GET(
     })
 
     // Second pass: Nest replies
-    commentsData.forEach(comment => {
+    comments.forEach((comment: any) => {
       if (comment.parent_comment_id) {
         const parent = commentsMap.get(comment.parent_comment_id)
         const child = commentsMap.get(comment.id)
@@ -165,6 +167,26 @@ export async function POST(
       )
     }
 
+    // Ensure user profile exists in public.users table (fix for foreign key violation)
+    const { data: profile } = await supabase
+      .from('users')
+      .select('id')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile) {
+      console.log(`👤 Profile missing for user ${user.id}, creating one...`)
+      await (supabase
+        .from('users') as any)
+        .insert({
+          id: user.id,
+          email: user.email || '',
+          display_name: user.user_metadata?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0],
+          photo_url: user.user_metadata?.avatar_url,
+          subscription_tier: 'trial'
+        })
+    }
+
     const { id: storyId } = await params
 
     // Parse request body
@@ -174,7 +196,7 @@ export async function POST(
       parentCommentId?: string
     }
 
-    // Validate content
+    // Validate and sanitize content
     if (!content || content.trim().length === 0) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Comment content is required' },
@@ -185,6 +207,18 @@ export async function POST(
     if (content.length > 1000) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Comment is too long (max 1000 characters)' },
+        { status: 400 }
+      )
+    }
+
+    // Sanitize content to prevent XSS
+    // Remove HTML tags and script content
+    const { sanitizeTextInput } = await import('@/lib/validation/input-sanitizer')
+    const sanitizedContent = sanitizeTextInput(content, 1000)
+    
+    if (sanitizedContent.length === 0) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: 'Comment content is invalid' },
         { status: 400 }
       )
     }
@@ -203,7 +237,11 @@ export async function POST(
       )
     }
 
-    if (story.visibility !== 'public') {
+    // Use sanitized content for database insert
+    const finalContent = sanitizedContent
+    const storyDataPost = story as any
+
+    if (storyDataPost.visibility !== 'public') {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Can only comment on public stories' },
         { status: 400 }
@@ -218,7 +256,7 @@ export async function POST(
         .eq('id', parentCommentId)
         .single()
 
-      if (!parentComment || parentComment.story_id !== storyId) {
+      if (!parentComment || (parentComment as any).story_id !== storyId) {
         return NextResponse.json<ApiResponse>(
           { success: false, error: 'Parent comment not found' },
           { status: 404 }
@@ -226,13 +264,13 @@ export async function POST(
       }
     }
 
-    // Insert comment
-    const { data: newComment, error: insertError } = await supabase
-      .from('story_comments')
+    // Insert comment with sanitized content
+    const { data: newComment, error: insertError } = await (supabase
+      .from('story_comments') as any)
       .insert({
         story_id: storyId,
         user_id: user.id,
-        content: content.trim(),
+        content: finalContent, // Use sanitized content
         parent_comment_id: parentCommentId || null
       })
       .select()
@@ -253,16 +291,17 @@ export async function POST(
       .eq('id', user.id)
       .single()
 
+    const newCommentData = newComment as any
     const comment: StoryComment = {
-      id: newComment.id,
-      storyId: newComment.story_id,
-      userId: newComment.user_id,
-      content: newComment.content,
-      parentCommentId: newComment.parent_comment_id || undefined,
-      createdAt: new Date(newComment.created_at),
-      updatedAt: new Date(newComment.updated_at),
-      authorName: userData?.display_name || userData?.email?.split('@')[0] || 'Anonymous',
-      authorAvatar: userData?.avatar_url,
+      id: newCommentData.id,
+      storyId: newCommentData.story_id,
+      userId: newCommentData.user_id,
+      content: newCommentData.content,
+      parentCommentId: newCommentData.parent_comment_id || undefined,
+      createdAt: new Date(newCommentData.created_at),
+      updatedAt: new Date(newCommentData.updated_at),
+      authorName: (userData as any)?.display_name || (userData as any)?.email?.split('@')[0] || 'Anonymous',
+      authorAvatar: (userData as any)?.avatar_url,
       replies: []
     }
 

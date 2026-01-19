@@ -26,7 +26,7 @@ export async function checkAndAwardAchievements(userId?: string): Promise<Achiev
     }
 
     // Call the database function to check and award achievements
-    const { data, error } = await supabase.rpc('check_and_award_achievements', {
+    const { data, error } = await (supabase.rpc as any)('check_and_award_achievements', {
       user_uuid: targetUserId,
     })
 
@@ -122,8 +122,8 @@ export async function markAchievementsAsViewed(achievementIds: string[]): Promis
     } = await supabase.auth.getUser()
     if (!user) return false
 
-    const { error } = await supabase
-      .from('user_achievements')
+    const { error } = await (supabase
+      .from('user_achievements') as any)
       .update({ is_viewed: true })
       .eq('user_id', user.id)
       .in('achievement_id', achievementIds)
@@ -187,7 +187,7 @@ export async function getUserStats(userId?: string): Promise<UserStats | null> {
       .select('theme')
       .eq('user_id', targetUserId)
 
-    const uniqueThemes = new Set((themesData || []).map(s => s.theme)).size
+    const uniqueThemes = new Set((themesData || []).map((s: any) => s.theme)).size
 
     // Count reading sessions
     const { count: totalReadingSessions } = await supabase
@@ -201,7 +201,7 @@ export async function getUserStats(userId?: string): Promise<UserStats | null> {
       .select('duration_seconds')
       .eq('user_id', targetUserId)
 
-    const totalReadingTime = (sessionsData || []).reduce((sum, s) => sum + (s.duration_seconds || 0), 0)
+    const totalReadingTime = (sessionsData || []).reduce((sum, s: any) => sum + (s.duration_seconds || 0), 0)
 
     const averageSessionDuration =
       totalReadingSessions && totalReadingSessions > 0 ? totalReadingTime / totalReadingSessions : 0

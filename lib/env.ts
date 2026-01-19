@@ -23,19 +23,29 @@ const envSchema = z.object({
   STABILITY_AI_API_KEY: z.string().min(1).optional(),
   STABLE_DIFFUSION_API_KEY: z.string().min(1).optional(),
 
-  // Stripe
-  STRIPE_SECRET_KEY: z.string().min(1),
-  STRIPE_PUBLISHABLE_KEY: z.string().min(1),
-  STRIPE_WEBHOOK_SECRET: z.string().optional(),
-  STRIPE_PRO_PRICE_ID: z.string().optional(),
-  STRIPE_PRO_MAX_PRICE_ID: z.string().optional(),
+  // Lemon Squeezy
+  LEMONSQUEEZY_API_KEY: z.string().min(1),
+  LEMONSQUEEZY_STORE_ID: z.string().min(1),
+  LEMONSQUEEZY_WEBHOOK_SECRET: z.string().optional(),
+  LEMONSQUEEZY_PRO_VARIANT_ID: z.string().optional(),
+  LEMONSQUEEZY_FAMILY_VARIANT_ID: z.string().optional(),
 
   // Email (waitlist)
   RESEND_API_KEY: z.string().min(1).optional(),
   WAITLIST_FROM_EMAIL: z.string().email().optional(),
 
+  // Cron Security
+  CRON_SECRET: z.string().min(1).optional(),
+
+  // Redis (Rate Limiting) - Self-hosted Redis (e.g., Dokploy)
+  REDIS_HOST: z.string().optional(),
+  REDIS_PORT: z.string().optional(),
+  REDIS_PASSWORD: z.string().optional(),
+  REDIS_DB: z.string().optional(),
+
   // App
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),
+  NEXT_PUBLIC_GLITCHTIP_DSN: z.string().url().optional(),
 })
 
 type Env = z.infer<typeof envSchema>
@@ -50,9 +60,57 @@ export function validateEnv(): Env {
   } catch (error) {
     if (error instanceof z.ZodError) {
       const missingVars = error.errors.map((e) => e.path.join('.')).join(', ')
-      throw new Error(`Missing or invalid environment variables: ${missingVars}`)
+      const errorMessage = `Missing or invalid environment variables: ${missingVars}`
+      console.error('❌ Environment validation failed:', errorMessage)
+      console.error('Required variables:', error.errors.map(e => e.path.join('.')).join(', '))
+      throw new Error(errorMessage)
     }
     throw error
+  }
+}
+
+/**
+ * Validate environment variables at startup (non-blocking in development)
+ * In production, this will throw and prevent the app from starting
+ */
+export function validateEnvAtStartup(): void {
+  // Skip in Edge Runtime (middleware, edge routes) - process.exit is not available
+  if (typeof process === 'undefined' || !process.exit) {
+    return
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    // In production, strict validation - fail fast
+    try {
+      validateEnv()
+      console.log('✅ Environment variables validated successfully')
+    } catch (error) {
+      console.error('❌ CRITICAL: Environment validation failed in production')
+      console.error(error)
+      // Only use process.exit if available (Node.js runtime)
+      if (typeof process !== 'undefined' && process.exit) {
+        process.exit(1)
+      } else {
+        throw error
+      }
+    }
+  } else {
+    // In development, warn but don't fail
+    try {
+      validateEnv()
+      console.log('✅ Environment variables validated successfully')
+    } catch (error) {
+      console.warn('⚠️  Environment validation warnings (development mode):', error)
+      console.warn('⚠️  Some features may not work correctly. Please check your .env.local file.')
+    }
+  }
+}
+
+// Auto-validate on module load (runs once when module is imported)
+if (typeof window === 'undefined') {
+  // Only run on server-side, and only in Node.js runtime (not Edge Runtime)
+  if (typeof process !== 'undefined' && process.exit) {
+    validateEnvAtStartup()
   }
 }
 

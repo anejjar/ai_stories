@@ -2,15 +2,25 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth/middleware'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { getProviderManager } from '@/lib/ai/provider-manager'
-import { uploadImagesToStorage } from '@/lib/supabase/storage'
+import { uploadImagesToStorage, getSuccessfulUploadUrls } from '@/lib/supabase/storage'
+import { retryDatabaseOperation } from '@/lib/database/retry'
 import { checkRateLimit, RATE_LIMITS, getRateLimitHeaders } from '@/lib/rate-limit'
 import type { ApiResponse } from '@/types'
 import type { ImageGenerationRequest } from '@/lib/ai/types'
 import { ProviderError } from '@/lib/ai/types'
 import type { DatabaseStory } from '@/types/database'
+import {
+  buildEnhancedIllustrationPrompt,
+  buildAppearanceDescription,
+  determineCharacterTier,
+  selectArtStyle,
+  determineMoodFromScene,
+  type IllustrationRequest
+} from '@/lib/ai/illustration-prompt-builder'
+import { extractScenesFromStory, extractKeyVisualMoment } from '@/lib/ai/scene-extractor'
 
 /**
- * Generate images for an existing story (PRO MAX feature)
+ * Generate images for an existing story (Family Plan feature)
  */
 export async function POST(
   request: NextRequest,
@@ -21,7 +31,7 @@ export async function POST(
   if (response) return response
 
   // Rate limiting for expensive image generation
-  const rateLimitResult = checkRateLimit(userId, RATE_LIMITS.imageGeneration)
+  const rateLimitResult = await checkRateLimit(userId, RATE_LIMITS.imageGeneration)
   if (!rateLimitResult.success) {
     return NextResponse.json<ApiResponse>(
       {
@@ -96,8 +106,7 @@ export async function POST(
     // For multi-child, use children[].appearance; for single-child, use story.appearance
     const appearance = requestAppearance || (isMultiChild ? undefined : (story.appearance as any))
 
-    // Generate image prompts from story content
-    // For MVP, we'll generate 3-5 key scenes from the story
+    // Generate image prompts using enhanced prompt builder for consistency
     const imagePrompts = isMultiChild && children
       ? generateImagePromptsFromMultiChildStory(
         story.content,
@@ -111,16 +120,38 @@ export async function POST(
         appearance
       )
 
+    // Helper function to randomly select aspect ratio
+    const selectRandomAspectRatio = (): 'square' | 'portrait' | 'landscape' => {
+      const ratios: Array<'square' | 'portrait' | 'landscape'> = ['square', 'portrait', 'landscape']
+      return ratios[Math.floor(Math.random() * ratios.length)]
+    }
+
+    // Helper function to map aspect ratio to size
+    const getSizeForAspectRatio = (aspectRatio: 'square' | 'portrait' | 'landscape'): '1024x1024' | '1024x1792' | '1792x1024' => {
+      switch (aspectRatio) {
+        case 'square':
+          return '1024x1024'
+        case 'portrait':
+          return '1024x1792'
+        case 'landscape':
+          return '1792x1024'
+      }
+    }
+
     // Generate images using configured image provider
     const providerManager = getProviderManager()
     const imageUrls: string[] = []
 
     for (const prompt of imagePrompts) {
       try {
+        // Randomly select aspect ratio for visual variety
+        const aspectRatio = selectRandomAspectRatio()
+        const size = getSizeForAspectRatio(aspectRatio)
+
         const imageRequest: ImageGenerationRequest = {
           prompt,
           count: 1,
-          size: '1024x1024',
+          size: size,
           style: style || 'natural',
         }
 
@@ -142,29 +173,44 @@ export async function POST(
       )
     }
 
-    // Upload images to Supabase Storage
-    let storageUrls: string[] = []
-    try {
-      storageUrls = await uploadImagesToStorage(imageUrls, storyId)
-    } catch (storageError) {
-      console.error('Error uploading images to storage, using original URLs:', storageError)
-      // Fallback to original URLs if storage upload fails
-      storageUrls = imageUrls
-    }
+    // Upload images to Supabase Storage with detailed results
+    console.log(`📤 Uploading ${imageUrls.length} images to storage...`)
+    const uploadResults = await uploadImagesToStorage(imageUrls, storyId)
+    const successfulResults = uploadResults.filter(r => r.success)
+    const failedResults = uploadResults.filter(r => !r.success)
 
-    // Update story with image URLs (prefer storage URLs, fallback to original)
+    console.log(`📊 Upload complete: ${successfulResults.length}/${imageUrls.length} successful`)
+
+    // Get successful upload URLs
+    const storageUrls = getSuccessfulUploadUrls(successfulResults)
+    
+    // Fallback to original URLs for failed uploads (if any)
     const finalImageUrls = storageUrls.length > 0 ? storageUrls : imageUrls
+
+    // Update story with image URLs using retry
     const updatePayload: Record<string, any> = {
-      has_images: true,
+      has_images: storageUrls.length > 0,
       image_urls: finalImageUrls,
     }
-    const { error: updateError } = await (supabaseAdmin
-      .from('stories') as any)
-      .update(updatePayload)
-      .eq('id', storyId)
 
-    if (updateError) {
-      throw updateError
+    try {
+      await retryDatabaseOperation(async () => {
+        const { error: updateError } = await (supabaseAdmin
+          .from('stories') as any)
+          .update(updatePayload)
+          .eq('id', storyId)
+
+        if (updateError) {
+          throw new Error(`Failed to update story with images: ${updateError.message}`)
+        }
+      })
+
+      if (failedResults.length > 0) {
+        console.warn(`⚠️ ${failedResults.length} image upload(s) failed, but story updated with ${successfulResults.length} successful upload(s)`)
+      }
+    } catch (updateError) {
+      console.error('Failed to update story with images:', updateError)
+      throw new Error(`Images uploaded but failed to update story: ${updateError instanceof Error ? updateError.message : String(updateError)}`)
     }
 
     return NextResponse.json<ApiResponse<{ imageUrls: string[] }>>({
@@ -197,8 +243,8 @@ export async function POST(
 }
 
 /**
- * Generate image prompts from story content
- * Extracts key scenes and creates kid-friendly, safe prompts
+ * Generate image prompts from story content using enhanced prompt builder
+ * Extracts key scenes and creates consistent, kid-friendly prompts
  */
 function generateImagePromptsFromStory(
   content: string,
@@ -210,89 +256,133 @@ function generateImagePromptsFromStory(
     hairStyle?: string
   }
 ): string[] {
-  // Split story into paragraphs
-  const paragraphs = content
-    .split('\n\n')
-    .filter((p) => p.trim().length > 50) // Filter out very short paragraphs
-
-  // Select 3-5 key scenes (beginning, middle, end)
-  const sceneCount = Math.min(5, Math.max(3, paragraphs.length))
-  const selectedParagraphs = [
-    paragraphs[0], // Beginning
-    ...paragraphs.slice(1, -1).slice(0, sceneCount - 2), // Middle scenes
-    paragraphs[paragraphs.length - 1], // End
-  ].filter(Boolean)
-
-  // Build appearance description
-  let appearanceDesc = ''
-  if (appearance) {
-    const parts: string[] = []
-    if (appearance.skinTone) parts.push(`${appearance.skinTone} skin`)
-    if (appearance.hairColor && appearance.hairStyle) {
-      parts.push(`${appearance.hairColor} ${appearance.hairStyle} hair`)
-    } else if (appearance.hairColor) {
-      parts.push(`${appearance.hairColor} hair`)
-    }
-    appearanceDesc = parts.length > 0 ? `, ${parts.join(', ')}` : ''
+  // Determine character rendering tier
+  const characterTier = determineCharacterTier(undefined, appearance as any)
+  
+  // Build character description
+  let characterDescription: string | undefined
+  let includeCharacter = true
+  
+  if (characterTier === 'appearance' && appearance) {
+    characterDescription = buildAppearanceDescription(appearance as any, childName)
+  } else {
+    includeCharacter = false
+    characterDescription = undefined
   }
 
-  // Generate prompts for each scene
-  return selectedParagraphs.map((paragraph, index) => {
-    // Extract key visual elements
-    const scene = paragraph
-      .substring(0, 200) // Limit length
-      .replace(/[^\w\s.,!?-]/g, '') // Remove special chars
-      .trim()
+  // Extract scenes using shared scene extractor
+  const scenes = extractScenesFromStory(
+    content,
+    childName,
+    theme,
+    characterDescription,
+    includeCharacter
+  )
 
-    return `A beautiful, kid-friendly illustration for a children's storybook. The scene shows ${childName}${appearanceDesc} in a ${theme.toLowerCase()} setting. ${scene}. Style: colorful, whimsical, safe for children, storybook illustration, soft colors, friendly characters, no scary elements.`
+  // Select 3-5 key scenes (beginning, middle, end)
+  const sceneCount = Math.min(5, Math.max(3, scenes.length))
+  const selectedScenes = [
+    scenes[0], // Beginning
+    ...scenes.slice(1, -1).slice(0, sceneCount - 2), // Middle scenes
+    scenes[scenes.length - 1], // End
+  ].filter(Boolean)
+
+  // Determine art style ONCE for the entire story
+  const storyArtStyle = selectArtStyle(theme, 'exciting')
+
+  // Generate prompts using enhanced prompt builder
+  return selectedScenes.map((scene, index) => {
+    const mood = determineMoodFromScene(scene.text)
+    
+    const illustrationRequest: IllustrationRequest = {
+      sceneDescription: extractKeyVisualMoment(scene.text, childName),
+      childName,
+      childDescription: characterDescription,
+      theme,
+      mood,
+      artStyle: storyArtStyle, // Use story-level art style for consistency
+      includeCharacter,
+      sceneNumber: index + 1,
+      totalScenes: selectedScenes.length,
+    }
+
+    return buildEnhancedIllustrationPrompt(illustrationRequest)
   })
 }
 
 /**
- * Generate image prompts from multi-child story content
+ * Generate image prompts from multi-child story content using enhanced prompt builder
  */
 function generateImagePromptsFromMultiChildStory(
   content: string,
   children: any[],
   theme: string
 ): string[] {
-  // Split story into paragraphs
-  const paragraphs = content
-    .split('\n\n')
-    .filter((p) => p.trim().length > 50) // Filter out very short paragraphs
-
-  // Select 3-5 key scenes (beginning, middle, end)
-  const sceneCount = Math.min(5, Math.max(3, paragraphs.length))
-  const selectedParagraphs = [
-    paragraphs[0], // Beginning
-    ...paragraphs.slice(1, -1).slice(0, sceneCount - 2), // Middle scenes
-    paragraphs[paragraphs.length - 1], // End
-  ].filter(Boolean)
-
-  // Build children description with appearances
-  const childrenNames = children.map((c: any) => c.name).join(' and ')
-  const childrenDescriptions = children.map((child: any, index: number) => {
-    const parts: string[] = [child.name]
-    if (child.appearance) {
-      if (child.appearance.skinTone) parts.push(`${child.appearance.skinTone} skin`)
-      if (child.appearance.hairColor && child.appearance.hairStyle) {
-        parts.push(`${child.appearance.hairColor} ${child.appearance.hairStyle} hair`)
-      } else if (child.appearance.hairColor) {
-        parts.push(`${child.appearance.hairColor} hair`)
+  // Use first child as main character for scene extraction
+  const mainChild = children[0]
+  const mainChildName = mainChild?.name || 'children'
+  
+  // Build character description for main child
+  let characterDescription: string | undefined
+  if (mainChild?.appearance) {
+    characterDescription = buildAppearanceDescription(mainChild.appearance, mainChildName)
+  }
+  
+  // Build description of other children
+  const otherChildren = children.slice(1).map((c: any) => {
+    const parts: string[] = [c.name]
+    if (c.appearance) {
+      if (c.appearance.skinTone) parts.push(`${c.appearance.skinTone} skin`)
+      if (c.appearance.hairColor && c.appearance.hairStyle) {
+        parts.push(`${c.appearance.hairColor} ${c.appearance.hairStyle} hair`)
+      } else if (c.appearance.hairColor) {
+        parts.push(`${c.appearance.hairColor} hair`)
       }
     }
     return parts.join(' with ')
   }).join(', ')
+  
+  const fullChildDescription = otherChildren
+    ? `${characterDescription || 'friendly child'}. With friends: ${otherChildren}`
+    : characterDescription || 'friendly children'
 
-  // Generate prompts for each scene
-  return selectedParagraphs.map((paragraph, index) => {
-    // Extract key visual elements
-    const scene = paragraph
-      .substring(0, 200) // Limit length
-      .replace(/[^\w\s.,!?-]/g, '') // Remove special chars
-      .trim()
+  // Extract scenes using shared scene extractor
+  const scenes = extractScenesFromStory(
+    content,
+    mainChildName,
+    theme,
+    fullChildDescription,
+    true // Always include character for multi-child
+  )
 
-    return `A beautiful, kid-friendly illustration for a children's storybook. The scene shows ${childrenDescriptions} together in a ${theme.toLowerCase()} setting. ${scene}. Style: colorful, whimsical, safe for children, storybook illustration, soft colors, friendly characters, no scary elements, multiple children playing together.`
+  // Select 3-5 key scenes (beginning, middle, end)
+  const sceneCount = Math.min(5, Math.max(3, scenes.length))
+  const selectedScenes = [
+    scenes[0], // Beginning
+    ...scenes.slice(1, -1).slice(0, sceneCount - 2), // Middle scenes
+    scenes[scenes.length - 1], // End
+  ].filter(Boolean)
+
+  // Determine art style ONCE for the entire story
+  const storyArtStyle = selectArtStyle(theme, 'exciting')
+
+  // Generate prompts using enhanced prompt builder
+  return selectedScenes.map((scene, index) => {
+    const mood = determineMoodFromScene(scene.text)
+    
+    const illustrationRequest: IllustrationRequest = {
+      sceneDescription: extractKeyVisualMoment(scene.text, mainChildName),
+      childName: mainChildName,
+      childDescription: fullChildDescription,
+      theme,
+      mood,
+      artStyle: storyArtStyle, // Use story-level art style for consistency
+      includeCharacter: true,
+      sceneNumber: index + 1,
+      totalScenes: selectedScenes.length,
+    }
+
+    return buildEnhancedIllustrationPrompt(illustrationRequest)
   })
 }
 

@@ -28,7 +28,7 @@ function loadAnthropic() {
 
 export class AnthropicProvider implements AIProvider {
   name: 'anthropic' = 'anthropic'
-  private client: Anthropic | null = null
+  private client: any = null
 
   constructor() {
     const AnthropicSDK = loadAnthropic()
@@ -39,7 +39,11 @@ export class AnthropicProvider implements AIProvider {
     
     const apiKey = process.env.ANTHROPIC_API_KEY
     if (apiKey) {
-      this.client = new AnthropicSDK({ apiKey })
+      this.client = new AnthropicSDK({ 
+        apiKey,
+        timeout: 60000, // 60 seconds timeout
+        maxRetries: 2,
+      })
     } else {
       console.warn('ANTHROPIC_API_KEY is not set. Anthropic provider will not be available.')
     }

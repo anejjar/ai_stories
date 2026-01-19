@@ -192,7 +192,7 @@ export async function getUserUsageStats(userId: string): Promise<UsageStats> {
     ) || { textStories: 0, illustratedStories: 0 }
 
     // Get all-time total stories
-    const { data: allStories, error: allError } = await supabaseAdmin
+    const { count: allStoriesCount, error: allError } = await supabaseAdmin
       .from('stories')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
@@ -209,7 +209,7 @@ export async function getUserUsageStats(userId: string): Promise<UsageStats> {
       thisWeek: weekStats,
       thisMonth: monthStats,
       allTime: {
-        totalStories: allStories?.count || 0
+        totalStories: allStoriesCount || 0
       }
     }
   } catch (error) {
@@ -287,14 +287,14 @@ export async function checkChildProfileLimit(
 ): Promise<UsageLimitCheck> {
   try {
     // Get current profile count
-    const { data, error } = await supabaseAdmin
+    const { count, error } = await supabaseAdmin
       .from('child_profiles')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
 
     if (error) throw error
 
-    const currentCount = data?.count || 0
+    const currentCount = count || 0
 
     // Determine limit based on tier
     let limit = 1 // trial default

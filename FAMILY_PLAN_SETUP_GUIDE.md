@@ -58,12 +58,12 @@ supabase db push
 
 ---
 
-## Step 2: Set Up Stripe Products
+## Step 2: Set Up Lemon Squeezy Products
 
-### Create Products in Stripe Dashboard
+### Create Products in Lemon Squeezy Dashboard
 
-1. **Go to Stripe Dashboard**
-   - Visit https://dashboard.stripe.com
+1. **Go to Lemon Squeezy Dashboard**
+   - Visit https://app.lemonsqueezy.com
 
 2. **Create Pro Plan Product**
    - Click "Products" → "Add product"
@@ -73,7 +73,7 @@ supabase db push
      - Recurring: Monthly
      - Price: $9.99 USD
    - Click "Save product"
-   - **Copy the Price ID** (starts with `price_`)
+   - After creating, add a variant and **Copy the Variant ID**
 
 3. **Create Family Plan Product**
    - Click "Products" → "Add product"
@@ -83,20 +83,21 @@ supabase db push
      - Recurring: Monthly
      - Price: $24.99 USD
    - Click "Save product"
-   - **Copy the Price ID** (starts with `price_`)
+   - After creating, add a variant and **Copy the Variant ID**
 
 4. **Set up Webhook (for subscription events)**
-   - Go to "Developers" → "Webhooks"
-   - Click "Add endpoint"
+   - Go to "Settings" → "Webhooks"
+   - Click "Create webhook"
    - Endpoint URL: `https://your-domain.com/api/payments/webhook`
      - For local dev: Use ngrok or skip for now
    - Events to listen for:
-     - `checkout.session.completed`
-     - `customer.subscription.created`
-     - `customer.subscription.updated`
-     - `customer.subscription.deleted`
-   - Click "Add endpoint"
-   - **Copy the Webhook Secret** (starts with `whsec_`)
+     - `subscription_created`
+     - `subscription_updated`
+     - `subscription_cancelled`
+     - `subscription_expired`
+     - `subscription_payment_success`
+   - Click "Create webhook"
+   - **Copy the Webhook Secret**
 
 ---
 
@@ -106,15 +107,15 @@ supabase db push
 
 ```env
 # ================================
-# Stripe Configuration
+# Lemon Squeezy Configuration
 # ================================
-STRIPE_SECRET_KEY=sk_test_xxxxx  # Your Stripe Secret Key
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxxxx  # Your Stripe Publishable Key
-STRIPE_WEBHOOK_SECRET=whsec_xxxxx  # Your Webhook Secret
+LEMONSQUEEZY_API_KEY=your-api-key  # Your Lemon Squeezy API Key
+LEMONSQUEEZY_STORE_ID=your-store-id  # Your Lemon Squeezy Store ID
+LEMONSQUEEZY_WEBHOOK_SECRET=your-webhook-secret  # Your Webhook Secret
 
-# Stripe Price IDs (from Step 2)
-STRIPE_PRO_PRICE_ID=price_xxxxx  # Pro Plan Price ID
-STRIPE_FAMILY_PRICE_ID=price_xxxxx  # Family Plan Price ID
+# Lemon Squeezy Variant IDs (from Step 2)
+LEMONSQUEEZY_PRO_VARIANT_ID=your-pro-variant-id  # Pro Plan Variant ID
+LEMONSQUEEZY_FAMILY_VARIANT_ID=your-family-variant-id  # Family Plan Variant ID
 ```
 
 ### Full `.env.local` example:
@@ -134,12 +135,12 @@ REPLICATE_API_TOKEN=r8_xxxxx
 # Application
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 
-# Stripe (NEW!)
-STRIPE_SECRET_KEY=sk_test_xxxxx
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxxxx
-STRIPE_WEBHOOK_SECRET=whsec_xxxxx
-STRIPE_PRO_PRICE_ID=price_xxxxx
-STRIPE_FAMILY_PRICE_ID=price_xxxxx
+# Lemon Squeezy (NEW!)
+LEMONSQUEEZY_API_KEY=your-api-key
+LEMONSQUEEZY_STORE_ID=your-store-id
+LEMONSQUEEZY_WEBHOOK_SECRET=your-webhook-secret
+LEMONSQUEEZY_PRO_VARIANT_ID=your-pro-variant-id
+LEMONSQUEEZY_FAMILY_VARIANT_ID=your-family-variant-id
 ```
 
 ---
@@ -311,7 +312,7 @@ If you run into issues:
 
 1. Check the console for errors
 2. Check Supabase logs (Dashboard → Logs)
-3. Verify environment variables are loaded: http://localhost:3000/debug/env
+3. Check server logs and console for any configuration errors
 4. Check the database tables were created correctly
 
 ---

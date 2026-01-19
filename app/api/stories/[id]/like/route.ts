@@ -32,6 +32,27 @@ export async function POST(
       )
     }
 
+    // Ensure user profile exists in public.users table (fix for foreign key violation)
+    // Sometimes the trigger might fail or not have run yet
+    const { data: profile } = await supabase
+      .from('users')
+      .select('id')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile) {
+      console.log(`👤 Profile missing for user ${user.id}, creating one...`)
+      await (supabase
+        .from('users') as any)
+        .insert({
+          id: user.id,
+          email: user.email || '',
+          display_name: user.user_metadata?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0],
+          photo_url: user.user_metadata?.avatar_url,
+          subscription_tier: 'trial'
+        })
+    }
+
     const { id: storyId } = await params
 
     // Verify story exists and is public
@@ -48,7 +69,8 @@ export async function POST(
       )
     }
 
-    if (story.visibility !== 'public') {
+    const storyData = story as any
+    if (storyData.visibility !== 'public') {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Can only like public stories' },
         { status: 400 }
@@ -87,8 +109,8 @@ export async function POST(
 
     } else {
       // Like: Add the like
-      const { error: insertError } = await supabase
-        .from('story_likes')
+      const { error: insertError } = await (supabase
+        .from('story_likes') as any)
         .insert({
           story_id: storyId,
           user_id: user.id
@@ -113,7 +135,7 @@ export async function POST(
       .eq('id', storyId)
       .single()
 
-    likesCount = updatedStory?.likes_count || 0
+    likesCount = (updatedStory as any)?.likes_count || 0
 
     const response: LikeStoryResponse = {
       isLiked,

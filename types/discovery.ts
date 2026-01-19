@@ -16,7 +16,6 @@ export interface PublicStory extends Omit<Story, 'visibility'> {
   publishedAt: Date
   isLikedByUser?: boolean
   userRating?: number
-  authorName?: string
 }
 
 // =====================================================
@@ -53,7 +52,7 @@ export interface StoryRating {
   updatedAt: Date
 }
 
-export type ReportReason = 'inappropriate' | 'spam' | 'copyright' | 'other'
+export type ReportReason = 'inappropriate' | 'spam' | 'copyright' | 'unwanted_words' | 'unwanted_images' | 'image_issues' | 'other'
 export type ReportStatus = 'pending' | 'reviewed' | 'resolved' | 'dismissed'
 
 export interface StoryReport {

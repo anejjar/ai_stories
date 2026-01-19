@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import type { ApiResponse } from '@/types'
 import type { SocialStats } from '@/types/discovery'
+import { unstable_noStore as noStore } from 'next/cache'
 
 interface SocialStatsParams {
   params: Promise<{
@@ -19,6 +20,9 @@ export async function GET(
   { params }: SocialStatsParams
 ) {
   try {
+    // Prevent caching to ensure stats are fresh
+    noStore()
+
     const supabase = await createServerSupabaseClient()
 
     // Check authentication
@@ -49,7 +53,8 @@ export async function GET(
 
     // Check if story is accessible (public or owned by user)
     // For private stories, only the owner can see stats
-    if (story.visibility !== 'public') {
+    const storyData = story as any
+    if (storyData.visibility !== 'public') {
       const { data: ownerCheck } = await supabase
         .from('stories')
         .select('user_id')
@@ -82,13 +87,13 @@ export async function GET(
       .single()
 
     const stats: SocialStats = {
-      likesCount: story.likes_count || 0,
-      commentsCount: story.comments_count || 0,
-      averageRating: parseFloat(story.average_rating) || 0,
-      ratingsCount: story.ratings_count || 0,
-      viewCount: story.view_count || 0,
+      likesCount: storyData.likes_count || 0,
+      commentsCount: storyData.comments_count || 0,
+      averageRating: parseFloat(storyData.average_rating) || 0,
+      ratingsCount: storyData.ratings_count || 0,
+      viewCount: storyData.view_count || 0,
       isLikedByUser: !!userLike,
-      userRating: userRating?.rating
+      userRating: (userRating as any)?.rating
     }
 
     return NextResponse.json<ApiResponse<SocialStats>>(

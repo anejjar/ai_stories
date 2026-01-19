@@ -11,7 +11,7 @@
  */
 import 'dotenv/config'
 import { createClient } from '@supabase/supabase-js'
-import { readFileSync } from 'fs'
+import { readFileSync, readdirSync } from 'fs'
 import { join } from 'path'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -34,35 +34,38 @@ async function applyMigrations() {
     })
 
     try {
-        // Read the migration SQL file
-        const migrationPath = join(process.cwd(), 'supabase', 'migrations', 'apply_missing_migrations.sql')
-        const migrationSQL = readFileSync(migrationPath, 'utf-8')
+        // Read all SQL files in the migrations directory
+        const migrationsDir = join(process.cwd(), 'supabase', 'migrations')
+        const migrationFiles = readdirSync(migrationsDir)
+            .filter(file => file.endsWith('.sql'))
+            .sort()
 
-        console.log('📝 Applying migrations...')
-        console.log('Migration file:', migrationPath)
+        console.log(`📂 Found ${migrationFiles.length} migration files in ${migrationsDir}`)
 
-        // Execute the SQL
-        const { error } = await supabase.rpc('exec_sql', { sql: migrationSQL })
+        for (const file of migrationFiles) {
+            console.log(`📝 Checking migration: ${file}...`)
+            const migrationPath = join(migrationsDir, file)
+            const migrationSQL = readFileSync(migrationPath, 'utf-8')
 
-        if (error) {
-            // If exec_sql doesn't exist, try direct SQL execution
-            console.log('⚠️  exec_sql function not found, trying alternative method...')
-            console.log('\n📋 Please run the following SQL in your Supabase SQL Editor:')
-            console.log('='.repeat(80))
-            console.log(migrationSQL)
-            console.log('='.repeat(80))
-            console.log('\nSteps:')
-            console.log('1. Go to your Supabase project dashboard')
-            console.log('2. Navigate to SQL Editor')
-            console.log('3. Copy and paste the SQL above')
-            console.log('4. Click "Run" to execute')
-            return
+            // Execute the SQL
+            const { error } = await supabase.rpc('exec_sql', { sql: migrationSQL })
+
+            if (error) {
+                if (error.message.includes('function "exec_sql" does not exist')) {
+                    console.log(`⚠️  "exec_sql" function not found. Please run ${file} manually in the Supabase SQL Editor.`)
+                    console.log('='.repeat(80))
+                    console.log(migrationSQL)
+                    console.log('='.repeat(80))
+                } else {
+                    console.error(`❌ Error applying migration ${file}:`, error.message)
+                }
+                continue
+            }
+            console.log(`✅ Migration ${file} applied successfully!`)
         }
 
-        console.log('✅ Migrations applied successfully!')
-
         // Verify the columns exist
-        console.log('\n🔍 Verifying migrations...')
+        console.log('\n🔍 Verifying schema...')
         const { data, error: queryError } = await supabase
             .from('stories')
             .select('*')
@@ -86,12 +89,7 @@ async function applyMigrations() {
         }
     } catch (error) {
         console.error('❌ Error applying migrations:', error)
-        console.log('\n📋 Manual migration required. Run this SQL in your Supabase SQL Editor:')
-        console.log('='.repeat(80))
-        const migrationPath = join(process.cwd(), 'supabase', 'migrations', 'apply_missing_migrations.sql')
-        const migrationSQL = readFileSync(migrationPath, 'utf-8')
-        console.log(migrationSQL)
-        console.log('='.repeat(80))
+        console.log('\n📋 Manual migration might be required. If the error persists, please run your SQL files manually in the Supabase SQL Editor.')
     }
 }
 

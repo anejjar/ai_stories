@@ -802,11 +802,11 @@ export function StoryForm({ onSubmit, disabled, loading, onShowUpgrade }: StoryF
               <div className="flex items-center gap-2 mb-2">
                 <h3 className="font-bold text-lg text-gray-800">Create Illustrated Story Books</h3>
                 <Badge className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white font-bold border-2 border-yellow-500 rounded-full px-3">
-                  PRO MAX 👑
+                  FAMILY PLAN 👑
                 </Badge>
               </div>
               <p className="text-sm text-gray-700 mb-3 font-semibold">
-                Upgrade to PRO MAX to create beautiful illustrated story books with your child as the hero!
+                Upgrade to Family Plan to create beautiful illustrated story books with your child as the hero!
                 Generate 5-7 consistent AI illustrations that follow your selected theme and bring your story to life. ✨
               </p>
               <Button
@@ -816,7 +816,7 @@ export function StoryForm({ onSubmit, disabled, loading, onShowUpgrade }: StoryF
                 className="rounded-full border-2 border-yellow-400 bg-white/80 font-bold hover:bg-yellow-50 hover:text-yellow-700 transition-colors"
               >
                 <Lock className="h-4 w-4 mr-2" />
-                Unlock with PRO MAX 🚀
+                Unlock with FAMILY PLAN 🚀
               </Button>
             </div>
           </div>

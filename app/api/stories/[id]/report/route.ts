@@ -9,7 +9,7 @@ interface ReportParams {
   }>
 }
 
-const VALID_REASONS: ReportReason[] = ['inappropriate', 'spam', 'copyright', 'other']
+const VALID_REASONS: ReportReason[] = ['inappropriate', 'spam', 'copyright', 'unwanted_words', 'unwanted_images', 'image_issues', 'other']
 
 /**
  * POST /api/stories/[id]/report
@@ -58,7 +58,7 @@ export async function POST(
       )
     }
 
-    // Verify story exists and is public
+    // Verify story exists (can be public or private)
     const { data: story, error: storyError } = await supabase
       .from('stories')
       .select('id, visibility')
@@ -72,12 +72,8 @@ export async function POST(
       )
     }
 
-    if (story.visibility !== 'public') {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: 'Can only report public stories' },
-        { status: 400 }
-      )
-    }
+    // Allow reporting both public and private stories
+    // Users can report any story they have access to
 
     // Check if user already reported this story
     const { data: existingReport } = await supabase
@@ -87,7 +83,8 @@ export async function POST(
       .eq('user_id', user.id)
       .single()
 
-    if (existingReport && existingReport.status === 'pending') {
+    const existingReportData = existingReport as any
+    if (existingReportData && existingReportData.status === 'pending') {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'You have already reported this story. The report is being reviewed.' },
         { status: 400 }
@@ -95,8 +92,8 @@ export async function POST(
     }
 
     // Insert report
-    const { error: insertError } = await supabase
-      .from('story_reports')
+    const { error: insertError } = await (supabase
+      .from('story_reports') as any)
       .insert({
         story_id: storyId,
         user_id: user.id,
@@ -118,7 +115,7 @@ export async function POST(
     return NextResponse.json<ApiResponse>(
       {
         success: true,
-        message: 'Thank you for your report. Our team will review it shortly.'
+        message: 'Thank you for making this app healthy and safe for all children! Our team will review your report shortly.'
       },
       { status: 201 }
     )

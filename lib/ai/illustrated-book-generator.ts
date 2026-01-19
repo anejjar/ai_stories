@@ -14,6 +14,8 @@ import {
   selectArtStyle,
   type IllustrationRequest
 } from './illustration-prompt-builder'
+import { validateAIResponse } from '../moderation/ai-response-validator'
+import { extractScenesFromStory as extractScenes, extractKeyVisualMoment } from './scene-extractor'
 
 export interface BookScene {
   sceneNumber: number
@@ -25,12 +27,47 @@ export interface BookPage {
   pageNumber: number
   text: string
   illustration_url: string
+  // Aspect ratio metadata (optional for backward compatibility)
+  width?: number
+  height?: number
+  aspectRatio?: 'square' | 'portrait' | 'landscape'
 }
 
 export interface IllustratedBookResult {
   content: string // Full story text
   bookPages: BookPage[]
   scenes: BookScene[]
+}
+
+/**
+ * Randomly select an aspect ratio for image generation
+ * Returns: 'square' | 'portrait' | 'landscape'
+ */
+function selectRandomAspectRatio(): 'square' | 'portrait' | 'landscape' {
+  const ratios: Array<'square' | 'portrait' | 'landscape'> = ['square', 'portrait', 'landscape']
+  return ratios[Math.floor(Math.random() * ratios.length)]
+}
+
+/**
+ * Map aspect ratio to image generation size
+ */
+function getSizeForAspectRatio(aspectRatio: 'square' | 'portrait' | 'landscape'): '1024x1024' | '1024x1792' | '1792x1024' {
+  switch (aspectRatio) {
+    case 'square':
+      return '1024x1024'
+    case 'portrait':
+      return '1024x1792'
+    case 'landscape':
+      return '1792x1024'
+  }
+}
+
+/**
+ * Get dimensions from size string
+ */
+function getDimensionsFromSize(size: string): { width: number; height: number } {
+  const [width, height] = size.split('x').map(Number)
+  return { width, height }
 }
 
 /**
@@ -51,7 +88,13 @@ export async function generateIllustratedBook(params: {
   const providerManager = getProviderManager()
 
   // Step 1: Generate story content structured into 5-7 scenes
-  const storyPrompt = buildIllustratedStoryPrompt(params)
+  const storyPrompt = buildIllustratedStoryPrompt({
+    childName: params.childName,
+    adjectives: params.adjectives,
+    theme: params.theme,
+    moral: params.moral,
+    childAge: params.childAge
+  })
   const storyContent = await providerManager.generateText({
     childName: params.childName,
     adjectives: params.adjectives,
@@ -60,6 +103,15 @@ export async function generateIllustratedBook(params: {
     templateId: params.templateId,
     customPrompt: storyPrompt,
   })
+  // Validate AI-generated story content
+  const aiResponseValidation = validateAIResponse(storyContent)
+  if (!aiResponseValidation.isValid) {
+    throw new Error(
+      `AI response validation failed: ${aiResponseValidation.reason}. ` +
+      `Please try different character names or themes.`
+    )
+  }
+
 
   // Determine character rendering tier
   const characterTier = determineCharacterTier(params.aiDescription, params.appearance)
@@ -88,7 +140,7 @@ export async function generateIllustratedBook(params: {
   }
 
   // Step 2: Split story into scenes (5-7 scenes)
-  const scenes = extractScenesFromStory(
+  const extractedScenes = extractScenes(
     storyContent,
     params.childName,
     params.theme,
@@ -96,6 +148,9 @@ export async function generateIllustratedBook(params: {
     includeCharacter,
     params.profileImageUrl
   )
+
+  // Convert to BookScene format
+  const scenes = convertScenesToBookScenes(extractedScenes)
 
   // Step 3: Generate illustrations for each scene
   const bookPages: BookPage[] = []
@@ -107,10 +162,17 @@ export async function generateIllustratedBook(params: {
       console.log(`Generating illustration ${i + 1}/${scenes.length} for illustrated book...`)
       console.log(`Scene ${i + 1} prompt length: ${scene.illustrationPrompt.length} chars`)
 
+      // Randomly select aspect ratio for visual variety
+      const aspectRatio = selectRandomAspectRatio()
+      const size = getSizeForAspectRatio(aspectRatio)
+      const dimensions = getDimensionsFromSize(size)
+
+      console.log(`Selected aspect ratio: ${aspectRatio} (${size})`)
+
       const imageRequest: ImageGenerationRequest = {
         prompt: scene.illustrationPrompt,
         count: 1,
-        size: '1024x1792', // Portrait mode for better book layout
+        size: size,
         style: 'vivid', // Use vivid style for more engaging illustrations
       }
 
@@ -126,9 +188,12 @@ export async function generateIllustratedBook(params: {
         pageNumber: i + 1,
         text: scene.text,
         illustration_url: urls[0],
+        width: dimensions.width,
+        height: dimensions.height,
+        aspectRatio: aspectRatio,
       })
 
-      console.log(`✅ Successfully generated illustration ${i + 1}/${scenes.length}`)
+      console.log(`✅ Successfully generated illustration ${i + 1}/${scenes.length} with ${aspectRatio} aspect ratio`)
     } catch (error) {
       console.error(`❌ Error generating illustration for scene ${i + 1}:`, error)
       console.error('Error details:', {
@@ -166,175 +231,46 @@ function buildIllustratedStoryPrompt(params: {
   adjectives: string[]
   theme: string
   moral?: string
+  childAge?: number
 }): string {
   const adjectivesStr = params.adjectives.join(', ')
   const moralSection = params.moral ? `\nMoral/Lesson: ${params.moral}` : ''
 
-  return `Create a children's story about ${params.childName}, a ${adjectivesStr} child.
+  return `Create a magical children's story about ${params.childName}, a ${adjectivesStr} child.
 Theme: ${params.theme}${moralSection}
 
-IMPORTANT: Structure the story into exactly 5-7 distinct scenes/sections, separated by double line breaks.
-Each scene should be 2-3 paragraphs and represent a key moment in the story that can be illustrated.
-Make ${params.childName} the main hero who takes action and drives the story forward.
+IMPORTANT STRUCTURE:
+1. Divide the story into exactly 5-7 distinct scenes, separated by double line breaks.
+2. Each scene must have a clear visual focus for illustration.
+3. Include **BOLD ALL CAPS** for sound effects (e.g., **WHOOSH**, **CRACKLE**) to help parents read aloud.
+4. Include 2-3 interaction cues in [brackets] (e.g., [Action: Point to the dragon], [Sound: Make a soft wind sound]).
+5. Include 2-3 "Sparkle Words" (advanced vocabulary) explained naturally in context.
+6. The final scene must include a "Bedtime Bridge" with rhythmic, calming language to help the child settle for sleep.
 
 The story should:
-- Be engaging and age-appropriate (4-8 years old)
+- Be engaging and age-appropriate (for a ${params.childAge || 5} year old)
 - Have clear visual moments perfect for illustration
 - Show ${params.childName} as an active protagonist
-- Be 300-500 words total
+- Be 400-600 words total
 - Have a clear beginning, middle, and end
 - Be wholesome and educational
 
-Remember: Each scene will have its own illustration, so make each scene visually distinct and exciting!`
+CRITICAL: Write ONLY the story text. Do NOT include any notes, instructions, or metadata like "Visual:", "Scene:", "Image focus:", "Illustration:", "Prompt:", or "Key visual moment:". Just write the pure story narrative. Each scene will have its own illustration, so make each scene visually distinct and exciting!`
 }
 
 /**
- * Extract scenes from generated story content
+ * Convert extracted scenes to book scenes format
  */
-function extractScenesFromStory(
-  content: string,
-  childName: string,
-  theme: string,
-  characterDescription: string | undefined,
-  includeCharacter: boolean,
-  profileImageUrl?: string
+function convertScenesToBookScenes(
+  extractedScenes: Array<{ sceneNumber: number; text: string; illustrationPrompt: string }>
 ): BookScene[] {
-  // Split by double line breaks to get scenes/sections
-  const sections = content
-    .split('\n\n')
-    .filter(section => section.trim().length > 50)
-    .slice(0, 7) // Max 7 scenes
-
-  // Ensure we have 5-7 scenes
-  if (sections.length < 5) {
-    // If we have fewer than 5 sections, try splitting by single line breaks
-    const altSections = content
-      .split('\n')
-      .filter(section => section.trim().length > 50)
-      .slice(0, 7)
-
-    if (altSections.length >= 5) {
-      // Determine art style ONCE for the entire story (use neutral mood for consistency)
-      const storyArtStyle = selectArtStyle(theme, 'exciting')
-      const totalScenes = altSections.length
-
-      return altSections.map((section, index) =>
-        createBookScene(section, index + 1, totalScenes, childName, theme, characterDescription, includeCharacter, storyArtStyle, profileImageUrl)
-      )
-    }
-
-    // If still not enough, split the content into equal parts
-    const wordsPerScene = Math.ceil(content.split(' ').length / 5)
-    const words = content.split(' ')
-    const generatedSections: string[] = []
-
-    for (let i = 0; i < 5; i++) {
-      const start = i * wordsPerScene
-      const end = Math.min((i + 1) * wordsPerScene, words.length)
-      generatedSections.push(words.slice(start, end).join(' '))
-    }
-
-    // Determine art style ONCE for the entire story
-    const storyArtStyle = selectArtStyle(theme, 'exciting')
-    const totalScenes = generatedSections.length
-
-    return generatedSections.map((section, index) =>
-      createBookScene(section, index + 1, totalScenes, childName, theme, characterDescription, includeCharacter, storyArtStyle, profileImageUrl)
-    )
-  }
-
-  // Determine art style ONCE for the entire story
-  const storyArtStyle = selectArtStyle(theme, 'exciting')
-  const totalScenes = sections.length
-
-  return sections.map((section, index) =>
-    createBookScene(section, index + 1, totalScenes, childName, theme, characterDescription, includeCharacter, storyArtStyle, profileImageUrl)
-  )
+  return extractedScenes.map(scene => ({
+    sceneNumber: scene.sceneNumber,
+    text: scene.text,
+    illustrationPrompt: scene.illustrationPrompt,
+  }))
 }
 
-/**
- * Extract the key visual moment from scene text
- */
-function extractKeyVisualMoment(text: string, childName: string): string {
-  // Find action verbs and key moments in the text
-  const lowerText = text.toLowerCase()
-
-  // Common action patterns to identify key moments
-  const actionPatterns = [
-    /(?:was |were |is |are |started |began )([\w\s]+ing)/i,  // Progressive verbs
-    new RegExp(`${childName.toLowerCase()}[^.!?]*?(discovered|found|saw|met|touched|held|climbed|jumped|ran|flew|opened|closed|picked|grabbed|hugged|smiled|laughed|cried|looked|gazed|pointed|waved|danced|sang|played|built|created|drew|painted)`, 'i'),
-  ]
-
-  // Try to find a clear action
-  for (const pattern of actionPatterns) {
-    const match = text.match(pattern)
-    if (match) {
-      // Extract sentence containing the action
-      const sentences = text.split(/[.!?]/)
-      for (const sentence of sentences) {
-        if (sentence.toLowerCase().includes(match[0].toLowerCase())) {
-          return sentence.trim()
-        }
-      }
-    }
-  }
-
-  // Fallback: use first meaningful sentence
-  const sentences = text.split(/[.!?]/).filter(s => s.trim().length > 20)
-  return sentences[0]?.trim() || text.substring(0, 200).trim()
-}
-
-/**
- * Create a book scene with illustration prompt
- */
-function createBookScene(
-  text: string,
-  sceneNumber: number,
-  totalScenes: number,
-  childName: string,
-  theme: string,
-  characterDescription: string | undefined,
-  includeCharacter: boolean,
-  storyArtStyle: 'classic-picture-book' | 'watercolor' | 'modern-flat' | 'whimsical',
-  profileImageUrl?: string
-): BookScene {
-  // Extract the ONE key visual moment from the scene
-  const keyMoment = extractKeyVisualMoment(text, childName)
-
-  // Create simple, focused description
-  const simplifiedMoment = keyMoment
-    .replace(/[^\w\s.,!?-]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-
-  // Determine mood from scene (still use for emotional tone, but not for art style)
-  const mood = determineMoodFromScene(text)
-
-  // Build enhanced illustration prompt with 3-tier character system
-  const illustrationRequest: IllustrationRequest = {
-    sceneDescription: simplifiedMoment,
-    childName,
-    childDescription: characterDescription,
-    theme,
-    mood,
-    artStyle: storyArtStyle, // Use story-level art style for consistency
-    includeCharacter,
-    profileImageUrl,
-    sceneNumber, // Pass scene context for consistency instructions
-    totalScenes,
-  }
-
-  const illustrationPrompt = buildEnhancedIllustrationPrompt(illustrationRequest)
-
-  // Log prompt details for debugging
-  console.log(`Scene ${sceneNumber}/${totalScenes} - Character: ${includeCharacter}, Style: ${storyArtStyle}, Prompt: ${illustrationPrompt.length} chars`)
-
-  return {
-    sceneNumber,
-    text: text.trim(),
-    illustrationPrompt,
-  }
-}
 
 /**
  * Generate illustration prompts for multi-child stories

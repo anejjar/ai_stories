@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useOnboarding } from '@/hooks/use-onboarding'
 import { useAuth } from '@/hooks/use-auth'
+import { useStories } from '@/hooks/use-stories'
 import { WelcomeModal } from './welcome-modal'
 
 /**
@@ -12,15 +13,17 @@ import { WelcomeModal } from './welcome-modal'
  */
 export function OnboardingManager() {
   const { user, loading: authLoading } = useAuth()
+  const { data: stories, isLoading: storiesLoading } = useStories()
   const { shouldShowWelcome } = useOnboarding()
   const [showModal, setShowModal] = useState(false)
 
   useEffect(() => {
-    // Wait for auth to load
-    if (authLoading) return
+    // Wait for auth and initial stories check to load
+    if (authLoading || storiesLoading) return
 
     // Only show for authenticated users who need onboarding
-    if (user && shouldShowWelcome) {
+    // AND have no stories yet (indicates a truly new user session)
+    if (user && shouldShowWelcome && (!stories || stories.length === 0)) {
       // Small delay to ensure smooth transition
       const timer = setTimeout(() => {
         setShowModal(true)
@@ -28,7 +31,7 @@ export function OnboardingManager() {
 
       return () => clearTimeout(timer)
     }
-  }, [user, authLoading, shouldShowWelcome])
+  }, [user, authLoading, storiesLoading, shouldShowWelcome, stories])
 
   if (!user || authLoading) {
     return null

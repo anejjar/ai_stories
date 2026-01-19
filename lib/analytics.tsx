@@ -64,17 +64,6 @@ export function GoogleAnalytics() {
   )
 }
 
-// Umami Analytics script component
-export function UmamiAnalytics() {
-  return (
-    <script
-      defer
-      src="https://analytics.anejjar.com/script.js"
-      data-website-id="b82c775e-b638-4977-97de-b0e3872a5ec4"
-    />
-  )
-}
-
 // Custom event tracking
 export function trackEvent(
   action: string,

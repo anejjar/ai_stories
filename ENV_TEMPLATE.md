@@ -30,7 +30,7 @@ GEMINI_API_KEY=your-gemini-key
 # ANTHROPIC_API_KEY=your-anthropic-key
 
 # -----------------------------------------------------
-# AI PROVIDERS - Image Generation (Required for PRO MAX)
+# AI PROVIDERS - Image Generation (Required for Family Plan)
 # -----------------------------------------------------
 # Comma-separated list of providers in priority order
 # Options: dalle, stable-diffusion, midjourney
@@ -50,20 +50,24 @@ OPENAI_API_KEY=sk-your-openai-key
 # MIDJOURNEY_API_KEY=your-midjourney-key
 
 # -----------------------------------------------------
-# STRIPE (Required for payments)
+# LEMON SQUEEZY (Required for payments)
 # -----------------------------------------------------
-# Get these from your Stripe Dashboard
-STRIPE_SECRET_KEY=sk_test_your-stripe-secret
-STRIPE_PUBLISHABLE_KEY=pk_test_your-stripe-publishable
+# Get these from your Lemon Squeezy Dashboard
+# API Key: Settings > API
+LEMONSQUEEZY_API_KEY=your-lemonsqueezy-api-key
 
-# Webhook secret for handling Stripe events
-# Get this when setting up webhooks in Stripe Dashboard
-STRIPE_WEBHOOK_SECRET=whsec_your-webhook-secret
+# Store ID: Found in your store URL or Settings > Stores
+LEMONSQUEEZY_STORE_ID=your-store-id
 
-# Price IDs for subscription products
-# Create these in Stripe Dashboard > Products
-STRIPE_PRO_PRICE_ID=price_your-pro-price-id
-STRIPE_PRO_MAX_PRICE_ID=price_your-pro-max-price-id
+# Webhook secret for handling Lemon Squeezy events
+# Get this when setting up webhooks in Lemon Squeezy Dashboard
+LEMONSQUEEZY_WEBHOOK_SECRET=your-webhook-secret
+
+# Variant IDs for subscription products
+# Create products in Lemon Squeezy Dashboard > Products
+# Then create variants for each product and copy the Variant ID
+LEMONSQUEEZY_PRO_VARIANT_ID=your-pro-variant-id
+LEMONSQUEEZY_FAMILY_VARIANT_ID=your-family-variant-id
 
 # -----------------------------------------------------
 # APPLICATION
@@ -77,15 +81,15 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 # Google Analytics
 # NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
 
-# Sentry Error Tracking
-# SENTRY_DSN=https://xxx@xxx.ingest.sentry.io/xxx
+# Sentry / GlitchTip Error Tracking
+NEXT_PUBLIC_GLITCHTIP_DSN=your-glitchtip-dsn-here
 
 # -----------------------------------------------------
 # PRODUCTION NOTES
 # -----------------------------------------------------
 # 1. Never commit this file with real values
 # 2. Use different API keys for production
-# 3. Enable Stripe live mode for production
+# 3. Use Lemon Squeezy live mode for production
 # 4. Set up proper webhook endpoints
 # 5. Configure rate limiting for production traffic
 

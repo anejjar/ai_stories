@@ -4,29 +4,26 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getProviderManager } from '@/lib/ai/provider-manager'
 import { checkTrialLimit, incrementTrialUsage } from '@/lib/trial/trial-service-server'
 import { checkStoryLimit, incrementStoryUsage } from '@/lib/usage/daily-limits'
-import { validateStoryInput } from '@/lib/moderation/content-moderation'
+import { validateStoryInput, validateMultiChildStoryInput } from '@/lib/moderation/content-moderation'
+import { validateAIResponse, validateIllustratedBookContent } from '@/lib/moderation/ai-response-validator'
 import { checkRateLimit, RATE_LIMITS, getRateLimitHeaders } from '@/lib/rate-limit'
 import type { ApiResponse, StoryInput, Story } from '@/types'
 import { storyToDatabaseStory, databaseStoryToStory, firestoreStoryToStory, type DatabaseStory } from '@/types/database'
 import { ProviderError } from '@/lib/ai/types'
 import { generateIllustratedBook, type BookPage } from '@/lib/ai/illustrated-book-generator'
-import { uploadImageToStorage } from '@/lib/supabase/storage'
+import { uploadImageToStorage, uploadImagesToStorage, getSuccessfulUploadUrls, deleteStoryImages } from '@/lib/supabase/storage'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { getMemoizedUserProfile } from '@/lib/api/user'
+import { retryDatabaseOperation } from '@/lib/database/retry'
+import { validateStoryData, sanitizeStoryContent } from '@/lib/validation/story-validator'
 
-// Helper to get user profile from Supabase (server-side)
+// Helper to get user profile from Supabase (server-side) - Now using memoized version
 async function getUserProfile(userId: string) {
-  const { data, error } = await supabaseAdmin
-    .from('users')
-    .select('subscription_tier')
-    .eq('id', userId)
-    .single<{ subscription_tier: string }>()
-
-  if (error || !data) {
-    return null
-  }
-
+  const profile = await getMemoizedUserProfile(userId)
+  if (!profile) return null
+  
   return {
-    subscriptionTier: data.subscription_tier || 'trial',
+    subscriptionTier: profile.subscriptionTier,
   }
 }
 
@@ -144,8 +141,18 @@ export async function POST(request: NextRequest) {
   const { userId, response } = await requireAuth(request)
   if (response) return response
 
+  // CSRF protection (optional - SameSite cookies provide basic protection)
+  // For enhanced security, uncomment and implement CSRF token validation
+  // const csrfCheck = await requireCsrfToken(request)
+  // if (!csrfCheck.valid) {
+  //   return NextResponse.json<ApiResponse>(
+  //     { success: false, error: csrfCheck.error || 'CSRF validation failed' },
+  //     { status: 403 }
+  //   )
+  // }
+
   // Rate limiting
-  const rateLimitResult = checkRateLimit(userId, RATE_LIMITS.storyGeneration)
+  const rateLimitResult = await checkRateLimit(userId, RATE_LIMITS.storyGeneration)
   if (!rateLimitResult.success) {
     return NextResponse.json<ApiResponse>(
       {
@@ -282,24 +289,25 @@ export async function POST(request: NextRequest) {
 
     // Content moderation - validate for kid-safe content
     const validation = isMultiChild
-      ? validateStoryInput({
-        childName: storyInput.children![0].name, // Use first child for validation
-        adjectives: storyInput.children![0].adjectives,
-        theme: storyInput.theme,
-        moral: storyInput.moral,
-      })
+      ? validateMultiChildStoryInput(
+          storyInput.children!,
+          storyInput.theme,
+          storyInput.moral
+        )
       : validateStoryInput({
-        childName: storyInput.childName!,
-        adjectives: storyInput.adjectives!,
-        theme: storyInput.theme,
-        moral: storyInput.moral,
-      })
+          childName: storyInput.childName!,
+          adjectives: storyInput.adjectives!,
+          theme: storyInput.theme,
+          moral: storyInput.moral,
+        })
 
     if (!validation.isValid) {
       return NextResponse.json<ApiResponse>(
         {
           success: false,
-          error: validation.errors.join('. '),
+          error: 'We detected content that may not be appropriate for children. ' +
+                 validation.errors.join('. ') +
+                 ' Please try different words.',
         },
         { status: 400 }
       )
@@ -375,6 +383,28 @@ export async function POST(request: NextRequest) {
             hasUrl: !!p.illustration_url,
             urlLength: p.illustration_url.length
           })))
+          // Validate illustrated book content
+          const bookContentValidation = validateIllustratedBookContent(
+            storyContent,
+            bookPages
+          )
+
+          if (!bookContentValidation.isValid) {
+            console.error('Illustrated book validation failed:', {
+              reason: bookContentValidation.reason,
+              confidence: bookContentValidation.confidence,
+              contentPreview: storyContent.substring(0, 200)
+            })
+
+            return NextResponse.json<ApiResponse>(
+              {
+                success: false,
+                error: 'We were unable to create an appropriate illustrated story with the provided details. ' +
+                       'Please try using different character names or themes.' ,
+              },
+              { status: 400 }
+            )
+          }
         } catch (illustratedError) {
           console.error('❌ Failed to generate illustrated book:', illustratedError)
           console.error('Illustrated book error details:', {
@@ -390,6 +420,25 @@ export async function POST(request: NextRequest) {
       // Regular story generation (text-only)
       storyContent = await generateRegularStory(providerManager, storyInput, isMultiChild)
     }
+    // Validate AI response for refusal messages
+    const aiResponseValidation = validateAIResponse(storyContent)
+    if (!aiResponseValidation.isValid) {
+      console.error('AI response validation failed:', {
+        reason: aiResponseValidation.reason,
+        confidence: aiResponseValidation.confidence,
+        contentPreview: storyContent.substring(0, 200)
+      })
+
+      return NextResponse.json<ApiResponse>(
+        {
+          success: false,
+          error: 'We were unable to create an appropriate story with the provided details. ' +
+                 'Please try using different character names or themes.' ,
+        },
+        { status: 400 }
+      )
+    }
+
 
     // Generate story title
     const titleChildName = isMultiChild
@@ -401,14 +450,35 @@ export async function POST(request: NextRequest) {
       storyInput.theme
     )
 
-    // STEP 1: Save story to database WITHOUT images first (to get story ID)
+    // STEP 1: Validate story data before saving
+    const sanitizedContent = sanitizeStoryContent(storyContent)
+    const storyValidation = validateStoryData({
+      userId,
+      title: storyTitle,
+      content: sanitizedContent,
+      theme: storyInput.theme,
+      imageUrls: undefined, // Will validate after upload
+      bookPages: bookPages.length > 0 ? bookPages : undefined
+    })
+
+    if (!storyValidation.isValid) {
+      return NextResponse.json<ApiResponse>(
+        {
+          success: false,
+          error: `Validation failed: ${storyValidation.errors.join(', ')}`,
+        },
+        { status: 400 }
+      )
+    }
+
+    // STEP 2: Save story to database WITHOUT images first (to get story ID)
     // Base64 images are too large (~13MB) and cause database timeout
     console.log('💾 Saving story metadata to database (without images)...')
 
     const storyData = storyToDatabaseStory({
       userId,
       title: storyTitle,
-      content: storyContent,
+      content: sanitizedContent,
       // Backward compatibility fields
       childName: isMultiChild ? storyInput.children![0].name : storyInput.childName!,
       adjectives: isMultiChild ? storyInput.children![0].adjectives : storyInput.adjectives!,
@@ -425,92 +495,96 @@ export async function POST(request: NextRequest) {
       bookPages: undefined, // Will add after upload
     })
 
-    const { data: createdStory, error: insertError } = await supabaseAdmin
-      .from('stories')
-      .insert(storyData as any)
-      .select()
-      .single<DatabaseStory>()
+    const createdStory = await retryDatabaseOperation(async () => {
+      const { data, error } = await supabaseAdmin
+        .from('stories')
+        .insert(storyData as any)
+        .select()
+        .single<DatabaseStory>()
 
-    if (insertError || !createdStory) {
-      console.error('❌ Supabase insert error:', {
-        message: insertError?.message,
-        details: insertError?.details,
-        hint: insertError?.hint,
-        code: insertError?.code
-      })
-      throw new Error(`Failed to save story to database: ${insertError?.message || 'Unknown error'}`)
-    }
+      if (error || !data) {
+        console.error('❌ Supabase insert error:', {
+          message: error?.message,
+          details: error?.details,
+          hint: error?.hint,
+          code: error?.code
+        })
+        throw new Error(`Failed to save story to database: ${error?.message || 'Unknown error'}`)
+      }
+
+      return data
+    })
 
     console.log(`✅ Story saved to database with ID: ${createdStory.id}`)
 
-    // STEP 2: Upload images to storage in parallel batches
-    // Parallel processing: compress and upload images simultaneously
+    // STEP 3: Upload images to storage with retry and track for cleanup
+    const storyId = createdStory.id
+    
     if (isIllustratedBook && bookPages.length > 0) {
-      console.log(`📤 Uploading ${bookPages.length} images to storage in parallel...`)
+      console.log(`📤 Uploading ${bookPages.length} images to storage...`)
 
-      const storyId = createdStory.id
-
-      // Create upload promises - no timeout, trust Supabase's built-in timeout
-      const uploadPromises = bookPages.map(async (page, index) => {
-        try {
-          console.log(`Starting upload ${index + 1}/${bookPages.length}...`)
-
-          // Upload without artificial timeout (Supabase has built-in timeouts)
-          // Compression + upload typically takes 10-30s per image
-          const storageUrl = await uploadImageToStorage(page.illustration_url, storyId, index)
-
-          console.log(`✅ Image ${index + 1} uploaded successfully`)
-
-          return {
-            success: true,
-            index,
-            page: {
-              ...page,
-              illustration_url: storageUrl
-            },
-            storageUrl
-          }
-        } catch (uploadError) {
-          console.error(`⚠️ Failed to upload image ${index + 1}:`, uploadError)
-          return {
-            success: false,
-            index,
-            page,
-            error: uploadError
-          }
-        }
-      })
-
-      // Wait for all uploads to complete (in parallel)
       const uploadStartTime = Date.now()
-      const results = await Promise.all(uploadPromises)
+      
+      // Upload images sequentially with detailed results
+      const uploadResults = await uploadImagesToStorage(
+        bookPages.map(page => page.illustration_url),
+        storyId
+      )
+      
       const uploadDuration = ((Date.now() - uploadStartTime) / 1000).toFixed(1)
-
-      // Extract successful uploads
-      const successfulResults = results.filter(r => r.success)
-      const uploadedPages = successfulResults.map(r => r.page)
-      const storageUrls = successfulResults.map(r => r.storageUrl)
+      const successfulResults = uploadResults.filter(r => r.success)
+      const failedResults = uploadResults.filter(r => !r.success)
 
       console.log(`📊 Upload complete: ${successfulResults.length}/${bookPages.length} successful in ${uploadDuration}s`)
 
+      // Determine upload status
+      let uploadStatus: 'complete' | 'partial' | 'failed' = 'complete'
+      if (failedResults.length === uploadResults.length) {
+        uploadStatus = 'failed'
+      } else if (failedResults.length > 0) {
+        uploadStatus = 'partial'
+      }
+
       // Update story with successfully uploaded images
-      if (uploadedPages.length > 0) {
+      if (successfulResults.length > 0) {
+        const storageUrls = getSuccessfulUploadUrls(successfulResults)
+        const uploadedPages = bookPages.map((page, index) => {
+          const result = uploadResults.find(r => r.index === index && r.success)
+          return {
+            ...page,
+            illustration_url: result?.url || page.illustration_url
+          }
+        }).filter((page, index) => uploadResults[index]?.success) // Only include successful uploads
+
         console.log(`Updating story with ${uploadedPages.length} uploaded images...`)
 
-        const { error: updateError } = await (supabaseAdmin
-          .from('stories') as any)
-          .update({
-            image_urls: storageUrls,
-            book_pages: uploadedPages
-          })
-          .eq('id', storyId)
+        try {
+          await retryDatabaseOperation(async () => {
+            const { error: updateError } = await (supabaseAdmin
+              .from('stories') as any)
+              .update({
+                image_urls: storageUrls,
+                book_pages: uploadedPages,
+              })
+              .eq('id', storyId)
 
-        if (updateError) {
+            if (updateError) {
+              throw new Error(`Failed to update story with images: ${updateError.message}`)
+            }
+          })
+
+          console.log(`✅ Story updated with ${uploadedPages.length}/${bookPages.length} images (status: ${uploadStatus})`)
+        } catch (updateError) {
           console.error('⚠️ Failed to update story with images:', updateError)
-        } else {
-          console.log(`✅ Story updated with ${uploadedPages.length}/${bookPages.length} images`)
+          
+          // Cleanup uploaded images since update failed
+          console.log('Cleaning up uploaded images due to update failure...')
+          await deleteStoryImages(storyId)
+          
+          throw new Error(`Story saved but image update failed. Images have been cleaned up.`)
         }
       } else {
+        // All uploads failed
         console.error('❌ All image uploads failed - story saved without images')
       }
     }
@@ -524,14 +598,29 @@ export async function POST(request: NextRequest) {
       console.log(`[Family Plan] Usage incremented for user ${userId}, illustrated: ${isIllustratedBook}`)
     }
 
-    const story: Story = databaseStoryToStory(createdStory)
+    // Reload story to get latest data including image URLs
+    const { data: reloadedStory } = await supabaseAdmin
+      .from('stories')
+      .select('*')
+      .eq('id', createdStory.id)
+      .single<DatabaseStory>()
+
+    const responseStory: Story = reloadedStory ? databaseStoryToStory(reloadedStory) : databaseStoryToStory(createdStory)
 
     return NextResponse.json<ApiResponse<Story>>({
       success: true,
-      data: story,
+      data: responseStory,
     })
   } catch (error) {
     console.error('Error creating story:', error)
+
+    // Cleanup uploaded images if story creation failed
+    if (error instanceof Error && error.message.includes('story saved')) {
+      // Images already cleaned up
+    } else {
+      // Try to cleanup any uploaded images if we have a story ID
+      // (This would require tracking the storyId in the catch block, which we can't easily do)
+    }
 
     // Handle specific error types
     if (error instanceof Error) {
@@ -546,6 +635,16 @@ export async function POST(request: NextRequest) {
         )
       }
 
+      if (error.message.includes('Validation failed')) {
+        return NextResponse.json<ApiResponse>(
+          {
+            success: false,
+            error: error.message,
+          },
+          { status: 400 }
+        )
+      }
+
       if (error instanceof ProviderError || error.message.includes('API') || error.message.includes('provider')) {
         return NextResponse.json<ApiResponse>(
           {
@@ -555,6 +654,15 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         )
       }
+
+      // Return detailed error message for debugging
+      return NextResponse.json<ApiResponse>(
+        {
+          success: false,
+          error: error.message || 'Failed to create story',
+        },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json<ApiResponse>(

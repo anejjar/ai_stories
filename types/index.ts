@@ -10,8 +10,8 @@ export interface User {
   subscriptionTier: SubscriptionTier
   createdAt: Date
   updatedAt: Date
-  stripeCustomerId?: string
-  stripeSubscriptionId?: string
+  lemonsqueezyCustomerId?: string
+  lemonsqueezySubscriptionId?: string
   onboardingCompleted?: boolean
   onboardingStep?: OnboardingStep
   onboardingDismissedAt?: Date
@@ -27,7 +27,7 @@ export interface ChildAppearance {
 export interface Child {
   name: string
   adjectives: string[]
-  appearance?: ChildAppearance // PRO MAX only
+  appearance?: ChildAppearance // Family Plan only
   profileId?: string // Reference to child profile if using saved profile
 }
 
@@ -51,6 +51,10 @@ export interface BookPage {
   pageNumber: number
   text: string
   illustration_url: string
+  // Aspect ratio metadata (optional for backward compatibility)
+  width?: number
+  height?: number
+  aspectRatio?: 'square' | 'portrait' | 'landscape'
 }
 
 export interface Story {
@@ -65,12 +69,19 @@ export interface Story {
   moral?: string
   hasImages: boolean
   imageUrls?: string[]
-  appearance?: ChildAppearance // Deprecated: kept for backward compatibility (PRO MAX only)
+  appearance?: ChildAppearance // Deprecated: kept for backward compatibility (Family Plan only)
   parentStoryId?: string // If set, this is a draft of another story
   draftNumber?: number // Draft number (1, 2, 3, etc.)
   isSelectedDraft?: boolean // True if this draft was selected as final
-  isIllustratedBook?: boolean // True if this is an illustrated book format (PRO MAX feature)
-  bookPages?: BookPage[] // Structured pages with illustrations (PRO MAX feature)
+  isIllustratedBook?: boolean // True if this is an illustrated book format (Family Plan feature)
+  bookPages?: BookPage[] // Structured pages with illustrations (Family Plan feature)
+  visibility?: 'public' | 'private'
+  publishedAt?: Date
+  viewCount?: number
+  likesCount?: number
+  commentsCount?: number
+  averageRating?: number
+  ratingsCount?: number
   createdAt: Date
   updatedAt: Date
 }
@@ -83,7 +94,7 @@ export interface StoryInput {
   moral?: string
   generateImages?: boolean
   templateId?: string // Optional template ID
-  appearance?: ChildAppearance // Deprecated: kept for backward compatibility (PRO MAX only)
+  appearance?: ChildAppearance // Deprecated: kept for backward compatibility (Family Plan only)
   profileId?: string // Optional: for illustrated books with child profile
 }
 
@@ -97,7 +108,7 @@ export interface TrialUsage {
 export interface Payment {
   id: string
   userId: string
-  stripePaymentIntentId: string
+  lemonsqueezyOrderId: string
   amount: number
   currency: string
   status: 'pending' | 'succeeded' | 'failed'

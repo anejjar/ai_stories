@@ -13,6 +13,10 @@ export interface VirtualPage {
   illustration_url: string // Image URL from original page
   isFirstVirtualPage: boolean // True if first split of original page
   isLastVirtualPage: boolean // True if last split of original page
+  // Aspect ratio metadata (optional for backward compatibility)
+  width?: number
+  height?: number
+  aspectRatio?: 'square' | 'portrait' | 'landscape'
 }
 
 export interface TextPaginationOptions {
@@ -70,6 +74,11 @@ function splitAtSentence(text: string, maxLength: number): [string, string] {
 }
 
 /**
+ * Simple cache for text height measurements
+ */
+const measurementCache: Record<string, number> = {}
+
+/**
  * Measure text height using a hidden div
  */
 function measureTextHeight(
@@ -77,6 +86,11 @@ function measureTextHeight(
   options: TextPaginationOptions,
   containerWidth: number
 ): number {
+  const cacheKey = `${text.length}-${options.fontSize}-${options.lineHeight}-${containerWidth}`
+  if (measurementCache[cacheKey] !== undefined) {
+    return measurementCache[cacheKey]
+  }
+
   // Create temporary measuring div
   const measuringDiv = document.createElement('div')
   measuringDiv.style.position = 'absolute'
@@ -96,6 +110,7 @@ function measureTextHeight(
   const height = measuringDiv.offsetHeight
   document.body.removeChild(measuringDiv)
 
+  measurementCache[cacheKey] = height
   return height
 }
 
@@ -110,7 +125,8 @@ function paginateText(
   const pages: string[] = []
   let remainingText = text.trim()
 
-  const availableHeight = options.maxHeight - options.containerPadding - options.decorationHeight
+  const safetyBuffer = 60 // Increased buffer to prevent cropping/overflow
+  const availableHeight = options.maxHeight - options.containerPadding - options.decorationHeight - safetyBuffer
 
   // Binary search approach to find optimal text length per page
   while (remainingText.length > 0) {
@@ -156,7 +172,13 @@ function paginateText(
 }
 
 export function useTextPagination(
-  bookPages: Array<{ text: string; illustration_url: string }>,
+  bookPages: Array<{ 
+    text: string
+    illustration_url: string
+    width?: number
+    height?: number
+    aspectRatio?: 'square' | 'portrait' | 'landscape'
+  }>,
   options: TextPaginationOptions,
   containerWidth: number,
   enabled: boolean = true
@@ -190,7 +212,11 @@ export function useTextPagination(
             text: pageText,
             illustration_url: bookPage.illustration_url,
             isFirstVirtualPage: textPageIndex === 0,
-            isLastVirtualPage: textPageIndex === textPages.length - 1
+            isLastVirtualPage: textPageIndex === textPages.length - 1,
+            // Pass through aspect ratio metadata from original BookPage
+            width: bookPage.width,
+            height: bookPage.height,
+            aspectRatio: bookPage.aspectRatio
           })
         })
       })

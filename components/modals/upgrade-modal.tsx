@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Check, Sparkles, Crown, Star, Zap, Heart, Shield, Infinity, Users } from 'lucide-react'
+import { Check, Sparkles, Crown, Star, Zap, Heart, Shield, Infinity, Users, Loader2 } from 'lucide-react'
 import type { SubscriptionTier } from '@/types'
 import { useAuth } from '@/hooks/use-auth'
 import { toast } from '@/components/ui/toaster'
@@ -67,13 +67,11 @@ export function UpgradeModal({ open, onOpenChange, tier }: UpgradeModalProps) {
 
     setLoading(true)
     try {
-      // Get Supabase access token
       const token = await getAccessToken()
       if (!token) {
         throw new Error('Failed to get access token - please try logging in again')
       }
 
-      // Call checkout API
       const response = await fetch('/api/payments/checkout', {
         method: 'POST',
         headers: {
@@ -90,7 +88,6 @@ export function UpgradeModal({ open, onOpenChange, tier }: UpgradeModalProps) {
       }
 
       if (result.data?.checkoutUrl) {
-        // Redirect to Stripe Checkout
         window.location.href = result.data.checkoutUrl
       } else {
         throw new Error('No checkout URL received')
@@ -107,162 +104,154 @@ export function UpgradeModal({ open, onOpenChange, tier }: UpgradeModalProps) {
 
   const features = tier === 'pro' ? PRO_FEATURES : FAMILY_PLAN_FEATURES
   const price = tier === 'pro' ? '$9.99' : '$24.99'
-  const title = tier === 'pro' ? 'Upgrade to PRO' : 'Upgrade to FAMILY PLAN'
+  const title = tier === 'pro' ? 'Get Pro Access' : 'Join Family Plan'
+  const subtitle = tier === 'pro' ? 'PRO' : 'FAMILY'
   const description =
     tier === 'pro'
-      ? 'Unlock unlimited stories and powerful features'
-      : 'Unlock magical illustrations and premium features'
+      ? 'Unlimited text stories and powerful editing tools for your child.'
+      : 'Our most magical plan with AI illustrations, PDF exports, and more.'
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px] max-h-[90vh] border-4 border-pink-300 rounded-2xl bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 shadow-2xl p-0">
-        <div className="flex flex-col h-full max-h-[90vh] overflow-hidden relative">
-          {/* Animated background decorations - reduced */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-2 right-2 text-2xl animate-sparkle opacity-40">✨</div>
-            <div className="absolute top-2 left-2 text-2xl animate-sparkle opacity-40" style={{ animationDelay: '0.5s' }}>⭐</div>
-          </div>
-
-          {/* Compact Header */}
-          <DialogHeader className="relative bg-gradient-to-r from-pink-100 via-purple-100 to-blue-100 rounded-t-2xl p-4 border-b-2 border-pink-300 flex-shrink-0">
-            {/* Most Popular Badge for PRO MAX */}
-            {tier === 'family' && (
-              <div className="flex justify-center mb-2">
-                <Badge className="bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 text-white font-bold rounded-full px-3 py-1 text-xs border-2 border-white shadow-xl">
-                  <Star className="h-3 w-3 mr-1 inline" />
-                  MOST POPULAR
-                </Badge>
-              </div>
-            )}
-            <div className="flex items-center gap-3">
-              {tier === 'family' ? (
-                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-yellow-400 via-orange-500 to-pink-500 flex items-center justify-center shadow-lg flex-shrink-0">
-                  <Crown className="h-6 w-6 text-white" />
+      <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-0 bg-transparent shadow-none ring-0 focus:ring-0 focus-visible:ring-0 max-h-[95vh]">
+        <div className="bg-white rounded-[4rem] border-8 border-gray-50 shadow-2xl overflow-hidden relative flex flex-col max-h-[95vh]">
+          {/* Top Decorative Header - Fixed at top */}
+          <div className={`h-32 w-full shrink-0 relative overflow-hidden ${
+            tier === 'family' ? 'bg-playwize-orange' : 'bg-playwize-purple'
+          }`}>
+            <div className="absolute inset-0 playwize-bg opacity-20" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-white text-center space-y-1">
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  {tier === 'family' ? (
+                    <Crown className="h-6 w-6 text-white animate-bounce-slow" />
+                  ) : (
+                    <Sparkles className="h-6 w-6 text-white animate-pulse" />
+                  )}
+                  <span className="text-xs font-black uppercase tracking-[0.3em] opacity-90">
+                    {subtitle} PLAN
+                  </span>
                 </div>
-              ) : (
-                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg flex-shrink-0">
-                  <Sparkles className="h-6 w-6 text-white" />
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <DialogTitle className="text-2xl font-comic bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-                  {title} 🎉
-                </DialogTitle>
-                <DialogDescription className="text-sm text-gray-700 font-semibold mt-0.5">
-                  {description}
-                </DialogDescription>
+                <DialogTitle className="text-3xl font-black tracking-tight">{title}</DialogTitle>
               </div>
             </div>
-          </DialogHeader>
+
+            {/* Hidden description for accessibility */}
+            <DialogDescription className="sr-only">
+              {description}
+            </DialogDescription>
+
+            {/* Floating Elements */}
+            <div className="absolute top-4 right-4 animate-float-gentle opacity-50">✨</div>
+            <div className="absolute bottom-4 left-6 animate-bounce-slow opacity-30">⭐</div>
+          </div>
 
           {/* Scrollable Content Area */}
-          <div className="flex-1 overflow-y-auto px-4 py-4 relative z-10">
-            {/* Compact Pricing */}
-            <div className="text-center mb-4 bg-gradient-to-br from-white via-pink-50 to-purple-50 backdrop-blur-sm p-4 rounded-xl border-2 border-yellow-300 shadow-lg">
-              <div className="flex items-baseline justify-center gap-1 mb-1">
-                <span className="text-4xl font-bold font-comic bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-                  {price}
-                </span>
-                <span className="text-lg text-gray-500 font-semibold">/mo</span>
-              </div>
-              {tier === 'family' && (
-                <Badge className="bg-gradient-to-r from-green-400 to-emerald-500 text-white text-xs font-bold px-2 py-0.5 mt-1">
-                  Save 33% ✨
-                </Badge>
-              )}
-              <div className="text-xs text-gray-600 font-semibold mt-1 flex items-center justify-center gap-1">
-                <Shield className="h-3 w-3 text-green-500" />
-                Cancel anytime
-              </div>
-            </div>
+          <div className="overflow-y-auto flex-1 custom-scrollbar">
+            <div className="p-8 md:p-10 space-y-8">
+              {/* Value Proposition */}
+              <div className="text-center space-y-4">
+                <p className="text-gray-500 font-bold text-lg leading-relaxed px-4">
+                  {description}
+                </p>
 
-            {/* Compact Features List */}
-            <div className="space-y-2 mb-4">
-              {features.map((feature, index) => {
-                const IconComponent = feature.icon || Check
-                return (
-                  <div
-                    key={index}
-                    className={`flex items-center gap-2 bg-white/90 backdrop-blur-sm p-3 rounded-xl border-2 ${feature.highlight
-                      ? 'border-yellow-400 bg-gradient-to-r from-yellow-50 to-orange-50'
-                      : 'border-pink-200'
-                      }`}
-                  >
-                    <div className={`h-7 w-7 rounded-full flex items-center justify-center flex-shrink-0 ${feature.highlight
-                      ? 'bg-gradient-to-br from-yellow-400 to-orange-500'
-                      : 'bg-gradient-to-br from-green-400 to-emerald-500'
-                      }`}>
-                      <IconComponent className="h-4 w-4 text-white" />
-                    </div>
-                    <span className="text-xl flex-shrink-0">{feature.emoji}</span>
-                    <span className={`text-sm font-semibold flex-1 ${feature.highlight ? 'text-gray-900' : 'text-gray-800'
-                      }`}>
-                      {feature.text}
-                    </span>
+                <div className="flex items-center justify-center gap-3">
+                  <div className="bg-gray-50 px-6 py-3 rounded-full border-2 border-gray-100 shadow-sm flex items-baseline gap-1">
+                    <span className="text-4xl font-black text-gray-900">{price}</span>
+                    <span className="text-sm font-black text-gray-400 uppercase tracking-widest">/month</span>
                   </div>
-                )
-              })}
-            </div>
+                  {tier === 'family' && (
+                    <Badge className="bg-green-100 text-green-600 border-2 border-green-200 rounded-full px-4 py-1.5 font-black text-[10px] tracking-widest uppercase">
+                      Best Value
+                    </Badge>
+                  )}
+                </div>
+              </div>
 
-            {/* Compact Social Proof */}
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-2 border-2 border-blue-200 mb-2">
-              <div className="flex items-center justify-center gap-2 text-xs text-gray-700 font-semibold">
-                <span className="text-lg">😊</span>
-                <span>Join <span className="font-bold text-purple-600">1,000+</span> happy families!</span>
+              {/* Features Grid */}
+              <div className="grid gap-3">
+                {features.map((feature, index) => {
+                  const IconComponent = feature.icon || Check
+                  return (
+                    <div
+                      key={index}
+                      className={`flex items-center gap-4 p-4 rounded-[2rem] transition-all border-2 ${
+                        feature.highlight
+                          ? 'bg-purple-50 border-purple-100'
+                          : 'bg-gray-50/50 border-white'
+                      }`}
+                    >
+                      <div className={`h-10 w-10 rounded-2xl flex items-center justify-center shrink-0 shadow-sm ${
+                        feature.highlight
+                          ? 'bg-playwize-purple text-white'
+                          : 'bg-white text-playwize-purple'
+                      }`}>
+                        <IconComponent className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1">
+                        <p className={`font-bold leading-tight ${
+                          feature.highlight ? 'text-playwize-purple' : 'text-gray-700'
+                        }`}>
+                          {feature.text}
+                        </p>
+                      </div>
+                      <span className="text-2xl opacity-80">{feature.emoji}</span>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Trust Badges */}
+              <div className="flex items-center justify-center gap-6 py-2 border-y-2 border-gray-50">
+                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.15em] text-gray-400">
+                  <Shield className="h-3 w-3 text-green-500" />
+                  Secure Checkout
+                </div>
+                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.15em] text-gray-400">
+                  <Heart className="h-3 w-3 text-red-400" />
+                  Cancel Anytime
+                </div>
+                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.15em] text-gray-400">
+                  <Users className="h-3 w-3 text-blue-400" />
+                  1000+ Happy Parents
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Fixed Footer */}
-          <DialogFooter className="flex !flex-col gap-2 pt-3 pb-4 px-4 border-t-2 border-pink-200 from-pink-50 to-purple-50 flex-shrink-0">
-            {/* Main CTA Button */}
+          {/* Footer Actions - Fixed at bottom */}
+          <div className="p-8 md:p-10 pt-4 bg-white border-t-2 border-gray-50 shrink-0">
             <Button
               onClick={handleUpgrade}
               disabled={loading || authLoading}
-              className={`w-full rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all font-bold text-lg py-4 relative overflow-hidden ${tier === 'family'
-                ? 'bg-gradient-to-r from-yellow-500 via-orange-500 to-pink-500 hover:from-yellow-600 hover:via-orange-600 hover:to-pink-600'
-                : 'bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600'
-                }`}
+              className={`w-full h-16 rounded-full text-xl font-black shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] ${
+                tier === 'family'
+                  ? 'bg-playwize-orange hover:bg-orange-600 text-white shadow-orange-100'
+                  : 'bg-playwize-purple hover:bg-purple-700 text-white shadow-purple-100'
+              }`}
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
-              <div className="relative z-10 flex flex-col items-center gap-1">
-                <span className="flex items-center justify-center gap-2">
-                  {loading ? (
-                    <>
-                      <span className="animate-spin text-xl">⏳</span>
-                      <span>Processing...</span>
-                    </>
+              {loading ? (
+                <Loader2 className="h-6 w-6 animate-spin" />
+              ) : (
+                <>
+                  {tier === 'family' ? (
+                    <span className="flex items-center gap-3">
+                      Start Family Adventure <Crown className="h-6 w-6" />
+                    </span>
                   ) : (
-                    <>
-                      {tier === 'family' ? (
-                        <>
-                          <Crown className="h-5 w-5" />
-                          <span>Get Family Plan Now! 👑</span>
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="h-5 w-5" />
-                          <span>Get PRO Now! ✨</span>
-                        </>
-                      )}
-                    </>
+                    <span className="flex items-center gap-3">
+                      Go Pro Now <Sparkles className="h-6 w-6" />
+                    </span>
                   )}
-                </span>
-              </div>
+                </>
+              )}
             </Button>
-            {/* Trust indicators inside button */}
-            <div className="flex items-center justify-center gap-3 text-xs font-semibold opacity-90">
-              <div className="flex items-center gap-1">
-                <Shield className="h-3 w-3 text-green-500" />
-                <span>Secure</span>
-              </div>
-              <span>•</span>
-              <div className="flex items-center gap-1">
-                <Heart className="h-3 w-3 text-red-500" />
-                <span>Cancel Anytime</span>
-              </div>
-            </div>
-          </DialogFooter>
+            <p className="text-center mt-6 text-xs font-bold text-gray-400">
+              By upgrading, you agree to our Terms and Conditions.
+              <br />
+              Secure payment processed by Lemon Squeezy.
+            </p>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

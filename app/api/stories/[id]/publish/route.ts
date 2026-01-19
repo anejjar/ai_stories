@@ -60,7 +60,8 @@ export async function POST(
     }
 
     // Verify ownership
-    if (story.user_id !== user.id) {
+    const storyData = story as any
+    if (storyData.user_id !== user.id) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'You do not have permission to publish this story' },
         { status: 403 }
@@ -68,7 +69,7 @@ export async function POST(
     }
 
     // Prevent publishing illustrated books
-    if (story.is_illustrated_book && visibility === 'public') {
+    if (storyData.is_illustrated_book && visibility === 'public') {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Illustrated books cannot be made public. Only text stories can be shared in Discovery.' },
         { status: 400 }
@@ -82,12 +83,12 @@ export async function POST(
     }
 
     // Set published_at timestamp when making public for the first time
-    if (visibility === 'public' && story.visibility !== 'public') {
+    if (visibility === 'public' && storyData.visibility !== 'public') {
       updateData.published_at = new Date().toISOString()
     }
 
-    const { data: updatedStory, error: updateError } = await supabase
-      .from('stories')
+    const { data: updatedStory, error: updateError } = await (supabase
+      .from('stories') as any)
       .update(updateData)
       .eq('id', storyId)
       .select()
@@ -102,14 +103,15 @@ export async function POST(
     }
 
     console.log(`✅ Story ${storyId} visibility updated to: ${visibility}`)
+    const updatedStoryData = updatedStory as any
 
     return NextResponse.json<ApiResponse>(
       {
         success: true,
         data: {
-          id: updatedStory.id,
-          visibility: updatedStory.visibility,
-          publishedAt: updatedStory.published_at
+          id: updatedStoryData.id,
+          visibility: updatedStoryData.visibility,
+          publishedAt: updatedStoryData.published_at
         },
         message: `Story ${visibility === 'public' ? 'published' : 'unpublished'} successfully`
       },

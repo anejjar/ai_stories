@@ -45,11 +45,11 @@ export class GeminiImageProvider implements ImageProvider {
             }
 
             // Generate content with image output
+            // @ts-ignore - responseModalities and imageConfig may not be in types yet
             const result = await model.generateContent({
                 contents: [{ role: 'user', parts: [{ text: request.prompt }] }],
                 generationConfig: {
                     responseModalities: ['IMAGE'],
-                    // @ts-ignore - imageConfig may not be in types yet
                     imageConfig: {
                         aspectRatio: aspectRatio
                     }
@@ -79,12 +79,12 @@ export class GeminiImageProvider implements ImageProvider {
                 // Make additional requests if more images needed
                 const additionalPromises = []
                 for (let i = 1; i < count; i++) {
+                    // @ts-ignore - responseModalities and imageConfig may not be in types yet
                     additionalPromises.push(
                         model.generateContent({
                             contents: [{ role: 'user', parts: [{ text: request.prompt }] }],
                             generationConfig: {
                                 responseModalities: ['IMAGE'],
-                                // @ts-ignore
                                 imageConfig: { aspectRatio: aspectRatio }
                             }
                         })

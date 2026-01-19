@@ -11,7 +11,11 @@ export class OpenAIProvider implements AIProvider {
   constructor() {
     const apiKey = process.env.OPENAI_API_KEY
     if (apiKey) {
-      this.client = new OpenAI({ apiKey })
+      this.client = new OpenAI({ 
+        apiKey,
+        timeout: 60000, // 60 seconds timeout
+        maxRetries: 2,
+      })
     } else {
       console.warn('OPENAI_API_KEY is not set. OpenAI provider will not be available.')
     }

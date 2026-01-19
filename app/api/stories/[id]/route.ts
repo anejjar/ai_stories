@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/auth/middleware'
+import { optionalAuth } from '@/lib/auth/middleware'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import type { ApiResponse, Story } from '@/types'
 import { databaseStoryToStory, type DatabaseStory } from '@/types/database'
@@ -10,8 +10,7 @@ export async function GET(
   props: { params: Promise<{ id: string }> }
 ) {
   const params = await props.params;
-  const { userId, response } = await requireAuth(request)
-  if (response) return response
+  const userId = await optionalAuth(request)
 
   try {
     // Do not cache this endpoint; large payloads (stories + images) can exceed Next.js cache size limits
@@ -34,7 +33,7 @@ export async function GET(
     }
 
     const storyData = data as DatabaseStory
-    if (!storyData || storyData.user_id !== userId) {
+    if (!storyData || (storyData.user_id !== userId && storyData.visibility !== 'public')) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Unauthorized' },
         { status: 403 }
@@ -42,6 +41,43 @@ export async function GET(
     }
 
     const story: Story = databaseStoryToStory(storyData)
+
+    // Increment view count using RPC function (safe from race conditions)
+    // We do this after verifying access
+    await (supabaseAdmin.rpc as any)('increment_story_view_count', { story_id: storyId })
+
+    // Add social stats if public
+    if (story.visibility === 'public') {
+      // Get likes count
+      const { count: likesCount } = await supabaseAdmin
+        .from('story_likes')
+        .select('*', { count: 'exact', head: true })
+        .eq('story_id', storyId)
+
+      // Get comments count
+      const { count: commentsCount } = await supabaseAdmin
+        .from('story_comments')
+        .select('*', { count: 'exact', head: true })
+        .eq('story_id', storyId)
+
+      // Check if liked by current user
+      let isLikedByUser = false
+      if (userId) {
+        const { data: likeData } = await supabaseAdmin
+          .from('story_likes')
+          .select('id')
+          .eq('story_id', storyId)
+          .eq('user_id', userId)
+          .single()
+        
+        isLikedByUser = !!likeData
+      }
+
+      const storyWithStats = story as any
+      storyWithStats.likesCount = likesCount || 0
+      storyWithStats.commentsCount = commentsCount || 0
+      storyWithStats.isLikedByUser = isLikedByUser
+    }
 
     return NextResponse.json<ApiResponse<Story>>({
       success: true,

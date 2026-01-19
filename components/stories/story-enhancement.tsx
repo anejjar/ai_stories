@@ -127,7 +127,7 @@ export function StoryEnhancement({ storyId, onEnhanced }: StoryEnhancementProps)
       },
     ]
 
-  // Show ProMax upsell for Pro users instead of enhancement tools
+  // Show Family Plan upsell for Pro users instead of enhancement tools
   if (isProOnly) {
     return (
       <div className="mb-8">

@@ -60,7 +60,8 @@ export async function POST(
       )
     }
 
-    if (story.visibility !== 'public') {
+    const storyData = story as any
+    if (storyData.visibility !== 'public') {
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Can only rate public stories' },
         { status: 400 }
@@ -77,8 +78,8 @@ export async function POST(
 
     if (existingRating) {
       // Update existing rating
-      const { error: updateError } = await supabase
-        .from('story_ratings')
+      const { error: updateError } = await (supabase
+        .from('story_ratings') as any)
         .update({
           rating,
           updated_at: new Date().toISOString()
@@ -98,8 +99,8 @@ export async function POST(
 
     } else {
       // Insert new rating
-      const { error: insertError } = await supabase
-        .from('story_ratings')
+      const { error: insertError } = await (supabase
+        .from('story_ratings') as any)
         .insert({
           story_id: storyId,
           user_id: user.id,
@@ -124,9 +125,10 @@ export async function POST(
       .eq('id', storyId)
       .single()
 
+    const updatedStoryData = updatedStory as any
     const response: RateStoryResponse = {
-      averageRating: parseFloat(updatedStory?.average_rating || '0'),
-      ratingsCount: updatedStory?.ratings_count || 0,
+      averageRating: parseFloat(updatedStoryData?.average_rating || '0'),
+      ratingsCount: updatedStoryData?.ratings_count || 0,
       userRating: rating
     }
 

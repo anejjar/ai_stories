@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       request.headers.get('x-real-ip') ||
       'unknown'
 
-    const rate = checkRateLimit(ip, RATE_LIMITS.waitlist)
+    const rate = await checkRateLimit(ip, RATE_LIMITS.waitlist)
     if (!rate.success) {
       return NextResponse.json(
         {

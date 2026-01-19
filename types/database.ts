@@ -1,6 +1,6 @@
 // Supabase Database Types and Helper Functions
 
-import type { User, Story, TrialUsage, Payment, SubscriptionTier, ChildAppearance, Child, ChildProfile, BookPage } from './index'
+import type { User, Story, TrialUsage, Payment, SubscriptionTier, ChildAppearance, Child, ChildProfile, BookPage, OnboardingChecklist } from './index'
 
 // Database User Row (matches PostgreSQL users table)
 export interface DatabaseUser {
@@ -11,8 +11,13 @@ export interface DatabaseUser {
   subscription_tier: SubscriptionTier
   created_at: string // ISO timestamp
   updated_at: string // ISO timestamp
-  stripe_customer_id: string | null
-  stripe_subscription_id: string | null
+  lemonsqueezy_customer_id: string | null
+  lemonsqueezy_subscription_id: string | null
+  onboarding_completed: boolean
+  onboarding_step: 'welcome' | 'profile_setup' | 'tour_active' | 'first_story' | 'completed'
+  onboarding_dismissed_at: string | null // ISO timestamp
+  onboarding_checklist: OnboardingChecklist | null // JSONB
+  welcome_email_sent_at: string | null // ISO timestamp
 }
 
 // Database Story Row (matches PostgreSQL stories table)
@@ -28,12 +33,20 @@ export interface DatabaseStory {
   moral: string | null
   has_images: boolean
   image_urls: string[] | null
-  appearance: ChildAppearance | null // JSONB column for PRO MAX customization (deprecated, use children[].appearance)
+  appearance: ChildAppearance | null // JSONB column for Family Plan customization (deprecated, use children[].appearance)
   parent_story_id: string | null // If set, this is a draft of another story
   draft_number: number | null // Draft number (1, 2, 3, etc.)
   is_selected_draft: boolean | null // True if this draft was selected as final
-  is_illustrated_book: boolean | null // True if this is an illustrated book format (PRO MAX feature)
-  book_pages: BookPage[] | null // JSONB array of structured pages with illustrations (PRO MAX feature)
+  is_illustrated_book: boolean | null // True if this is an illustrated book format (Family Plan feature)
+  book_pages: BookPage[] | null // JSONB array of structured pages with illustrations (Family Plan feature)
+  image_upload_status: 'pending' | 'complete' | 'failed' | 'partial' | null // Status of image uploads
+  visibility: 'public' | 'private' | null
+  published_at: string | null // ISO timestamp
+  view_count: number | null
+  likes_count: number | null
+  comments_count: number | null
+  average_rating: number | null
+  ratings_count: number | null
   created_at: string // ISO timestamp
   updated_at: string // ISO timestamp
 }
@@ -53,7 +66,7 @@ export interface DatabaseTrialUsage {
 export interface DatabasePayment {
   id: string
   user_id: string
-  stripe_payment_intent_id: string
+  lemonsqueezy_order_id: string
   amount: number
   currency: string
   status: 'pending' | 'succeeded' | 'failed'
@@ -72,6 +85,57 @@ export interface DatabaseChildProfile {
   ai_generated_image_url: string | null
   ai_description: string | null // AI-generated description for consistent illustration generation
   original_image_uploaded_at: string | null // ISO timestamp
+  created_at: string // ISO timestamp
+  updated_at: string // ISO timestamp
+}
+
+// Database Webhook Event Row
+export interface DatabaseWebhookEvent {
+  id: string
+  event_id: string
+  event_type: string
+  provider: 'lemonsqueezy' | 'stripe'
+  status: 'processing' | 'completed' | 'failed'
+  payload: Record<string, any> // JSONB
+  error_message: string | null
+  processed_at: string | null // ISO timestamp
+  created_at: string // ISO timestamp
+  updated_at: string // ISO timestamp
+}
+
+// Database Reading Session Row
+export interface DatabaseReadingSession {
+  id: string
+  user_id: string
+  story_id: string
+  read_at: string // ISO timestamp
+  duration_seconds: number
+  completed: boolean
+  audio_used: boolean
+  created_at: string // ISO timestamp
+}
+
+// Database Admin Activity Log Row
+export interface DatabaseAdminActivityLog {
+  id: string
+  admin_id: string
+  action_type: string
+  target_id: string
+  target_type: string
+  details: Record<string, any> // JSONB
+  ip_address: string
+  user_agent: string
+  created_at: string // ISO timestamp
+}
+
+// Database User Achievement Row
+export interface DatabaseUserAchievement {
+  id: string
+  user_id: string
+  achievement_id: string
+  progress: number
+  unlocked_at: string | null // ISO timestamp
+  is_viewed: boolean
   created_at: string // ISO timestamp
   updated_at: string // ISO timestamp
 }
@@ -104,6 +168,36 @@ export interface Database {
         Update: Partial<Omit<DatabasePayment, 'id' | 'created_at'>>
         Relationships: []
       }
+      child_profiles: {
+        Row: DatabaseChildProfile
+        Insert: Omit<DatabaseChildProfile, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<DatabaseChildProfile, 'id' | 'created_at'>>
+        Relationships: []
+      }
+      webhook_events: {
+        Row: DatabaseWebhookEvent
+        Insert: Omit<DatabaseWebhookEvent, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<DatabaseWebhookEvent, 'id' | 'created_at'>>
+        Relationships: []
+      }
+      reading_sessions: {
+        Row: DatabaseReadingSession
+        Insert: Omit<DatabaseReadingSession, 'id' | 'created_at'>
+        Update: Partial<Omit<DatabaseReadingSession, 'id' | 'created_at'>>
+        Relationships: []
+      }
+      admin_activity_log: {
+        Row: DatabaseAdminActivityLog
+        Insert: Omit<DatabaseAdminActivityLog, 'id' | 'created_at'>
+        Update: Partial<Omit<DatabaseAdminActivityLog, 'id' | 'created_at'>>
+        Relationships: []
+      }
+      user_achievements: {
+        Row: DatabaseUserAchievement
+        Insert: Omit<DatabaseUserAchievement, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<DatabaseUserAchievement, 'id' | 'created_at'>>
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -130,8 +224,12 @@ export function databaseUserToUser(data: DatabaseUser): User {
     subscriptionTier: data.subscription_tier,
     createdAt: new Date(data.created_at),
     updatedAt: new Date(data.updated_at),
-    stripeCustomerId: data.stripe_customer_id || undefined,
-    stripeSubscriptionId: data.stripe_subscription_id || undefined,
+    lemonsqueezyCustomerId: data.lemonsqueezy_customer_id || undefined,
+    lemonsqueezySubscriptionId: data.lemonsqueezy_subscription_id || undefined,
+    onboardingCompleted: data.onboarding_completed,
+    onboardingStep: data.onboarding_step as any,
+    onboardingDismissedAt: data.onboarding_dismissed_at ? new Date(data.onboarding_dismissed_at) : undefined,
+    onboardingChecklist: data.onboarding_checklist,
   }
 }
 
@@ -141,8 +239,8 @@ export function userToDatabaseUser(user: Partial<User>): Partial<DatabaseUser> {
     display_name: user.displayName || null,
     photo_url: user.photoURL || null,
     subscription_tier: user.subscriptionTier,
-    stripe_customer_id: user.stripeCustomerId || null,
-    stripe_subscription_id: user.stripeSubscriptionId || null,
+    lemonsqueezy_customer_id: user.lemonsqueezyCustomerId || null,
+    lemonsqueezy_subscription_id: user.lemonsqueezySubscriptionId || null,
   } as Partial<DatabaseUser>
 }
 
@@ -215,6 +313,15 @@ export function databaseStoryToStory(data: DatabaseStory): Story {
     isSelectedDraft: data.is_selected_draft || false,
     isIllustratedBook: data.is_illustrated_book || false,
     bookPages,
+    visibility: data.visibility || 'private',
+    publishedAt: data.published_at ? new Date(data.published_at) : undefined,
+    viewCount: data.view_count || 0,
+    likesCount: data.likes_count || 0,
+    commentsCount: data.comments_count || 0,
+    averageRating: typeof data.average_rating === 'string'
+      ? parseFloat(data.average_rating)
+      : (data.average_rating || 0),
+    ratingsCount: data.ratings_count || 0,
     createdAt: validCreatedAt,
     updatedAt: validUpdatedAt,
   }
@@ -243,6 +350,8 @@ export function storyToDatabaseStory(story: Partial<Story>): Partial<DatabaseSto
     is_selected_draft: story.isSelectedDraft ?? false, // Ensure boolean, never undefined
     is_illustrated_book: story.isIllustratedBook ?? false, // Ensure boolean, never undefined
     book_pages: story.bookPages || null, // JSONB array of pages
+    visibility: story.visibility || 'private',
+    published_at: story.publishedAt ? story.publishedAt.toISOString() : null,
   } as Partial<DatabaseStory>
 }
 
@@ -263,7 +372,7 @@ export function databasePaymentToPayment(data: DatabasePayment): Payment {
   return {
     id: data.id,
     userId: data.user_id,
-    stripePaymentIntentId: data.stripe_payment_intent_id,
+    lemonsqueezyOrderId: data.lemonsqueezy_order_id,
     amount: data.amount,
     currency: data.currency,
     status: data.status,
@@ -282,8 +391,8 @@ export function firestoreUserToUser(id: string, data: any): User {
     subscriptionTier: data.subscription_tier || data.subscriptionTier,
     createdAt: data.created_at ? new Date(data.created_at) : new Date(),
     updatedAt: data.updated_at ? new Date(data.updated_at) : new Date(),
-    stripeCustomerId: data.stripe_customer_id || data.stripeCustomerId,
-    stripeSubscriptionId: data.stripe_subscription_id || data.stripeSubscriptionId,
+    lemonsqueezyCustomerId: data.lemonsqueezy_customer_id || data.lemonsqueezyCustomerId,
+    lemonsqueezySubscriptionId: data.lemonsqueezy_subscription_id || data.lemonsqueezySubscriptionId,
   }
 }
 

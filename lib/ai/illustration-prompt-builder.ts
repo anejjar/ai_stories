@@ -95,23 +95,23 @@ const THEME_COLOR_PALETTES: Record<string, ColorPalette> = {
     secondary: 'Bright star white and silver',
     accent: 'Electric blue, cyan, and pink nebula colors',
     background: 'Dark space with distant galaxies, gradients from black to deep blue',
-    lighting: 'Soft glow from stars and planets, rim lighting on character',
+    lighting: 'Soft ethereal glow from stars, bioluminescent nebulae, rim lighting on character',
     mood: 'Sense of wonder and infinite possibility',
   },
   Ocean: {
     primary: 'Turquoise and sea blue',
     secondary: 'Sandy yellows and coral pinks',
     accent: 'Bright tropical fish colors, purple sea anemones',
-    background: 'Underwater gradient from light turquoise to deep blue, dappled sunlight',
-    lighting: 'Filtered underwater sunbeams, caustic light patterns',
+    background: 'Underwater gradient with dappled sunlight rays filtering through water',
+    lighting: 'Filtered underwater sunbeams, caustic light patterns, glowing sea creatures',
     mood: 'Peaceful exploration with pockets of excitement',
   },
   Fantasy: {
     primary: 'Royal purple and soft pink',
     secondary: 'Sparkle silver and gold accents',
     accent: 'Rainbow gradients, magical glows',
-    background: 'Enchanted forest or castle with atmospheric mist',
-    lighting: 'Magical sparkles, soft ethereal glow, warm ambient light',
+    background: 'Enchanted forest with atmospheric mist and glowing crystals',
+    lighting: 'Magical sparkles, soft warm ambient light, magical bioluminescence',
     mood: 'Magical and full of wonder',
   },
   Nature: {
@@ -119,9 +119,10 @@ const THEME_COLOR_PALETTES: Record<string, ColorPalette> = {
     secondary: 'Sky blue and cloud white',
     accent: 'Wildflower colors, autumn leaves, bright berries',
     background: 'Natural outdoor setting, trees, grass, sky',
-    lighting: 'Warm natural sunlight filtering through leaves, golden hour',
+    lighting: 'Warm golden hour sunlight filtering through leaves, long soft shadows',
     mood: 'Peaceful, grounded, alive',
   },
+// ... other themes ...
   Dinosaurs: {
     primary: 'Prehistoric greens and earth tones',
     secondary: 'Volcanic oranges and rocky grays',
@@ -282,6 +283,22 @@ export function determineCharacterTier(
   return 'none'
 }
 
+const SIGNATURE_ACCESSORIES: Record<string, string> = {
+  Space: 'silver star-shaped badge on their chest',
+  Ocean: 'sparkly blue seashell pendant',
+  Fantasy: 'magical glowing crystal bracelet',
+  Nature: 'braided green leaf headband',
+  Dinosaurs: 'prehistoric bone-shaped charm on a necklace',
+  Superhero: 'bright gold lightning bolt emblem on their belt',
+  Princess: 'sparkling diamond tiara with a small pink heart',
+  Robots: 'small glowing blue gear-shaped pin',
+  Adventure: 'brave red explorer scarf',
+  Magic: 'sparkly violet wizard hat with tiny silver moons',
+  Friendship: 'warm orange friendship bracelet',
+  Learning: 'bright yellow "idea" badge with a lightbulb',
+  Pirates: 'brave blue pirate bandana with a gold anchor',
+}
+
 export function buildEnhancedIllustrationPrompt(request: IllustrationRequest): string {
   const artStyle = request.artStyle || 'classic-picture-book'
   const styleGuide = ART_STYLES[artStyle]
@@ -296,6 +313,18 @@ export function buildEnhancedIllustrationPrompt(request: IllustrationRequest): s
 
   // Check if we should include character or just environment
   const includeCharacter = request.includeCharacter !== false
+  const signatureAccessory = SIGNATURE_ACCESSORIES[request.theme] || SIGNATURE_ACCESSORIES['Adventure']
+
+  // Build stronger consistency context with reference to previous scenes
+  let sceneContext = ''
+  if (request.sceneNumber && request.totalScenes) {
+    if (request.sceneNumber === 1) {
+      sceneContext = `\n\nStory Continuity: This is scene 1 of ${request.totalScenes}. Establish the visual style that will be maintained EXACTLY throughout all ${request.totalScenes} scenes. Use consistent art style, line weight, color palette, rendering technique, brushwork quality, and level of detail. This style signature must be identical in all subsequent scenes.`
+    } else {
+      const previousScenes = request.sceneNumber > 1 ? `scenes 1-${request.sceneNumber - 1}` : 'scene 1'
+      sceneContext = `\n\nStory Continuity: This is scene ${request.sceneNumber} of ${request.totalScenes}. CRITICAL: Use EXACTLY the same art style, line weight, color palette, rendering technique, brushwork quality, and level of detail as ${previousScenes}. The visual style must be visually indistinguishable - same artistic choices, same color treatment, same lighting approach, same texture quality. Match the style signature established in scene 1 precisely.`
+    }
+  }
 
   // Build prompt based on whether character is included
   let prompt: string
@@ -306,17 +335,13 @@ export function buildEnhancedIllustrationPrompt(request: IllustrationRequest): s
       ? 'IMPORTANT: Maintain exact same character appearance as reference throughout all illustrations.'
       : 'IMPORTANT: Keep character appearance consistent with this description.'
 
-    const sceneContext = request.sceneNumber && request.totalScenes
-      ? `\n\nStory Continuity: This is scene ${request.sceneNumber} of ${request.totalScenes}. Use EXACTLY the same art style, line weight, color palette, and rendering technique as all other scenes in this story. The visual style must be indistinguishable between illustrations - same brushwork, same level of detail, same artistic choices throughout.`
-      : ''
-
     prompt = `Children's book illustration: ${cleanScene}
 
-Character: ${request.childName}, ${request.childDescription}. Make ${request.childName} the clear focal point with expressive ${mood} emotion. ${consistencyNote}
+Character: ${request.childName}, ${request.childDescription}, wearing a ${signatureAccessory} (IMPORTANT: always show this accessory for character consistency). Make ${request.childName} the clear focal point with expressive ${mood} emotion. ${consistencyNote}
 
 ${request.profileImageUrl ? `Reference: Character appearance based on provided profile image for visual consistency.` : ''}
 
-Style: ${styleGuide.description}. ${styleGuide.techniques}. ${styleGuide.characteristics.slice(0, 3).join(', ')}. Inspired by ${styleGuide.referenceArtists[0]} style.
+Style: ${styleGuide.description}. ${styleGuide.techniques}. ${styleGuide.characteristics.slice(0, 3).join(', ')}. Inspired by ${styleGuide.referenceArtists[0]} style. MAINTAIN CONSISTENT STYLE SIGNATURE: Use identical rendering technique, line quality, color saturation, and detail level across all scenes in this story.
 
 Colors (${request.theme}): ${colorPalette.primary}, ${colorPalette.secondary}. ${colorPalette.lighting}. ${colorPalette.mood}.
 
@@ -326,24 +351,24 @@ Mood: ${mood.charAt(0).toUpperCase() + mood.slice(1)}, warm, safe, perfect for b
 
 Professional quality, single focused moment, ages 3-8, never scary.
 
-NO: text, words, letters, speech bubbles, multiple scenes, cluttered backgrounds, photorealism, dark elements.`
+NO: text, words, letters, speech bubbles, multiple scenes, cluttered backgrounds, photorealism, dark elements, warped faces, scary expressions, distorted hands, creepy shadows.`
   } else if (includeCharacter) {
     // Generic friendly child (fallback)
     prompt = `Children's book illustration: ${cleanScene}
 
-Character: ${request.childName}, friendly child. Make ${request.childName} the clear focal point with expressive ${mood} emotion.
+Character: ${request.childName}, friendly child, wearing a ${signatureAccessory} (IMPORTANT: always show this accessory for character consistency). Make ${request.childName} the clear focal point with expressive ${mood} emotion.
 
-Style: ${styleGuide.description}. ${styleGuide.techniques}. ${styleGuide.characteristics.slice(0, 3).join(', ')}. Inspired by ${styleGuide.referenceArtists[0]} style.
+Style: ${styleGuide.description}. ${styleGuide.techniques}. ${styleGuide.characteristics.slice(0, 3).join(', ')}. Inspired by ${styleGuide.referenceArtists[0]} style. MAINTAIN CONSISTENT STYLE SIGNATURE: Use identical rendering technique, line quality, color saturation, and detail level across all scenes in this story.
 
 Colors (${request.theme}): ${colorPalette.primary}, ${colorPalette.secondary}. ${colorPalette.lighting}. ${colorPalette.mood}.
 
 Composition: ${request.childName} in lower third or center (rule of thirds). Simple background with 2-4 elements. Character prominent (30% of image). Clear depth with foreground/background layers.
 
-Mood: ${mood.charAt(0).toUpperCase() + mood.slice(1)}, warm, safe, perfect for bedtime.
+Mood: ${mood.charAt(0).toUpperCase() + mood.slice(1)}, warm, safe, perfect for bedtime.${sceneContext}
 
 Professional quality, single focused moment, ages 3-8, never scary.
 
-NO: text, words, letters, speech bubbles, multiple scenes, cluttered backgrounds, photorealism, dark elements.`
+NO: text, words, letters, speech bubbles, multiple scenes, cluttered backgrounds, photorealism, dark elements, warped faces, scary expressions, distorted hands, creepy shadows.`
   } else {
     // Environment-only illustration (no character)
     // Remove character name from scene description
@@ -352,15 +377,22 @@ NO: text, words, letters, speech bubbles, multiple scenes, cluttered backgrounds
       .replace(/\b(he|she|they|him|her|them)\b/gi, 'it')
       .replace(/character|person|child/gi, 'element')
 
-    const sceneContext = request.sceneNumber && request.totalScenes
-      ? `\n\nStory Continuity: This is scene ${request.sceneNumber} of ${request.totalScenes}. Maintain EXACTLY the same art style, color treatment, lighting approach, and atmospheric rendering as all other scenes. The environment/landscape style must be visually cohesive with the entire story - same artistic technique, same brushwork quality, same level of detail throughout.`
-      : ''
+    // Build stronger consistency context for environment-only scenes
+    let sceneContext = ''
+    if (request.sceneNumber && request.totalScenes) {
+      if (request.sceneNumber === 1) {
+        sceneContext = `\n\nStory Continuity: This is scene 1 of ${request.totalScenes}. Establish the environment visual style that will be maintained EXACTLY throughout all ${request.totalScenes} scenes. Use consistent art style, color treatment, lighting approach, atmospheric rendering, brushwork quality, and detail level. This style signature must be identical in all subsequent scenes.`
+      } else {
+        const previousScenes = request.sceneNumber > 1 ? `scenes 1-${request.sceneNumber - 1}` : 'scene 1'
+        sceneContext = `\n\nStory Continuity: This is scene ${request.sceneNumber} of ${request.totalScenes}. CRITICAL: Maintain EXACTLY the same art style, color treatment, lighting approach, atmospheric rendering, brushwork quality, and detail level as ${previousScenes}. The environment/landscape style must be visually indistinguishable - same artistic technique, same color saturation, same texture quality. Match the style signature established in scene 1 precisely.`
+      }
+    }
 
     prompt = `Children's book illustration: ${environmentScene}
 
 Focus: Beautiful ${request.theme.toLowerCase()} environment and setting. NO characters or people. Focus entirely on the landscape, scenery, and atmosphere.
 
-Style: ${styleGuide.description}. ${styleGuide.techniques}. ${styleGuide.characteristics.slice(0, 3).join(', ')}. Inspired by ${styleGuide.referenceArtists[0]} style.
+Style: ${styleGuide.description}. ${styleGuide.techniques}. ${styleGuide.characteristics.slice(0, 3).join(', ')}. Inspired by ${styleGuide.referenceArtists[0]} style. MAINTAIN CONSISTENT STYLE SIGNATURE: Use identical rendering technique, color treatment, lighting approach, and detail level across all scenes in this story.
 
 Colors (${request.theme}): ${colorPalette.primary}, ${colorPalette.secondary}. ${colorPalette.lighting}. ${colorPalette.mood}.
 

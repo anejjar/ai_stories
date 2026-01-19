@@ -6,7 +6,7 @@ A Next.js application that empowers parents to create beautiful, personalized st
 
 - **Free Trial**: Generate 1 free story to experience the magic
 - **PRO Tier**: Unlimited text story generation with rewrite/enhance tools
-- **PRO MAX Tier**: Everything in PRO plus AI-illustrated stories
+- **Family Plan Tier**: Everything in PRO plus AI-illustrated stories
 
 ## Tech Stack
 

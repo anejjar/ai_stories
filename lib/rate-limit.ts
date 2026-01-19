@@ -1,16 +1,17 @@
 /**
  * Rate Limiter Middleware
- * Simple in-memory rate limiting for API routes
- * For production, consider using Redis or a dedicated rate limiting service
+ * Uses Redis for production, falls back to in-memory for development
  */
+
+import * as RedisRateLimit from './rate-limit-redis'
 
 interface RateLimitEntry {
   count: number
   resetTime: number
 }
 
-// In-memory store for rate limiting
-// Note: This resets on server restart. For production, use Redis or similar
+// In-memory store for rate limiting (development fallback only)
+// Note: This resets on server restart. Production uses Redis.
 const rateLimitStore = new Map<string, RateLimitEntry>()
 
 // Clean up old entries periodically (every 5 minutes)
@@ -42,12 +43,9 @@ export interface RateLimitResult {
 }
 
 /**
- * Check if a request should be rate limited
- * @param key - Unique identifier for the client (e.g., userId, IP)
- * @param config - Rate limit configuration
- * @returns RateLimitResult with success status and metadata
+ * In-memory rate limiter (fallback for development)
  */
-export function checkRateLimit(
+function checkRateLimitInMemory(
   key: string,
   config: RateLimitConfig
 ): RateLimitResult {
@@ -65,7 +63,7 @@ export function checkRateLimit(
       resetTime: now + windowMs,
     }
     rateLimitStore.set(storeKey, entry)
-    
+
     return {
       success: true,
       remaining: limit - 1,
@@ -95,6 +93,27 @@ export function checkRateLimit(
     remaining: limit - entry.count,
     resetIn,
     limit,
+  }
+}
+
+/**
+ * Check if a request should be rate limited
+ * Uses Redis for production, in-memory for development
+ *
+ * @param key - Unique identifier for the client (e.g., userId, IP)
+ * @param config - Rate limit configuration
+ * @returns RateLimitResult with success status and metadata
+ */
+export async function checkRateLimit(
+  key: string,
+  config: RateLimitConfig
+): Promise<RateLimitResult> {
+  // Use Redis if configured, otherwise fall back to in-memory
+  if (RedisRateLimit.isRedisConfigured()) {
+    return await RedisRateLimit.checkRateLimit(key, config)
+  } else {
+    console.warn('Redis not configured, using in-memory rate limiting (not suitable for production)')
+    return checkRateLimitInMemory(key, config)
   }
 }
 
@@ -142,6 +161,13 @@ export const RATE_LIMITS = {
     limit: 3,
     windowSeconds: 3600, // 3 signups per hour per IP
     identifier: 'waitlist',
+  },
+
+  // Support contact form - prevent spam
+  supportContact: {
+    limit: 5,
+    windowSeconds: 3600, // 5 tickets per hour per user
+    identifier: 'support-contact',
   },
 } as const
 
