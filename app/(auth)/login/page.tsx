@@ -62,12 +62,16 @@ function LoginForm() {
     }
 
     if (user) {
-      // Wait a moment for session to be fully established
+      // Wait for session to be fully established and cookies to be set
       // This prevents middleware from redirecting back to login
-      await new Promise(resolve => setTimeout(resolve, 500))
+      await new Promise(resolve => setTimeout(resolve, 1000))
 
-      // Use window.location.href for full page reload
-      window.location.href = '/library'
+      // Check if there's a redirect URL from middleware or email links
+      const redirectedFrom = searchParams.get('redirectedFrom')
+      const redirectTo = redirectedFrom || '/library'
+
+      // Use window.location.href for full page reload to ensure session is recognized
+      window.location.href = redirectTo
     } else {
       setError('Login failed. Please try again.')
       setLoading(false)
@@ -90,7 +94,16 @@ function LoginForm() {
       try {
         // Create or update user profile
         await createUserProfile(user, 'trial')
-        router.push('/library')
+        
+        // Wait for session to be fully established
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        // Check if there's a redirect URL from middleware or email links
+        const redirectedFrom = searchParams.get('redirectedFrom')
+        const redirectTo = redirectedFrom || '/library'
+        
+        // Use window.location.href for full page reload to ensure session is recognized
+        window.location.href = redirectTo
       } catch (profileError) {
         console.error('Error creating user profile:', profileError)
         setError('Sign-in successful but profile setup failed. Please try again.')

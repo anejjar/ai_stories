@@ -386,7 +386,7 @@ export function generateBedtimeReminderEmail(data: BedtimeReminderData): { html:
       ` : ''}
 
       <div class="cta-section">
-        <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://aistories.app'}/stories" class="cta-button">
+        <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://aistories.app'}/library" class="cta-button">
           Read a Story Tonight →
         </a>
       </div>
@@ -431,7 +431,7 @@ ${data.recentStories.length > 0 ? `
 ${data.recentStories.map(story => `- ${story.title} (${story.theme})`).join('\n')}
 ` : ''}
 
-Read a story tonight: ${process.env.NEXT_PUBLIC_APP_URL || 'https://aistories.app'}/stories
+Read a story tonight: ${process.env.NEXT_PUBLIC_APP_URL || 'https://aistories.app'}/library
 
 💡 Tip: Bedtime stories help children relax, improve vocabulary, and strengthen your bond. Even 10 minutes of reading can make a big difference!
 

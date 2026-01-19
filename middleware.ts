@@ -99,6 +99,9 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith('/story-examples') ||
     request.nextUrl.pathname.startsWith('/support') ||
     request.nextUrl.pathname.startsWith('/terms') ||
+    // SEO files
+    request.nextUrl.pathname === '/sitemap.xml' ||
+    request.nextUrl.pathname === '/robots.txt' ||
     // Public access to dashboard features (for sharing)
     request.nextUrl.pathname.startsWith('/discover') ||
     request.nextUrl.pathname.startsWith('/story/') ||
@@ -135,10 +138,13 @@ export async function middleware(request: NextRequest) {
   }
 
   // If the user is logged in and trying to access login/signup,
-  // redirect them to the dashboard
+  // redirect them to the dashboard (or their intended destination)
   if (user && (request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/signup'))) {
     const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
+    // Check if there's a redirectedFrom parameter (from email links or previous redirect)
+    const redirectedFrom = request.nextUrl.searchParams.get('redirectedFrom')
+    url.pathname = redirectedFrom || '/dashboard'
+    url.searchParams.delete('redirectedFrom') // Clean up the URL
     return NextResponse.redirect(url)
   }
 
