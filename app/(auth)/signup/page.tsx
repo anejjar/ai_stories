@@ -105,7 +105,7 @@ function SignupForm() {
     setError('')
     setLoading(true)
 
-    const { user, error: authError } = await signInWithGoogle()
+    const { user, error: authError } = await signInWithGoogle('signup')
 
     if (authError) {
       setError(authError)
